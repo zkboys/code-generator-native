@@ -1,0 +1,28 @@
+{
+  "name": "@ra-lib/gen",
+  "version": "1.1.6",
+  "description": "",
+  "main": "index.js",
+  "bin": {
+    "ra-gen": "bin/index.js"
+  },
+  "scripts": {
+    "start": "nodemon --ignore front/  --exec \"node index.js\""
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^9.0.0",
+    "cross-spawn": "^7.0.3",
+    "detect-port-alt": "^1.1.6",
+    "fs-extra": "^10.0.1",
+    "is-root": "^2.1.0",
+    "koa": "^2.13.4",
+    "open": "^8.4.0",
+    "prompts": "^2.4.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}

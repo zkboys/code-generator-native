@@ -1,0 +1,21 @@
+@import 'src/theme';
+
+.root {
+    padding: 0 16px;
+    margin: 0;
+
+    :global {
+        .@{ant-prefix}-tabs-nav {
+            margin-bottom: 24px !important;
+        }
+
+        *:focus {
+            outline: none;
+        }
+    }
+}
+
+.tag {
+    cursor: pointer;
+    user-select: none;
+}

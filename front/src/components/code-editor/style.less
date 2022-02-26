@@ -1,0 +1,57 @@
+:global {
+    .monaco-aria-container {
+        position: absolute !important; /* try to hide from window but not from screen readers */
+        left: -999em !important;
+    }
+}
+
+.fullScreen {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 9999;
+}
+
+.header {
+    height: 45px;
+    padding: 0 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    background: #fff;
+
+    .title {
+        display: flex;
+        align-items: center;
+    }
+
+    .tool {
+        cursor: pointer;
+    }
+}
+
+.root {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    & > footer {
+        background: #fff;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 0 8px;
+        height: 45px;
+        border-top: 1px solid #d8d8d8;
+    }
+
+    :global {
+        // 代码提示框
+        .monaco-editor .suggest-widget {
+            //width: 100px!important;
+        }
+    }
+}
