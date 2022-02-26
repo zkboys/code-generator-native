@@ -1,10 +1,11 @@
-import React, { useCallback } from 'react';
-import { Operator, Table, tableEditable, tableRowDraggable } from '@ra-lib/admin';
-import { Button } from 'antd';
+import React, { useCallback, useMemo, useEffect } from 'react';
+import { Operator, Table, tableRowDraggable } from '@ra-lib/admin';
+import { Button, Form } from 'antd';
 import { v4 as uuid } from 'uuid';
 import { OptionsTag } from 'src/components';
+import CellFormItem from './CellFormItem';
 
-const EditTable = tableEditable(tableRowDraggable(Table));
+const EditTable = tableRowDraggable(Table);
 
 const FORM_ELEMENT_OPTIONS = [
     { value: 'input', label: '输入框' },
@@ -41,6 +42,8 @@ export default function FieldTable(props) {
         otherHeight = 0,
         footer,
     } = props;
+
+    const [form] = Form.useForm();
 
     const handleAdd = useCallback((append) => {
         const length = dataSource.length;
@@ -141,92 +144,88 @@ export default function FieldTable(props) {
         onRecordChange && onRecordChange(record);
     }, [onRecordChange]);
 
-    const columns = [
-        { title: '注释', dataIndex: 'comment', width: 150 },
-        {
-            title: '中文名', dataIndex: 'chinese', width: 190,
-            formProps: (record, index) => {
-                const tabIndex = index + 1; // index * 2 + 1
-                return {
-                    label: ' ',
-                    colon: false,
-                    style: { width: 150 },
-                    required: true,
-                    tabIndex,
-                    onFocus: e => e.target.select(),
-                    onBlur: (e) => handleRecordChange(record, 'chinese', e.target.value),
-                    onKeyDown: (e) => handleKeyDown(e, tabIndex),
-                };
-            },
-        },
-        {
-            title: '列名', dataIndex: 'field', width: 190,
-            formProps: (record, index) => {
-                const length = dataSource?.length || 0;
+    useEffect(() => {
+        form.setFieldsValue({ dataSource });
+    }, [form, dataSource]);
 
-                const tabIndex = index + length + 1; // index * 2 + 2;
-                return {
-                    label: ' ',
-                    colon: false,
-                    style: { width: 150 },
-                    required: true,
-                    tabIndex,
-                    onFocus: e => e.target.select(),
-                    onBlur: (e) => handleRecordChange(record, 'field', e.target.value),
-                    onKeyDown: (e) => handleKeyDown(e, tabIndex),
-                };
-            },
-        },
-        {
-            title: '表单类型', dataIndex: 'formType', width: 190,
-            formProps: (record) => {
-                return {
-                    label: ' ',
-                    colon: false,
-                    style: { width: 150 },
-                    type: 'select',
-                    showSearch: true,
-                    required: true,
-                    options: FORM_ELEMENT_OPTIONS,
-                    onChange: (value) => handleRecordChange(record, 'formType', value),
-                };
-            },
-        },
-        {
-            title: '选项', dataIndex: 'options',
-            formProps: (record) => {
-                return {
-                    label: ' ',
-                    colon: false,
-                    options: record.options || [],
-                    children: (
-                        <OptionsTag
-                            options={options}
-                            onChange={(value) => handleRecordChange(record, 'options', value)}
+    const columns = useMemo(() => {
+        return [
+            { title: '注释', dataIndex: 'comment', width: 150 },
+            {
+                title: '中文名', dataIndex: 'chinese', width: 190,
+                render: (value, record, index) => {
+                    return (
+                        <CellFormItem
+                            form={form}
+                            type="input"
+                            name={['dataSource', index, 'chinese']}
+                            required
                         />
-                    ),
-                };
+                    );
+                },
             },
-        },
-        {
-            title: '操作', dataIndex: 'operator', width: 100,
-            render: (value, record) => {
-                const { id, chinese } = record;
-                const items = [
-                    {
-                        label: '删除',
-                        color: 'red',
-                        confirm: {
-                            title: `您确定删除"${chinese}"?`,
-                            onConfirm: () => handleDelete(id),
+            {
+                title: '列名', dataIndex: 'field', width: 190,
+                render: (value, record, index) => {
+                    return (
+                        <CellFormItem
+                            form={form}
+                            type="input"
+                            name={['dataSource', index, 'field']}
+                            required
+                        />
+                    );
+                },
+            },
+            {
+                title: '表单类型', dataIndex: 'formType', width: 190,
+                render: (value, record, index) => {
+                    return (
+                        <CellFormItem
+                            form={form}
+                            name={['dataSource', index, 'formType']}
+                            type="select"
+                            options={FORM_ELEMENT_OPTIONS}
+                            required
+                        />
+                    );
+                },
+            },
+            {
+                title: '选项', dataIndex: 'options',
+                render: (value, record, index) => {
+                    return (
+                        <CellFormItem
+                            form={form}
+                            type="options-tag"
+                            name={['dataSource', index, 'options']}
+                            options={options}
+                        >
+                            <OptionsTag options={options} />
+                        </CellFormItem>
+                    );
+                },
+            },
+            {
+                title: '操作', dataIndex: 'operator', width: 100,
+                render: (value, record) => {
+                    const { id, chinese } = record;
+                    const items = [
+                        {
+                            label: '删除',
+                            color: 'red',
+                            confirm: {
+                                title: `您确定删除"${chinese}"?`,
+                                onConfirm: () => handleDelete(id),
+                            },
                         },
-                    },
-                ];
+                    ];
 
-                return <Operator items={items} />;
+                    return <Operator items={items} />;
+                },
             },
-        },
-    ];
+        ];
+    }, [form, handleDelete, options]);
 
     const handleSortEnd = useCallback(({ newIndex, oldIndex }) => {
         dataSource.splice(newIndex - 1, 0, ...dataSource.splice(oldIndex - 1, 1));
@@ -234,26 +233,28 @@ export default function FieldTable(props) {
     }, [dataSource, onChange]);
 
     return (
-        <EditTable
-            fitHeight={fitHeight}
-            otherHeight={otherHeight}
-            onSortEnd={handleSortEnd}
-            serialNumber
-            columns={columns}
-            dataSource={dataSource}
-            rowKey="id"
-            size="small"
-            footer={footer || (() => {
-                return (
-                    <Button
-                        type={'dashed'}
-                        block
-                        onClick={() => handleAdd(true)}
-                    >
-                        添加一行
-                    </Button>
-                );
-            })}
-        />
+        <Form layout={'inline'} form={form}>
+            <EditTable
+                fitHeight={fitHeight}
+                otherHeight={otherHeight}
+                onSortEnd={handleSortEnd}
+                serialNumber
+                columns={columns}
+                dataSource={dataSource}
+                rowKey="id"
+                size="small"
+                footer={footer || (() => {
+                    return (
+                        <Button
+                            type={'dashed'}
+                            block
+                            onClick={() => handleAdd(true)}
+                        >
+                            添加一行
+                        </Button>
+                    );
+                })}
+            />
+        </Form>
     );
 }
