@@ -8,3 +8,4 @@ export { default as Permission } from './permission';
 export { default as Generator } from './generator';
 export { default as Proxy } from './proxy';
 export { default as CodeEditor } from './code-editor';
+export { default as OptionsTag } from './options-tag';

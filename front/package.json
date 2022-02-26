@@ -84,6 +84,7 @@
         "redux-thunk": "^2.3.0",
         "redux-undo": "^1.0.1",
         "speed-measure-webpack-plugin": "^1.5.0",
+        "string-to-color": "^2.2.2",
         "uuid": "^8.3.2",
         "web-vitals": "^1.0.1",
         "webpack-bundle-analyzer": "^4.4.1",

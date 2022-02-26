@@ -1,5 +1,5 @@
-import {match} from 'path-to-regexp';
-import {BASE_NAME, HASH_ROUTER, NO_AUTH_ROUTES} from '../config';
+import { match } from 'path-to-regexp';
+import { BASE_NAME, HASH_ROUTER, NO_AUTH_ROUTES } from '../config';
 import pageConfigs from 'src/pages/page-configs';
 
 /**

@@ -29,6 +29,7 @@ async function getLocalTemplates() {
         return {
             fileName,
             filePath,
+            extname,
             ...template,
         };
     });

@@ -12,7 +12,6 @@ const data = processArgs();
 const port = Number(data.port) || 3001;
 
 (async () => {
-
     const templates = await getLocalTemplates();
     console.log(templates.map(item => item.fileName));
 })();
