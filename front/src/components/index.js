@@ -9,3 +9,4 @@ export { default as Generator } from './generator';
 export { default as Proxy } from './proxy';
 export { default as CodeEditor } from './code-editor';
 export { default as OptionsTag } from './options-tag';
+export { default as FieldTable } from './field-table';

@@ -1,4 +1,12 @@
-.tag {
-    cursor: pointer;
-    user-select: none;
+@import 'src/theme';
+
+.root {
+    :global {
+        .@{ant-prefix}-tag {
+            padding: 0 4px;
+            margin-right: 4px;
+            cursor: pointer;
+            user-select: none;
+        }
+    }
 }

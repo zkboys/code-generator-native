@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Tag } from 'antd';
 import stringToColor from 'string-to-color';
@@ -7,20 +7,33 @@ import s from './style.less';
 function OptionsTag(props) {
     const { options = [], value = [], onChange } = props;
 
-    const handleClick = useCallback(label => {
+    const handleClick = useCallback((e, label) => {
+        const { ctrlKey, metaKey } = e;
         const isSelected = value.includes(label);
-        const nextValue = [...value];
-        if (isSelected) {
-            nextValue.splice(nextValue.indexOf(label), 1);
+        let nextValue = [...value];
+
+        // 全/反选
+        if (ctrlKey || metaKey) {
+            nextValue = isSelected ? [] : [...options];
         } else {
-            nextValue.push(label);
+            isSelected ? nextValue.splice(nextValue.indexOf(label), 1) : nextValue.push(label);
         }
 
         onChange && onChange(nextValue);
-    }, [value, onChange]);
+    }, [value, onChange, options]);
+
+    // options改变，修正value内容
+    useEffect(() => {
+        const nextValue = value.filter(item => options.includes(item));
+
+        // 防止死循环
+        if (nextValue.sort().join() === value.sort().join()) return;
+
+        onChange && onChange(nextValue);
+    }, [onChange, options, value]);
 
     return (
-        <div>
+        <div className={s.root}>
             {options.map(label => {
                 const isSelected = value.includes(label);
 
@@ -30,10 +43,9 @@ function OptionsTag(props) {
 
                 return (
                     <Tag
-                        className={s.tag}
                         key={label}
                         color={isSelected ? color : '#bbbbbb'}
-                        onClick={() => handleClick(label)}
+                        onClick={(e) => handleClick(e, label)}
                     >
                         {label}
                     </Tag>
