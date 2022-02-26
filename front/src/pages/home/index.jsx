@@ -1,24 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Form, Space, Row, Col, Button } from 'antd';
+import { Form, Space, Button } from 'antd';
 import { MinusCircleOutlined, PlusOutlined, FileAddOutlined, CodeOutlined, FormOutlined } from '@ant-design/icons';
-import { PageContent, FormItem } from '@ra-lib/admin';
+import { PageContent, FormItem, storage } from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
 import { OptionsTag, FieldTable } from 'src/components';
 import s from './style.less';
 import { v4 as uuid } from 'uuid';
 
+const FORM_STORAGE_KEY = 'single_form_values';
+const DATA_SOURCE_STORAGE_KEY = 'single_data_source';
+
 export default config({
     path: '/home',
     title: '首页',
 })(function Home(props) {
-    // 如果其他页面作为首页，直接重定向，config中不要设置title，否则tab页中会多个首页
-    // return <Redirect to="/users"/>;
-    const [value, setValue] = useState([]);
-    const [dataSource, setDataSource] = useState([]);
-    const [fieldOptions, setFieldOptions] = useState(['条件', '表格']);
-    const [tableOptions, setTableOptions] = useState([
-        { value: 'user_center_adfafd_asdfadf', label: 'user_center_adfafd_asdfadf' },
-    ]);
+    const [dataSource, setDataSource] = useState(storage.local.getItem(DATA_SOURCE_STORAGE_KEY) || []);
+    const [fieldOptions, setFieldOptions] = useState([]);
+    const [tableOptions, setTableOptions] = useState([]);
     const [templateOptions, setTemplateOptions] = useState([]);
     const [form] = Form.useForm();
 
@@ -64,15 +62,28 @@ export default config({
         //TODO
     }, []);
 
-    useEffect(() => {
-        setTimeout(() => {
-            setFieldOptions(['表格选中', '表格序号', '分页', '导入', '导出', '添加', '批量删除', '弹框编辑']);
-        }, 5000);
-    }, []);
 
-    const layout = {
-        labelCol: { flex: '120px' },
-    };
+    // 表单同步localStorage
+    const handleFormChange = useCallback((_, values) => storage.local.setItem(FORM_STORAGE_KEY, values), []);
+    useEffect(() => form.setFieldsValue(storage.local.getItem(FORM_STORAGE_KEY) || {}), [form]);
+
+    // dataSource同步localStorage
+    const saveDataSource = useCallback(() => {
+        storage.local.setItem(DATA_SOURCE_STORAGE_KEY, dataSource.map(item => ({ ...item, _form: null })));
+    }, [dataSource]);
+    useEffect(() => saveDataSource(), [dataSource, saveDataSource]);
+
+    // 测试数据
+    useEffect(() => {
+        setTemplateOptions([
+            { value: 'listPage', label: '列表页' },
+            { value: 'editModal', label: '编辑弹框' },
+        ]);
+        setTableOptions([
+            { value: 'user_center_adfafd_asdfadf', label: 'user_center_adfafd_asdfadf' },
+        ]);
+        setFieldOptions(['条件', '表格']);
+    }, []);
 
     const formItemProps = {
         // size: 'small',
@@ -85,11 +96,13 @@ export default config({
                 form={form}
                 layout="inline"
                 initialValues={{ files: [{}] }}
+                onValuesChange={handleFormChange}
             >
                 <FormItem
                     {...formItemProps}
                     labelCol={{ flex: '120px' }}
                     style={{ width: 300 }}
+                    align="right"
                     label="数据库地址"
                     name="dbUrl"
                     placeholder="mysql://username:password@host:port/database"
@@ -99,7 +112,7 @@ export default config({
                 />
                 <FormItem
                     {...formItemProps}
-                    style={{ width: 200 }}
+                    style={{ width: 300 }}
                     type="select"
                     showSearch
                     label="数据库表"
@@ -121,7 +134,7 @@ export default config({
                     <Form.List name="files">
                         {(fields, { add, remove }) => (
                             <>
-                                {fields.map(({ key, name, ...restField }, index) => (
+                                {fields.map(({ key, name, isListField, ...restField }, index) => (
                                     <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
                                         <div style={{ width: 421 }}>
                                             <FormItem
@@ -140,7 +153,7 @@ export default config({
                                         <FormItem
                                             {...formItemProps}
                                             {...restField}
-                                            style={{ width: 200 }}
+                                            style={{ width: 300 }}
                                             label="目标文件"
                                             name={[name, 'targetPath']}
                                             required
@@ -200,6 +213,7 @@ export default config({
                 otherHeight={72}
                 dataSource={dataSource}
                 onChange={setDataSource}
+                onRecordChange={() => saveDataSource()}
                 options={fieldOptions}
                 footer={() => null}
             />

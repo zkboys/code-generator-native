@@ -8,6 +8,8 @@ function OptionsTag(props) {
     const { options = [], value = [], onChange } = props;
 
     const handleClick = useCallback((e, label) => {
+        e.stopPropagation();
+        e.preventDefault();
         const { ctrlKey, metaKey } = e;
         let nextValue = [...value];
 
@@ -23,6 +25,7 @@ function OptionsTag(props) {
 
     // options改变，修正value内容
     useEffect(() => {
+        if (!options?.length) return;
         const nextValue = value.filter(item => options.includes(item));
 
         // 防止死循环

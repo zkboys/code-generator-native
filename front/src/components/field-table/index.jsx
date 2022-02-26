@@ -35,6 +35,7 @@ export default function FieldTable(props) {
     const {
         dataSource,
         onChange,
+        onRecordChange,
         options = [],
         fitHeight = true,
         otherHeight = 0,
@@ -137,9 +138,8 @@ export default function FieldTable(props) {
 
     const handleRecordChange = useCallback((record, key, value) => {
         record[key] = value;
-
-        onChange && onChange([...dataSource]);
-    }, [dataSource, onChange]);
+        onRecordChange && onRecordChange(record);
+    }, [onRecordChange]);
 
     const columns = [
         { title: '注释', dataIndex: 'comment', width: 150 },
@@ -162,7 +162,6 @@ export default function FieldTable(props) {
         {
             title: '列名', dataIndex: 'field', width: 190,
             formProps: (record, index) => {
-                if (record.isTable) return null;
                 const length = dataSource?.length || 0;
 
                 const tabIndex = index + length + 1; // index * 2 + 2;
@@ -181,8 +180,6 @@ export default function FieldTable(props) {
         {
             title: '表单类型', dataIndex: 'formType', width: 190,
             formProps: (record) => {
-                if (record.isTable) return null;
-
                 return {
                     label: ' ',
                     colon: false,
@@ -191,20 +188,24 @@ export default function FieldTable(props) {
                     showSearch: true,
                     required: true,
                     options: FORM_ELEMENT_OPTIONS,
-                    onChange: (formType) => handleRecordChange(record, 'formType', formType),
+                    onChange: (value) => handleRecordChange(record, 'formType', value),
                 };
             },
         },
         {
-            title: '选项', dataIndex: 'operator',
-            render: (value, record) => {
-                return (
-                    <OptionsTag
-                        options={options}
-                        value={record.options || []}
-                        onChange={value => handleRecordChange(record, 'options', value)}
-                    />
-                );
+            title: '选项', dataIndex: 'options',
+            formProps: (record) => {
+                return {
+                    label: ' ',
+                    colon: false,
+                    options: record.options || [],
+                    children: (
+                        <OptionsTag
+                            options={options}
+                            onChange={(value) => handleRecordChange(record, 'options', value)}
+                        />
+                    ),
+                };
             },
         },
         {
