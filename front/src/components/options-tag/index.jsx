@@ -9,14 +9,13 @@ function OptionsTag(props) {
 
     const handleClick = useCallback((e, label) => {
         const { ctrlKey, metaKey } = e;
-        const isSelected = value.includes(label);
         let nextValue = [...value];
 
         // 全/反选
         if (ctrlKey || metaKey) {
-            nextValue = isSelected ? [] : [...options];
+            nextValue = value?.length ? [] : [...options];
         } else {
-            isSelected ? nextValue.splice(nextValue.indexOf(label), 1) : nextValue.push(label);
+            value.includes(label) ? nextValue.splice(nextValue.indexOf(label), 1) : nextValue.push(label);
         }
 
         onChange && onChange(nextValue);

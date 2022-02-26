@@ -37,6 +37,8 @@ export default function FieldTable(props) {
         onChange,
         options = [],
         fitHeight = true,
+        otherHeight = 0,
+        footer,
     } = props;
 
     const handleAdd = useCallback((append) => {
@@ -233,14 +235,14 @@ export default function FieldTable(props) {
     return (
         <EditTable
             fitHeight={fitHeight}
-            otherHeight={80}
+            otherHeight={otherHeight}
             onSortEnd={handleSortEnd}
             serialNumber
             columns={columns}
             dataSource={dataSource}
             rowKey="id"
             size="small"
-            footer={() => {
+            footer={footer || (() => {
                 return (
                     <Button
                         type={'dashed'}
@@ -250,7 +252,7 @@ export default function FieldTable(props) {
                         添加一行
                     </Button>
                 );
-            }}
+            })}
         />
     );
 }
