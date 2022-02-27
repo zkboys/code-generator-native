@@ -9,6 +9,7 @@ export default function CellFormItem(props) {
         name,
         type,
         form,
+        placeholder,
         renderCell = value => value,
         style,
         required,
@@ -42,19 +43,20 @@ export default function CellFormItem(props) {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
-            {true ? (
+            {_showForm ? (
                 <FormItem
                     type={type}
                     name={name}
                     style={{ width: '100%', ...style }}
                     required={required}
+                    placeholder={placeholder}
                     {...others}
                 />
             ) : (
                 <div
-                    className={s[type]}
+                    className={[s[type], (!value || !value.length) && s.placeholder]}
                 >
-                    {renderCell(value)}
+                    {renderCell(value) || placeholder}
                     {type === 'select' && (
                         <span
                             className={`${theme.antPrefix}-select-arrow`}

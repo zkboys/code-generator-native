@@ -84,7 +84,7 @@ export default config({
         ]);
         setFieldOptions(['条件', '表格']);
 
-        setDataSource(Array.from({ length: 5 }).map((item, index) => {
+        setDataSource(Array.from({ length: 50 }).map((item, index) => {
 
             return {
                 id: `index_${index}`,

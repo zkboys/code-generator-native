@@ -71,72 +71,85 @@ export default function FieldTable(props) {
         onChange && onChange([...dataSource]);
     }, [dataSource, onChange, options]);
 
-    const handleKeyDown = useCallback((e, tabIndex, index, columnIndex) => {
+    const handleKeyDown = useCallback((e, tabIndex, columnNumber, totalColumn) => {
         const { keyCode, ctrlKey, shiftKey, altKey, metaKey } = e;
 
         if (ctrlKey || shiftKey || altKey || metaKey) return;
 
-        const length = dataSource.length;
         const isUp = keyCode === 38;
         const isRight = keyCode === 39;
         const isDown = keyCode === 40 || keyCode === 13;
         const isLeft = keyCode === 37;
 
+        // 移动光标
         const cursorPosition = getCursorPosition(e.target);
-
         if (isLeft && !cursorPosition.start) return;
         if (isRight && !cursorPosition.end) return;
 
+        const totalRow = dataSource.length;
+        const columnStartTabIndex = columnNumber * totalRow + 1;
+        const columnEndTabIndex = (columnNumber + 1) * totalRow;
+
         let nextTabIndex;
+        let isAdd;
+
+
+        if (isUp) {
+            // 到顶了
+            if (tabIndex === columnStartTabIndex) return;
+
+            nextTabIndex = tabIndex - 1;
+        }
+
+        if (isRight) {
+            // 右侧
+            if (columnNumber === totalColumn - 1) {
+                // 右下角
+                if (tabIndex === columnEndTabIndex) {
+                    isAdd = true;
+                    nextTabIndex = totalRow + 1;
+                } else {
+                    // 选中下一行第一个
+                    nextTabIndex = tabIndex - totalRow * columnNumber + 1;
+                }
+            } else {
+                // 选择右侧一个
+                nextTabIndex = tabIndex + totalRow;
+            }
+        }
 
         if (isDown) {
-            if (tabIndex === length || tabIndex === length * 2) {
-                nextTabIndex = undefined;
+            if (tabIndex === columnEndTabIndex) {
+                isAdd = true;
+                nextTabIndex = tabIndex + columnNumber + 1;
             } else {
                 nextTabIndex = tabIndex + 1;
             }
         }
 
-        if (isUp) nextTabIndex = tabIndex - 1;
-
         if (isLeft) {
-            if (tabIndex <= length) {
-                nextTabIndex = tabIndex - 1 <= 0 ? undefined : tabIndex - 1 + length;
-            } else {
-                nextTabIndex = tabIndex - length;
-            }
+            // 左上角
+            if (tabIndex === columnStartTabIndex && columnNumber === 0) return;
+
+            // 左侧第一列继续左移动，选中上一行最后一个
+            if (columnNumber === 0) nextTabIndex = (tabIndex - 1) + totalRow * (totalColumn - 1);
+
+            // 选择前一个
+            if (columnNumber !== 0) nextTabIndex = tabIndex - totalRow;
         }
 
-        if (isRight) {
-            if (tabIndex <= length) {
-                nextTabIndex = tabIndex + length;
-            } else {
-                nextTabIndex = tabIndex - length === length ? undefined : tabIndex - length + 1;
-            }
-        }
-
-        const nextInput = document.querySelector(`input[tabindex='${nextTabIndex}']`);
-
-        const isLast = dataSource.length - 1 === index;
-
-        if (nextInput) {
-            // 确保方向键也可以选中
-            setTimeout(() => {
-                nextInput.focus();
-                nextInput.select();
-            });
-        } else if ((isDown || isRight) && isLast) {
-            // 新增一行
+        if (isAdd) {
             handleAdd(true);
-
-            // 等待新增行渲染完成，新增行 input 获取焦点
-            setTimeout(() => {
-                const nextTabIndex = tabIndex + Math.ceil(tabIndex / length);
-                const nextInput = document.querySelector(`input[tabindex='${nextTabIndex}']`);
-                nextInput.focus();
-                nextInput.select();
-            });
         }
+
+        // 等待新增行渲染
+        setTimeout(() => {
+            const nextInput = document.querySelector(`input[tabindex='${nextTabIndex}']`);
+            if (!nextInput) return;
+            nextInput.focus();
+            nextInput.select();
+        });
+
     }, [dataSource, handleAdd]);
 
     const handleDelete = useCallback((id) => {
@@ -163,92 +176,64 @@ export default function FieldTable(props) {
     }, []);
 
     const columns = useMemo(() => {
+        let columnIndex = 0;
+        const rowCount = dataSource.length;
+
+        const inputColumn = (colOptions) => {
+            const { title, dataIndex } = colOptions;
+            const _columnIndex = columnIndex++;
+
+            return {
+                ...colOptions,
+                render: (value, record, index) => {
+                    const tabIndex = rowCount * _columnIndex + index + 1;
+                    const showForm = showFormIndex.includes(index);
+
+                    return (
+                        <CellFormItem
+                            form={form}
+                            showForm={showForm}
+                            value={value}
+                            type="input"
+                            name={['dataSource', index, dataIndex]}
+                            required
+                            tabIndex={tabIndex}
+                            onKeyDown={e => handleKeyDown(e, tabIndex, _columnIndex, columnIndex)}
+                            onFocus={e => handleFocus(e, index)}
+                            onBlur={e => handleBlur(e, index)}
+                            placeholder={`请输入${title}`}
+                        />
+                    );
+                },
+            };
+        };
+
+        const selectColumn = (colOptions) => {
+            const { options, title, dataIndex } = colOptions;
+
+            return {
+                ...colOptions,
+                render: (value, record, index) => {
+                    return (
+                        <CellFormItem
+                            form={form}
+                            name={['dataSource', index, dataIndex]}
+                            renderCell={value => options.find(item => item.value === value)?.label}
+                            type="select"
+                            options={options}
+                            required
+                            placeholder={`请选择${title}`}
+                        />
+                    );
+                },
+            };
+        };
         return [
             { title: '注释', dataIndex: 'comment', width: 150 },
-            {
-                title: '中文名', dataIndex: 'chinese', width: 190,
-                render: (value, record, index) => {
-                    const columnIndex = 1;
-                    const rowCount = dataSource.length;
-                    const tabIndex = rowCount * columnIndex + index;
-                    const showForm = showFormIndex.includes(index);
-                    return (
-                        <CellFormItem
-                            form={form}
-                            showForm={showForm}
-                            value={value}
-                            type="input"
-                            name={['dataSource', index, 'chinese']}
-                            required
-                            tabIndex={tabIndex}
-                            onKeyDown={e => handleKeyDown(e, tabIndex, index, columnIndex)}
-                            onFocus={e => handleFocus(e, index)}
-                            onBlur={e => handleBlur(e, index)}
-                        />
-                    );
-                },
-            },
-            {
-                title: '列名', dataIndex: 'field', width: 190,
-                render: (value, record, index) => {
-                    const columnIndex = 2;
-                    const rowCount = dataSource.length;
-                    const tabIndex = rowCount * columnIndex + index;
-                    const showForm = showFormIndex.includes(index);
-                    return (
-                        <CellFormItem
-                            form={form}
-                            showForm={showForm}
-                            value={value}
-                            type="input"
-                            name={['dataSource', index, 'field']}
-                            required
-                            tabIndex={tabIndex}
-                            onKeyDown={e => handleKeyDown(e, tabIndex, index, columnIndex)}
-                            onFocus={e => handleFocus(e, index)}
-                            onBlur={e => handleBlur(e, index)}
-                        />
-                    );
-                },
-            },
-            {
-                title: '表单类型', dataIndex: 'formType', width: 190,
-                render: (value, record, index) => {
-                    return (
-                        <CellFormItem
-                            form={form}
-                            name={['dataSource', index, 'formType']}
-                            renderCell={value => FORM_ELEMENT_OPTIONS.find(item => item.value === value)?.label}
-                            type="select"
-                            options={FORM_ELEMENT_OPTIONS}
-                            required
-                        />
-                    );
-                },
-            },
-            {
-                title: '列名2', dataIndex: 'field2', width: 190,
-                render: (value, record, index) => {
-                    const columnIndex = 4;
-                    const rowCount = dataSource.length;
-                    const tabIndex = rowCount * columnIndex + index;
-                    const showForm = showFormIndex.includes(index);
-                    return (
-                        <CellFormItem
-                            form={form}
-                            showForm={showForm}
-                            value={value}
-                            type="input"
-                            name={['dataSource', index, 'field2']}
-                            required
-                            tabIndex={tabIndex}
-                            onKeyDown={e => handleKeyDown(e, tabIndex, index, columnIndex)}
-                            onFocus={e => handleFocus(e, index)}
-                            onBlur={e => handleBlur(e, index)}
-                        />
-                    );
-                },
-            },
+            inputColumn({ title: '中文名', dataIndex: 'chinese', width: 190 }),
+            inputColumn({ title: '列名', dataIndex: 'field', width: 190 }),
+            selectColumn({ title: '表单类型', dataIndex: 'formType', width: 190, options: FORM_ELEMENT_OPTIONS }),
+            inputColumn({ title: '列名2', dataIndex: 'field2', width: 190 }),
             {
                 title: '选项', dataIndex: 'options',
                 render: (value, record, index) => {
