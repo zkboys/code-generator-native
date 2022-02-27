@@ -21,7 +21,7 @@ export default function EditTable(props) {
     } = props;
 
     const [form] = Form.useForm();
-    const [showFormIndex, setShowFormIndex] = useState([0]);
+    const [showFormIndex, setShowFormIndex] = useState([]);
     // 失去焦点延迟句柄
     const blurStRef = useRef(0);
 
@@ -157,10 +157,12 @@ export default function EditTable(props) {
                             onFocus={e => handleFocus(e, index)}
                             onBlur={e => handleBlur(e, index)}
                             placeholder={`请输入${title}`}
+                            rules={[{ required, message: `请输入${title}!` }]}
                         />
                     );
                 },
-            };
+            }
+                ;
         };
 
         const selectColumn = (colOptions) => {
@@ -178,6 +180,7 @@ export default function EditTable(props) {
                             options={options}
                             required={required}
                             placeholder={`请选择${title}`}
+                            rules={[{ required, message: `请选择${title}!` }]}
                         />
                     );
                 },
@@ -186,7 +189,7 @@ export default function EditTable(props) {
 
 
         const tagsColumn = (colOptions) => {
-            const { options, required } = colOptions;
+            const { title, options, required } = colOptions;
 
             return {
                 ...colOptions,
@@ -199,6 +202,7 @@ export default function EditTable(props) {
                             options={options}
                             renderCell={value => <OptionsTag value={value} options={options} />}
                             required={required}
+                            rules={[{ required, message: `请请选择${title}!` }]}
                         >
                             <OptionsTag options={options} />
                         </CellFormItem>
