@@ -1,48 +1,23 @@
 import React, { useCallback, useMemo, useEffect, useState, useRef } from 'react';
-import { Operator, Table, tableRowDraggable } from '@ra-lib/admin';
+import { Table, tableRowDraggable } from '@ra-lib/admin';
 import { Button, Form } from 'antd';
-import { v4 as uuid } from 'uuid';
 import { OptionsTag } from 'src/components';
 import CellFormItem from './CellFormItem';
 import { getCursorPosition } from 'src/commons';
 
 const RowDraggableTable = tableRowDraggable(Table);
 
-const FORM_ELEMENT_OPTIONS = [
-    { value: 'input', label: '输入框' },
-    { value: 'hidden', label: '隐藏框' },
-    { value: 'number', label: '数字框' },
-    { value: 'textarea', label: '文本框' },
-    { value: 'password', label: '密码框' },
-    { value: 'mobile', label: '手机输入框' },
-    { value: 'email', label: '邮箱输入框' },
-    { value: 'select', label: '下拉框' },
-    { value: 'select-tree', label: '下拉树' },
-    { value: 'checkbox', label: '复选框' },
-    { value: 'checkbox-group', label: '复选框组' },
-    { value: 'radio', label: '单选框' },
-    { value: 'radio-group', label: '单选框组' },
-    { value: 'radio-button', label: '单选按钮组' },
-    { value: 'switch', label: '切换按钮' },
-    { value: 'date', label: '日期选择框' },
-    { value: 'time', label: '时间选择框' },
-    { value: 'moth', label: '月份选择框' },
-    { value: 'date-time', label: '日期+时间选择框' },
-    { value: 'date-range', label: '日期区间选择框' },
-    { value: 'cascader', label: '级联下拉框' },
-    { value: 'transfer', label: '穿梭框' },
-];
-
 const FIELD_NAME = 'dataSource';
 
-export default function FieldTable(props) {
+export default function EditTable(props) {
     const {
         dataSource,
         onChange,
-        options = [],
         fitHeight = true,
         otherHeight = 0,
-        footer,
+        columns,
+        onAdd,
+        ...others
     } = props;
 
     const [form] = Form.useForm();
@@ -52,37 +27,6 @@ export default function FieldTable(props) {
 
     // dataSource改变，同步到form中
     useEffect(() => form.setFieldsValue({ [FIELD_NAME]: dataSource }), [form, dataSource]);
-
-    // 添加一行，首部或尾部添加
-    const handleAdd = useCallback((append) => {
-        const length = dataSource.length;
-        const field = `field${length + 1}`;
-        const id = uuid();
-
-        const newRecord = {
-            id,
-            field,
-            comment: '新增列',
-            chinese: '新增列',
-            name: field,
-
-            type: 'string',
-            formType: 'input',
-            length: 0,
-            isNullable: true,
-            options: [...options],
-        };
-
-        append ? dataSource.push(newRecord) : dataSource.unshift(newRecord);
-        onChange && onChange([...dataSource]);
-    }, [dataSource, onChange, options]);
-
-
-    // 删除行
-    const handleDelete = useCallback((id) => {
-        const nextDataSource = dataSource.filter(item => item.id !== id);
-        onChange && onChange(nextDataSource);
-    }, [dataSource, onChange]);
 
     // 拖拽排序结束，交换位置
     const handleSortEnd = useCallback(({ oldIndex, newIndex }) => {
@@ -157,7 +101,7 @@ export default function FieldTable(props) {
         }
 
         if (isAdd) {
-            handleAdd(true);
+            onAdd(true);
         }
 
         // 等待新增行渲染
@@ -167,7 +111,7 @@ export default function FieldTable(props) {
             nextInput.focus();
             nextInput.select();
         });
-    }, [handleAdd]);
+    }, [onAdd]);
 
     // 输入框获取焦点，选中内容
     const handleFocus = useCallback((e, index) => {
@@ -184,14 +128,14 @@ export default function FieldTable(props) {
     }, []);
 
     // 表格渲染表单组件
-    const columns = useMemo(() => {
+    const _columns = useMemo(() => {
         // 标记当前未第几列
         let columnIndex = 0;
         // 一共多少行
         const totalRow = dataSource.length;
 
         const inputColumn = (colOptions) => {
-            const { title, dataIndex } = colOptions;
+            const { title, dataIndex, required } = colOptions;
             const _columnIndex = columnIndex++;
 
             return {
@@ -207,7 +151,7 @@ export default function FieldTable(props) {
                             value={value}
                             type="input"
                             name={[FIELD_NAME, index, dataIndex]}
-                            required
+                            required={required}
                             tabIndex={tabIndex}
                             onKeyDown={e => handleKeyDown(e, tabIndex, _columnIndex, columnIndex, totalRow)}
                             onFocus={e => handleFocus(e, index)}
@@ -220,7 +164,7 @@ export default function FieldTable(props) {
         };
 
         const selectColumn = (colOptions) => {
-            const { options, title, dataIndex } = colOptions;
+            const { options, title, dataIndex, required } = colOptions;
 
             return {
                 ...colOptions,
@@ -232,21 +176,20 @@ export default function FieldTable(props) {
                             renderCell={value => options.find(item => item.value === value)?.label}
                             type="select"
                             options={options}
-                            required
+                            required={required}
                             placeholder={`请选择${title}`}
                         />
                     );
                 },
             };
         };
-        return [
-            { title: '注释', dataIndex: 'comment', width: 150 },
-            inputColumn({ title: '中文名', dataIndex: 'chinese', width: 190 }),
-            inputColumn({ title: '列名', dataIndex: 'field', width: 190 }),
-            selectColumn({ title: '表单类型', dataIndex: 'formType', width: 190, options: FORM_ELEMENT_OPTIONS }),
-            inputColumn({ title: '列名2', dataIndex: 'field2', width: 190 }),
-            {
-                title: '选项', dataIndex: 'options',
+
+
+        const tagsColumn = (colOptions) => {
+            const { options, required } = colOptions;
+
+            return {
+                ...colOptions,
                 render: (value, record, index) => {
                     return (
                         <CellFormItem
@@ -255,41 +198,24 @@ export default function FieldTable(props) {
                             name={[FIELD_NAME, index, 'options']}
                             options={options}
                             renderCell={value => <OptionsTag value={value} options={options} />}
+                            required={required}
                         >
                             <OptionsTag options={options} />
                         </CellFormItem>
                     );
                 },
-            },
-            {
-                title: '操作', dataIndex: 'operator', width: 100,
-                render: (value, record) => {
-                    const { id, chinese } = record;
-                    const items = [
-                        {
-                            label: '删除',
-                            color: 'red',
-                            confirm: {
-                                title: `您确定删除"${chinese}"?`,
-                                onConfirm: () => handleDelete(id),
-                            },
-                        },
-                    ];
+            };
+        };
 
-                    return <Operator items={items} />;
-                },
-            },
-        ];
-    }, [
-        dataSource?.length,
-        form,
-        handleBlur,
-        handleDelete,
-        handleFocus,
-        handleKeyDown,
-        options,
-        showFormIndex,
-    ]);
+        return columns.map(item => {
+            const { type, ...others } = item;
+            if (type === 'input') return inputColumn(others);
+            if (type === 'select') return selectColumn(others);
+            if (type === 'tags') return tagsColumn(others);
+
+            return others;
+        });
+    }, [columns, dataSource.length, form, handleBlur, handleFocus, handleKeyDown, showFormIndex]);
 
     return (
         <Form
@@ -311,21 +237,22 @@ export default function FieldTable(props) {
                 otherHeight={otherHeight}
                 onSortEnd={handleSortEnd}
                 serialNumber
-                columns={columns}
+                columns={_columns}
                 dataSource={dataSource}
                 rowKey="id"
                 size="small"
-                footer={footer || (() => {
+                footer={() => {
                     return (
                         <Button
                             type={'dashed'}
                             block
-                            onClick={() => handleAdd(true)}
+                            onClick={() => onAdd(true)}
                         >
                             添加一行
                         </Button>
                     );
-                })}
+                }}
+                {...others}
             />
         </Form>
     );

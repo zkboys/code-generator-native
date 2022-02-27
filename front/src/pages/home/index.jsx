@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Form, Space, Button } from 'antd';
 import { MinusCircleOutlined, PlusOutlined, FileAddOutlined, CodeOutlined, FormOutlined } from '@ant-design/icons';
-import { PageContent, FormItem, storage } from '@ra-lib/admin';
+import { PageContent, FormItem, storage, Operator } from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
-import { OptionsTag, FieldTable } from 'src/components';
+import { OptionsTag, EditTable } from 'src/components';
 import s from './style.less';
 import { v4 as uuid } from 'uuid';
+import { FORM_ELEMENT_OPTIONS, FIELD_EDIT_TYPES } from './constant';
 
 const FORM_STORAGE_KEY = 'single_form_values';
 const DATA_SOURCE_STORAGE_KEY = 'single_data_source';
@@ -20,6 +21,45 @@ export default config({
     const [templateOptions, setTemplateOptions] = useState([]);
     const [form] = Form.useForm();
 
+    // DataSource 改变
+    const handleDataSourceChange = useCallback(values => {
+        setDataSource(values);
+        storage.local.setItem(DATA_SOURCE_STORAGE_KEY, values);
+    }, []);
+
+    // 删除行
+    const handleDelete = useCallback((id) => {
+        const nextDataSource = dataSource.filter(item => item.id !== id);
+        handleDataSourceChange(nextDataSource);
+    }, [dataSource, handleDataSourceChange]);
+
+    const columns = [
+        { title: '注释', dataIndex: 'comment', width: 150 },
+        { title: '中文名', dataIndex: 'chinese', width: 190, type: FIELD_EDIT_TYPES.input, required: true },
+        { title: '列名', dataIndex: 'field', width: 190, type: FIELD_EDIT_TYPES.input, required: true },
+        { title: '表单类型', dataIndex: 'formType', width: 190, type: FIELD_EDIT_TYPES.select, options: FORM_ELEMENT_OPTIONS },
+        { title: '选项', dataIndex: 'options', type: FIELD_EDIT_TYPES.tags, options: fieldOptions },
+        {
+            title: '操作', dataIndex: 'operator', width: 100,
+            render: (value, record) => {
+                const { id, chinese } = record;
+                const items = [
+                    {
+                        label: '删除',
+                        color: 'red',
+                        confirm: {
+                            title: `您确定删除"${chinese}"?`,
+                            onConfirm: () => handleDelete(id),
+                        },
+                    },
+                ];
+
+                return <Operator items={items} />;
+            },
+        },
+
+    ];
+
     const handleDbUrlChange = useCallback(() => {
         // TODO
     }, []);
@@ -31,28 +71,21 @@ export default config({
     const handleModuleNameChange = useCallback(() => {
         // TODO
     }, []);
-    const addRow = useCallback((append = false) => {
+    const handleAdd = useCallback((append = false) => {
         const length = dataSource.length;
-        const field = `field${length + 1}`;
-        const id = uuid();
 
         const newRecord = {
-            id,
-            field,
+            id: uuid(),
             comment: '新增列',
             chinese: '新增列',
-            name: field,
-
-            type: 'string',
+            field: `field${length + 1}`,
             formType: 'input',
-            length: 0,
-            isNullable: true,
             options: [...fieldOptions],
         };
 
         append ? dataSource.push(newRecord) : dataSource.unshift(newRecord);
-        setDataSource([...dataSource]);
-    }, [dataSource, fieldOptions]);
+        handleDataSourceChange([...dataSource]);
+    }, [dataSource, fieldOptions, handleDataSourceChange]);
 
     const handlePreviewCode = useCallback(() => {
         //TODO
@@ -62,19 +95,14 @@ export default config({
         //TODO
     }, []);
 
-
     // 表单同步localStorage
-    const handleFormChange = useCallback((_, values) => storage.local.setItem(FORM_STORAGE_KEY, values), []);
+    const handleFormChange = useCallback(() => {
+        // 解决删除一行文件，获取不到最新数据问题
+        setTimeout(() => {
+            storage.local.setItem(FORM_STORAGE_KEY, form.getFieldsValue());
+        });
+    }, [form]);
     useEffect(() => form.setFieldsValue(storage.local.getItem(FORM_STORAGE_KEY) || {}), [form]);
-
-    // dataSource同步localStorage
-    const saveDataSource = useCallback((values) => storage.local.setItem(DATA_SOURCE_STORAGE_KEY, values || dataSource), [dataSource]);
-    useEffect(() => saveDataSource(), [dataSource, saveDataSource]);
-
-    const handleDataSourceChange = useCallback(values => {
-        setDataSource(values);
-        saveDataSource(values);
-    }, [saveDataSource]);
 
     // 测试数据
     useEffect(() => {
@@ -86,23 +114,6 @@ export default config({
             { value: 'user_center_adfafd_asdfadf', label: 'user_center_adfafd_asdfadf' },
         ]);
         setFieldOptions(['条件', '表格']);
-
-        // setDataSource(Array.from({ length: 50 }).map((item, index) => {
-        //
-        //     return {
-        //         id: `index_${index}`,
-        //         field: `field_${index}`,
-        //         comment: '新增列',
-        //         chinese: '新增列',
-        //         name: `field_${index}`,
-        //
-        //         type: 'string',
-        //         formType: 'input',
-        //         length: 0,
-        //         isNullable: true,
-        //         options: ['表格选中', '表格序号', '分页', '导入', '导出', '添加', '批量删除', '弹框编辑'],
-        //     };
-        // }));
     }, []);
 
     const formItemProps = {
@@ -112,6 +123,7 @@ export default config({
     return (
         <PageContent className={s.root}>
             <Form
+                className={s.query}
                 style={{ marginBottom: 8 }}
                 form={form}
                 layout="inline"
@@ -127,24 +139,24 @@ export default config({
                     name="dbUrl"
                     placeholder="mysql://username:password@host:port/database"
                     onChange={handleDbUrlChange}
-                    required
                     tooltip="支持mysql、oracle"
                 />
                 <FormItem
                     {...formItemProps}
                     style={{ width: 300 }}
+                    labelCol={{ flex: '91px' }}
                     type="select"
                     showSearch
                     label="数据库表"
                     name="tableName"
                     onChange={handleTableNameChange}
                     options={tableOptions}
-                    required
                 />
                 <FormItem
                     {...formItemProps}
                     style={{ width: 200 }}
                     label="模块名"
+                    labelCol={{ flex: '91px' }}
                     name="moduleName"
                     placeholder="比如：user-center"
                     onChange={handleModuleNameChange}
@@ -154,52 +166,74 @@ export default config({
                     <Form.List name="files">
                         {(fields, { add, remove }) => (
                             <>
-                                {fields.map(({ key, name, isListField, ...restField }, index) => (
-                                    <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
-                                        <div style={{ width: 421 }}>
+                                {fields.map(({ key, name, isListField, ...restField }, index) => {
+                                    const backgroundColor = index % 2 ? '#fff' : '#eee';
+                                    return (
+                                        <Space
+                                            key={key}
+                                            style={{
+                                                display: 'flex',
+                                                paddingTop: 7,
+                                                backgroundColor,
+                                            }}
+                                            align="baseline"
+                                        >
+                                            <div style={{ width: 421 }}>
+                                                <FormItem
+                                                    {...formItemProps}
+                                                    {...restField}
+                                                    labelCol={{ flex: '120px' }}
+                                                    style={{ width: 300 }}
+                                                    label={`生成文件${index + 1}`}
+                                                    name={[name, 'template']}
+                                                    required
+                                                    options={templateOptions}
+                                                    placeholder="请选择模板"
+                                                />
+                                            </div>
                                             <FormItem
                                                 {...formItemProps}
                                                 {...restField}
-                                                labelCol={{ flex: '120px' }}
                                                 style={{ width: 300 }}
-                                                label={index === 0 ? '生成文件' : ' '}
-                                                colon={index === 0}
-                                                name={[name, 'template']}
+                                                label="目标文件"
+                                                name={[name, 'targetPath']}
                                                 required
-                                                options={templateOptions}
-                                                placeholder="请选择模板"
+                                                rules={[
+                                                    {
+                                                        validator(_, value) {
+                                                            if (!value) return Promise.resolve();
+                                                            const files = form.getFieldValue('files');
+                                                            const index = files.findIndex(item => item.targetPath === value);
+                                                            const lastIndex = files.findLastIndex(item => item.targetPath === value);
+                                                            if (index !== lastIndex) return Promise.reject('不能使用相同的目标文件！请修改');
+                                                            return Promise.resolve();
+                                                        },
+                                                    },
+                                                ]}
                                             />
-                                        </div>
-                                        <FormItem
-                                            {...formItemProps}
-                                            {...restField}
-                                            style={{ width: 300 }}
-                                            label="目标文件"
-                                            name={[name, 'targetPath']}
-                                            required
-                                        />
-                                        <FormItem
-                                            {...formItemProps}
-                                            {...restField}
-                                            name={[name, 'options']}
-                                        >
-                                            <OptionsTag
-                                                options={['表格选中', '表格序号', '分页', '导入', '导出', '添加', '批量删除', '弹框编辑']}
-                                            />
-                                        </FormItem>
-                                        {fields?.length > 1 && (
-                                            <MinusCircleOutlined
-                                                style={{ color: 'red' }}
-                                                onClick={() => remove(name)}
-                                            />
-                                        )}
-                                    </Space>
-                                ))}
-                                <Space>
+                                            <FormItem
+                                                {...formItemProps}
+                                                {...restField}
+                                                name={[name, 'options']}
+                                            >
+                                                <OptionsTag
+                                                    options={['表格选中', '表格序号', '分页', '导入', '导出', '添加', '批量删除', '弹框编辑']}
+                                                />
+                                            </FormItem>
+                                            {fields?.length > 1 && (
+                                                <MinusCircleOutlined
+                                                    style={{ color: 'red' }}
+                                                    onClick={() => remove(name)}
+                                                />
+                                            )}
+                                        </Space>
+                                    );
+                                })}
+                                <Space style={{ marginTop: 8 }}>
                                     <Button
                                         icon={<FileAddOutlined />}
                                         type="primary"
-                                        onClick={() => add()}
+                                        onClick={() => add({})}
                                     >
                                         添加文件
                                     </Button>
@@ -207,7 +241,7 @@ export default config({
                                         icon={<PlusOutlined />}
                                         type="primary"
                                         ghost
-                                        onClick={() => addRow()}
+                                        onClick={() => handleAdd()}
                                     >
                                         添加一行
                                     </Button>
@@ -229,11 +263,12 @@ export default config({
                     </Form.List>
                 </div>
             </Form>
-            <FieldTable
+            <EditTable
                 otherHeight={72}
+                columns={columns}
+                onAdd={handleAdd}
                 dataSource={dataSource}
                 onChange={handleDataSourceChange}
-                options={fieldOptions}
                 footer={() => null}
             />
         </PageContent>
