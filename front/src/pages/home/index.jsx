@@ -68,10 +68,13 @@ export default config({
     useEffect(() => form.setFieldsValue(storage.local.getItem(FORM_STORAGE_KEY) || {}), [form]);
 
     // dataSource同步localStorage
-    const saveDataSource = useCallback(() => {
-        storage.local.setItem(DATA_SOURCE_STORAGE_KEY, dataSource.map(item => ({ ...item, _form: null })));
-    }, [dataSource]);
+    const saveDataSource = useCallback((values) => storage.local.setItem(DATA_SOURCE_STORAGE_KEY, values || dataSource), [dataSource]);
     useEffect(() => saveDataSource(), [dataSource, saveDataSource]);
+
+    const handleDataSourceChange = useCallback(values => {
+        setDataSource(values);
+        saveDataSource(values);
+    }, [saveDataSource]);
 
     // 测试数据
     useEffect(() => {
@@ -229,8 +232,7 @@ export default config({
             <FieldTable
                 otherHeight={72}
                 dataSource={dataSource}
-                onChange={setDataSource}
-                onRecordChange={() => saveDataSource()}
+                onChange={handleDataSourceChange}
                 options={fieldOptions}
                 footer={() => null}
             />

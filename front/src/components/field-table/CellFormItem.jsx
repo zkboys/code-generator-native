@@ -17,23 +17,25 @@ export default function CellFormItem(props) {
     } = props;
 
     const value = form.getFieldValue(name);
-
     const rootRef = useRef(null);
     const stRef = useRef(null);
+
     const [_showForm, setShowForm] = useState(false);
     useEffect(() => setShowForm(showForm), [showForm]);
 
     const handleMouseEnter = useCallback(() => {
-        stRef.current && clearTimeout(stRef.current);
+        clearTimeout(stRef.current);
         setShowForm(true);
     }, []);
+
     const handleMouseLeave = useCallback(() => {
         if (props.showForm) return;
+
         others.options ? stRef.current = setTimeout(() => {
             setShowForm(false);
         }, 300) : setShowForm(false);
 
-        return () => stRef.current && clearTimeout(stRef.current);
+        return () => clearTimeout(stRef.current);
     }, [others.options, props.showForm]);
 
     return (
@@ -53,10 +55,10 @@ export default function CellFormItem(props) {
                     {...others}
                 />
             ) : (
-                <div
-                    className={[s[type], (!value || !value.length) && s.placeholder]}
-                >
-                    <div className={s.value}>{renderCell(value) || placeholder}</div>
+                <div className={[s[type], (!value || !value.length) && s.placeholder]}>
+                    <div className={s.value}>
+                        {renderCell(value) || placeholder}
+                    </div>
                     {type === 'select' && (
                         <span
                             className={`${theme.antPrefix}-select-arrow`}

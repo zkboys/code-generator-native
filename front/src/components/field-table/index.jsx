@@ -6,10 +6,10 @@ import { OptionsTag } from 'src/components';
 import CellFormItem from './CellFormItem';
 import { getCursorPosition } from 'src/commons';
 
-const EditTable = tableRowDraggable(Table);
+const RowDraggableTable = tableRowDraggable(Table);
 
 const FORM_ELEMENT_OPTIONS = [
-    { value: 'input', label: '1输入框输入框输入框输入框输入框2' },
+    { value: 'input', label: '输入框' },
     { value: 'hidden', label: '隐藏框' },
     { value: 'number', label: '数字框' },
     { value: 'textarea', label: '文本框' },
@@ -33,11 +33,12 @@ const FORM_ELEMENT_OPTIONS = [
     { value: 'transfer', label: '穿梭框' },
 ];
 
+const FIELD_NAME = 'dataSource';
+
 export default function FieldTable(props) {
     const {
         dataSource,
         onChange,
-        onRecordChange,
         options = [],
         fitHeight = true,
         otherHeight = 0,
@@ -45,9 +46,14 @@ export default function FieldTable(props) {
     } = props;
 
     const [form] = Form.useForm();
-
     const [showFormIndex, setShowFormIndex] = useState([0]);
+    // 失去焦点延迟句柄
+    const blurStRef = useRef(0);
 
+    // dataSource改变，同步到form中
+    useEffect(() => form.setFieldsValue({ [FIELD_NAME]: dataSource }), [form, dataSource]);
+
+    // 添加一行，首部或尾部添加
     const handleAdd = useCallback((append) => {
         const length = dataSource.length;
         const field = `field${length + 1}`;
@@ -71,7 +77,21 @@ export default function FieldTable(props) {
         onChange && onChange([...dataSource]);
     }, [dataSource, onChange, options]);
 
-    const handleKeyDown = useCallback((e, tabIndex, columnNumber, totalColumn) => {
+
+    // 删除行
+    const handleDelete = useCallback((id) => {
+        const nextDataSource = dataSource.filter(item => item.id !== id);
+        onChange && onChange(nextDataSource);
+    }, [dataSource, onChange]);
+
+    // 拖拽排序结束，交换位置
+    const handleSortEnd = useCallback(({ oldIndex, newIndex }) => {
+        dataSource.splice(newIndex - 1, 0, ...dataSource.splice(oldIndex - 1, 1));
+        onChange && onChange([...dataSource]);
+    }, [dataSource, onChange]);
+
+    // 键盘时间，使输入框获取焦点，上、下、左、右、回车
+    const handleKeyDown = useCallback((e, tabIndex, columnIndex, totalColumn, totalRow) => {
         const { keyCode, ctrlKey, shiftKey, altKey, metaKey } = e;
 
         if (ctrlKey || shiftKey || altKey || metaKey) return;
@@ -86,13 +106,11 @@ export default function FieldTable(props) {
         if (isLeft && !cursorPosition.start) return;
         if (isRight && !cursorPosition.end) return;
 
-        const totalRow = dataSource.length;
-        const columnStartTabIndex = columnNumber * totalRow + 1;
-        const columnEndTabIndex = (columnNumber + 1) * totalRow;
+        const columnStartTabIndex = columnIndex * totalRow + 1;
+        const columnEndTabIndex = (columnIndex + 1) * totalRow;
 
         let nextTabIndex;
         let isAdd;
-
 
         if (isUp) {
             // 到顶了
@@ -103,14 +121,14 @@ export default function FieldTable(props) {
 
         if (isRight) {
             // 右侧
-            if (columnNumber === totalColumn - 1) {
+            if (columnIndex === totalColumn - 1) {
                 // 右下角
                 if (tabIndex === columnEndTabIndex) {
                     isAdd = true;
                     nextTabIndex = totalRow + 1;
                 } else {
                     // 选中下一行第一个
-                    nextTabIndex = tabIndex - totalRow * columnNumber + 1;
+                    nextTabIndex = tabIndex - totalRow * columnIndex + 1;
                 }
             } else {
                 // 选择右侧一个
@@ -121,7 +139,7 @@ export default function FieldTable(props) {
         if (isDown) {
             if (tabIndex === columnEndTabIndex) {
                 isAdd = true;
-                nextTabIndex = tabIndex + columnNumber + 1;
+                nextTabIndex = tabIndex + columnIndex + 1;
             } else {
                 nextTabIndex = tabIndex + 1;
             }
@@ -129,13 +147,13 @@ export default function FieldTable(props) {
 
         if (isLeft) {
             // 左上角
-            if (tabIndex === columnStartTabIndex && columnNumber === 0) return;
+            if (tabIndex === columnStartTabIndex && columnIndex === 0) return;
 
             // 左侧第一列继续左移动，选中上一行最后一个
-            if (columnNumber === 0) nextTabIndex = (tabIndex - 1) + totalRow * (totalColumn - 1);
+            if (columnIndex === 0) nextTabIndex = (tabIndex - 1) + totalRow * (totalColumn - 1);
 
             // 选择前一个
-            if (columnNumber !== 0) nextTabIndex = tabIndex - totalRow;
+            if (columnIndex !== 0) nextTabIndex = tabIndex - totalRow;
         }
 
         if (isAdd) {
@@ -149,35 +167,28 @@ export default function FieldTable(props) {
             nextInput.focus();
             nextInput.select();
         });
+    }, [handleAdd]);
 
-    }, [dataSource, handleAdd]);
-
-    const handleDelete = useCallback((id) => {
-        const nextDataSource = dataSource.filter(item => item.id !== id);
-        onChange && onChange(nextDataSource);
-    }, [dataSource, onChange]);
-
-    useEffect(() => {
-        form.setFieldsValue({ dataSource });
-    }, [form, dataSource]);
-
-    const blurStRef = useRef(0);
-
+    // 输入框获取焦点，选中内容
     const handleFocus = useCallback((e, index) => {
         clearTimeout(blurStRef.current);
         e.target.select();
         setShowFormIndex([index - 1, index, index + 1]);
     }, []);
 
+    // 输入框失去焦点，延迟切换为展示内容
     const handleBlur = useCallback((e, index) => {
         blurStRef.current = setTimeout(() => {
             setShowFormIndex([]);
         });
     }, []);
 
+    // 表格渲染表单组件
     const columns = useMemo(() => {
+        // 标记当前未第几列
         let columnIndex = 0;
-        const rowCount = dataSource.length;
+        // 一共多少行
+        const totalRow = dataSource.length;
 
         const inputColumn = (colOptions) => {
             const { title, dataIndex } = colOptions;
@@ -186,7 +197,7 @@ export default function FieldTable(props) {
             return {
                 ...colOptions,
                 render: (value, record, index) => {
-                    const tabIndex = rowCount * _columnIndex + index + 1;
+                    const tabIndex = totalRow * _columnIndex + index + 1;
                     const showForm = showFormIndex.includes(index);
 
                     return (
@@ -195,10 +206,10 @@ export default function FieldTable(props) {
                             showForm={showForm}
                             value={value}
                             type="input"
-                            name={['dataSource', index, dataIndex]}
+                            name={[FIELD_NAME, index, dataIndex]}
                             required
                             tabIndex={tabIndex}
-                            onKeyDown={e => handleKeyDown(e, tabIndex, _columnIndex, columnIndex)}
+                            onKeyDown={e => handleKeyDown(e, tabIndex, _columnIndex, columnIndex, totalRow)}
                             onFocus={e => handleFocus(e, index)}
                             onBlur={e => handleBlur(e, index)}
                             placeholder={`请输入${title}`}
@@ -217,7 +228,7 @@ export default function FieldTable(props) {
                     return (
                         <CellFormItem
                             form={form}
-                            name={['dataSource', index, dataIndex]}
+                            name={[FIELD_NAME, index, dataIndex]}
                             renderCell={value => options.find(item => item.value === value)?.label}
                             type="select"
                             options={options}
@@ -241,7 +252,7 @@ export default function FieldTable(props) {
                         <CellFormItem
                             form={form}
                             type="tags"
-                            name={['dataSource', index, 'options']}
+                            name={[FIELD_NAME, index, 'options']}
                             options={options}
                             renderCell={value => <OptionsTag value={value} options={options} />}
                         >
@@ -269,16 +280,33 @@ export default function FieldTable(props) {
                 },
             },
         ];
-    }, [dataSource?.length, form, handleBlur, handleDelete, handleFocus, handleKeyDown, options, showFormIndex]);
-
-    const handleSortEnd = useCallback(({ oldIndex, newIndex }) => {
-        dataSource.splice(newIndex - 1, 0, ...dataSource.splice(oldIndex - 1, 1));
-        onChange && onChange([...dataSource]);
-    }, [dataSource, onChange]);
+    }, [
+        dataSource?.length,
+        form,
+        handleBlur,
+        handleDelete,
+        handleFocus,
+        handleKeyDown,
+        options,
+        showFormIndex,
+    ]);
 
     return (
-        <Form layout={'inline'} form={form} onValuesChange={onRecordChange}>
-            <EditTable
+        <Form
+            layout={'inline'}
+            form={form}
+            onValuesChange={() => {
+                // 不改变DataSource引用方式，同步数据，否则输入框会失去焦点
+                const newDataSource = form.getFieldValue(FIELD_NAME);
+                newDataSource.forEach((item, index) => {
+                    Object.entries(item).forEach(([key, value]) => {
+                        dataSource[index][key] = value;
+                    });
+                });
+                onChange && onChange(dataSource);
+            }}
+        >
+            <RowDraggableTable
                 fitHeight={fitHeight}
                 otherHeight={otherHeight}
                 onSortEnd={handleSortEnd}
