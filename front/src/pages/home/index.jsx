@@ -84,22 +84,22 @@ export default config({
         ]);
         setFieldOptions(['条件', '表格']);
 
-        setDataSource(Array.from({ length: 50 }).map((item, index) => {
-
-            return {
-                id: `index_${index}`,
-                field: `field_${index}`,
-                comment: '新增列',
-                chinese: '新增列',
-                name: `field_${index}`,
-
-                type: 'string',
-                formType: 'input',
-                length: 0,
-                isNullable: true,
-                options: ['表格选中', '表格序号', '分页', '导入', '导出', '添加', '批量删除', '弹框编辑'],
-            };
-        }));
+        // setDataSource(Array.from({ length: 50 }).map((item, index) => {
+        //
+        //     return {
+        //         id: `index_${index}`,
+        //         field: `field_${index}`,
+        //         comment: '新增列',
+        //         chinese: '新增列',
+        //         name: `field_${index}`,
+        //
+        //         type: 'string',
+        //         formType: 'input',
+        //         length: 0,
+        //         isNullable: true,
+        //         options: ['表格选中', '表格序号', '分页', '导入', '导出', '添加', '批量删除', '弹框编辑'],
+        //     };
+        // }));
     }, []);
 
     const formItemProps = {

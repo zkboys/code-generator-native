@@ -56,7 +56,7 @@ export default function CellFormItem(props) {
                 <div
                     className={[s[type], (!value || !value.length) && s.placeholder]}
                 >
-                    {renderCell(value) || placeholder}
+                    <div className={s.value}>{renderCell(value) || placeholder}</div>
                     {type === 'select' && (
                         <span
                             className={`${theme.antPrefix}-select-arrow`}

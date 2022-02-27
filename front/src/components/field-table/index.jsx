@@ -9,7 +9,7 @@ import { getCursorPosition } from 'src/commons';
 const EditTable = tableRowDraggable(Table);
 
 const FORM_ELEMENT_OPTIONS = [
-    { value: 'input', label: '输入框' },
+    { value: 'input', label: '1输入框输入框输入框输入框输入框2' },
     { value: 'hidden', label: '隐藏框' },
     { value: 'number', label: '数字框' },
     { value: 'textarea', label: '文本框' },
