@@ -146,7 +146,6 @@ export default function EditTable(props) {
 
                     return (
                         <CellFormItem
-                            form={form}
                             showForm={showForm}
                             value={value}
                             type="input"
@@ -173,7 +172,6 @@ export default function EditTable(props) {
                 render: (value, record, index) => {
                     return (
                         <CellFormItem
-                            form={form}
                             name={[FIELD_NAME, index, dataIndex]}
                             renderCell={value => options.find(item => item.value === value)?.label}
                             type="select"
@@ -196,7 +194,6 @@ export default function EditTable(props) {
                 render: (value, record, index) => {
                     return (
                         <CellFormItem
-                            form={form}
                             type="tags"
                             name={[FIELD_NAME, index, 'options']}
                             options={options}
@@ -219,7 +216,7 @@ export default function EditTable(props) {
 
             return others;
         });
-    }, [columns, dataSource.length, form, handleBlur, handleFocus, handleKeyDown, showFormIndex]);
+    }, [columns, dataSource.length, handleBlur, handleFocus, handleKeyDown, showFormIndex]);
 
     return (
         <Form

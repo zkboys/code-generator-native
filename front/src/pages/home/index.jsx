@@ -76,8 +76,8 @@ export default config({
 
         const newRecord = {
             id: uuid(),
-            comment: '新增列',
-            chinese: '新增列',
+            comment: `新增列${length + 1}`,
+            chinese: `新增列${length + 1}`,
             field: `field${length + 1}`,
             formType: 'input',
             options: [...fieldOptions],
