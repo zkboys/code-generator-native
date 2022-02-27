@@ -1,9 +1,10 @@
-import React, { useCallback, useMemo, useEffect } from 'react';
+import React, { useCallback, useMemo, useEffect, useState, useRef } from 'react';
 import { Operator, Table, tableRowDraggable } from '@ra-lib/admin';
 import { Button, Form } from 'antd';
 import { v4 as uuid } from 'uuid';
 import { OptionsTag } from 'src/components';
 import CellFormItem from './CellFormItem';
+import { getCursorPosition } from 'src/commons';
 
 const EditTable = tableRowDraggable(Table);
 
@@ -45,6 +46,8 @@ export default function FieldTable(props) {
 
     const [form] = Form.useForm();
 
+    const [showFormIndex, setShowFormIndex] = useState([0]);
+
     const handleAdd = useCallback((append) => {
         const length = dataSource.length;
         const field = `field${length + 1}`;
@@ -68,10 +71,11 @@ export default function FieldTable(props) {
         onChange && onChange([...dataSource]);
     }, [dataSource, onChange, options]);
 
-    const handleKeyDown = useCallback((e, tabIndex) => {
+    const handleKeyDown = useCallback((e, tabIndex, index) => {
         const { keyCode, ctrlKey, shiftKey, altKey, metaKey } = e;
 
         if (ctrlKey || shiftKey || altKey || metaKey) return;
+
 
         const length = dataSource?.length || 0;
 
@@ -80,6 +84,11 @@ export default function FieldTable(props) {
         const isDown = keyCode === 40;
         const isLeft = keyCode === 37;
         const isEnter = keyCode === 13;
+
+        const cursorPosition = getCursorPosition(e.target);
+
+        if (isLeft && !cursorPosition.start) return;
+        if (isRight && !cursorPosition.end) return;
 
         let nextTabIndex;
 
@@ -111,25 +120,24 @@ export default function FieldTable(props) {
 
         const nextInput = document.querySelector(`input[tabindex='${nextTabIndex}']`);
 
+        const isLast = dataSource.length - 1 === index;
+
         if (nextInput) {
             // 确保方向键也可以选中
             setTimeout(() => {
                 nextInput.focus();
                 nextInput.select();
             });
-        } else if (isEnter || isDown || isRight) {
+        } else if ((isEnter || isDown || isRight) && isLast) {
             // 新增一行
             handleAdd(true);
 
             // 等待新增行渲染完成，新增行 input 获取焦点
             setTimeout(() => {
-                let ti = tabIndex;
-
-                if (isRight) ti = tabIndex - length;
-
-                if ((isDown || isEnter) && tabIndex === length * 2) ti = tabIndex + 1;
-
-                handleKeyDown({ keyCode: 13 }, ti);
+                const nextTabIndex = tabIndex + Math.ceil(tabIndex / length);
+                const nextInput = document.querySelector(`input[tabindex='${nextTabIndex}']`);
+                nextInput.focus();
+                nextInput.select();
             });
         }
     }, [dataSource, handleAdd]);
@@ -139,14 +147,23 @@ export default function FieldTable(props) {
         onChange && onChange(nextDataSource);
     }, [dataSource, onChange]);
 
-    const handleRecordChange = useCallback((record, key, value) => {
-        record[key] = value;
-        onRecordChange && onRecordChange(record);
-    }, [onRecordChange]);
-
     useEffect(() => {
         form.setFieldsValue({ dataSource });
     }, [form, dataSource]);
+
+    const blurStRef = useRef(0);
+
+    const handleFocus = useCallback((e, index) => {
+        clearTimeout(blurStRef.current);
+        e.target.select();
+        setShowFormIndex([index - 1, index, index + 1]);
+    }, []);
+
+    const handleBlur = useCallback((e, index) => {
+        blurStRef.current = setTimeout(() => {
+            setShowFormIndex([]);
+        });
+    }, []);
 
     const columns = useMemo(() => {
         return [
@@ -154,12 +171,20 @@ export default function FieldTable(props) {
             {
                 title: '中文名', dataIndex: 'chinese', width: 190,
                 render: (value, record, index) => {
+                    const tabIndex = index + 1;
+                    const showForm = showFormIndex.includes(index);
                     return (
                         <CellFormItem
                             form={form}
+                            showForm={showForm}
+                            value={value}
                             type="input"
                             name={['dataSource', index, 'chinese']}
                             required
+                            tabIndex={tabIndex}
+                            onKeyDown={e => handleKeyDown(e, tabIndex, index)}
+                            onFocus={e => handleFocus(e, index)}
+                            onBlur={e => handleBlur(e, index)}
                         />
                     );
                 },
@@ -167,12 +192,21 @@ export default function FieldTable(props) {
             {
                 title: '列名', dataIndex: 'field', width: 190,
                 render: (value, record, index) => {
+                    const length = dataSource?.length || 0;
+                    const tabIndex = index + length + 1;
+                    const showForm = showFormIndex.includes(index);
                     return (
                         <CellFormItem
                             form={form}
+                            showForm={showForm}
+                            value={value}
                             type="input"
                             name={['dataSource', index, 'field']}
                             required
+                            tabIndex={tabIndex}
+                            onKeyDown={e => handleKeyDown(e, tabIndex, index)}
+                            onFocus={e => handleFocus(e, index)}
+                            onBlur={e => handleBlur(e, index)}
                         />
                     );
                 },
@@ -184,6 +218,7 @@ export default function FieldTable(props) {
                         <CellFormItem
                             form={form}
                             name={['dataSource', index, 'formType']}
+                            renderCell={value => FORM_ELEMENT_OPTIONS.find(item => item.value === value)?.label}
                             type="select"
                             options={FORM_ELEMENT_OPTIONS}
                             required
@@ -197,9 +232,10 @@ export default function FieldTable(props) {
                     return (
                         <CellFormItem
                             form={form}
-                            type="options-tag"
+                            type="tags"
                             name={['dataSource', index, 'options']}
                             options={options}
+                            renderCell={value => <OptionsTag value={value} options={options} />}
                         >
                             <OptionsTag options={options} />
                         </CellFormItem>
@@ -225,15 +261,15 @@ export default function FieldTable(props) {
                 },
             },
         ];
-    }, [form, handleDelete, options]);
+    }, [dataSource?.length, form, handleBlur, handleDelete, handleFocus, handleKeyDown, options, showFormIndex]);
 
-    const handleSortEnd = useCallback(({ newIndex, oldIndex }) => {
+    const handleSortEnd = useCallback(({ oldIndex, newIndex }) => {
         dataSource.splice(newIndex - 1, 0, ...dataSource.splice(oldIndex - 1, 1));
         onChange && onChange([...dataSource]);
     }, [dataSource, onChange]);
 
     return (
-        <Form layout={'inline'} form={form}>
+        <Form layout={'inline'} form={form} onValuesChange={onRecordChange}>
             <EditTable
                 fitHeight={fitHeight}
                 otherHeight={otherHeight}

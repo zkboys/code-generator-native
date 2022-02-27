@@ -136,3 +136,37 @@ export function loadScript(url) {
 export function isNoAuthPage(pathname) {
     return NO_AUTH_ROUTES.includes(pathname || window.location.pathname);
 }
+
+/**
+ * 获取光标在input中的位置
+ * @param input
+ * @returns {{start: boolean, end: boolean, position: number}|{start: boolean, end: boolean, position: *}}
+ */
+export function getCursorPosition(input) {
+    let position = 0;
+    let start = false;
+    let end = false;
+
+    if (!input) return {
+        start,
+        end,
+        position,
+    };
+
+    if (typeof input.selectionStart == 'number') { // 非IE浏览器
+        position = input.selectionStart;
+    } else { // IE
+        const range = document.selection.createRange();
+        range.moveStart('character', -input.value.length);
+        position = range.text.length;
+    }
+
+    start = position === 0;
+    end = position === input?.value.length;
+
+    return {
+        start,
+        end,
+        position,
+    };
+}
