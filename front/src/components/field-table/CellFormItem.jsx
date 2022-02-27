@@ -42,7 +42,7 @@ export default function CellFormItem(props) {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
-            {_showForm ? (
+            {true ? (
                 <FormItem
                     type={type}
                     name={name}

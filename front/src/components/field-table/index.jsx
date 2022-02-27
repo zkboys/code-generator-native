@@ -71,19 +71,16 @@ export default function FieldTable(props) {
         onChange && onChange([...dataSource]);
     }, [dataSource, onChange, options]);
 
-    const handleKeyDown = useCallback((e, tabIndex, index) => {
+    const handleKeyDown = useCallback((e, tabIndex, index, columnIndex) => {
         const { keyCode, ctrlKey, shiftKey, altKey, metaKey } = e;
 
         if (ctrlKey || shiftKey || altKey || metaKey) return;
 
-
-        const length = dataSource?.length || 0;
-
+        const length = dataSource.length;
         const isUp = keyCode === 38;
         const isRight = keyCode === 39;
-        const isDown = keyCode === 40;
+        const isDown = keyCode === 40 || keyCode === 13;
         const isLeft = keyCode === 37;
-        const isEnter = keyCode === 13;
 
         const cursorPosition = getCursorPosition(e.target);
 
@@ -92,7 +89,7 @@ export default function FieldTable(props) {
 
         let nextTabIndex;
 
-        if (isDown || isEnter) {
+        if (isDown) {
             if (tabIndex === length || tabIndex === length * 2) {
                 nextTabIndex = undefined;
             } else {
@@ -128,7 +125,7 @@ export default function FieldTable(props) {
                 nextInput.focus();
                 nextInput.select();
             });
-        } else if ((isEnter || isDown || isRight) && isLast) {
+        } else if ((isDown || isRight) && isLast) {
             // 新增一行
             handleAdd(true);
 
@@ -171,7 +168,9 @@ export default function FieldTable(props) {
             {
                 title: '中文名', dataIndex: 'chinese', width: 190,
                 render: (value, record, index) => {
-                    const tabIndex = index + 1;
+                    const columnIndex = 1;
+                    const rowCount = dataSource.length;
+                    const tabIndex = rowCount * columnIndex + index;
                     const showForm = showFormIndex.includes(index);
                     return (
                         <CellFormItem
@@ -182,7 +181,7 @@ export default function FieldTable(props) {
                             name={['dataSource', index, 'chinese']}
                             required
                             tabIndex={tabIndex}
-                            onKeyDown={e => handleKeyDown(e, tabIndex, index)}
+                            onKeyDown={e => handleKeyDown(e, tabIndex, index, columnIndex)}
                             onFocus={e => handleFocus(e, index)}
                             onBlur={e => handleBlur(e, index)}
                         />
@@ -192,8 +191,9 @@ export default function FieldTable(props) {
             {
                 title: '列名', dataIndex: 'field', width: 190,
                 render: (value, record, index) => {
-                    const length = dataSource?.length || 0;
-                    const tabIndex = index + length + 1;
+                    const columnIndex = 2;
+                    const rowCount = dataSource.length;
+                    const tabIndex = rowCount * columnIndex + index;
                     const showForm = showFormIndex.includes(index);
                     return (
                         <CellFormItem
@@ -204,7 +204,7 @@ export default function FieldTable(props) {
                             name={['dataSource', index, 'field']}
                             required
                             tabIndex={tabIndex}
-                            onKeyDown={e => handleKeyDown(e, tabIndex, index)}
+                            onKeyDown={e => handleKeyDown(e, tabIndex, index, columnIndex)}
                             onFocus={e => handleFocus(e, index)}
                             onBlur={e => handleBlur(e, index)}
                         />
@@ -222,6 +222,29 @@ export default function FieldTable(props) {
                             type="select"
                             options={FORM_ELEMENT_OPTIONS}
                             required
+                        />
+                    );
+                },
+            },
+            {
+                title: '列名2', dataIndex: 'field2', width: 190,
+                render: (value, record, index) => {
+                    const columnIndex = 4;
+                    const rowCount = dataSource.length;
+                    const tabIndex = rowCount * columnIndex + index;
+                    const showForm = showFormIndex.includes(index);
+                    return (
+                        <CellFormItem
+                            form={form}
+                            showForm={showForm}
+                            value={value}
+                            type="input"
+                            name={['dataSource', index, 'field2']}
+                            required
+                            tabIndex={tabIndex}
+                            onKeyDown={e => handleKeyDown(e, tabIndex, index, columnIndex)}
+                            onFocus={e => handleFocus(e, index)}
+                            onBlur={e => handleBlur(e, index)}
                         />
                     );
                 },
