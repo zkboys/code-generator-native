@@ -54,7 +54,7 @@ export default config({
     const columns = [
         { title: '注释', dataIndex: 'comment', width: 150 },
         { title: '中文名', dataIndex: 'chinese', width: 190, type: FIELD_EDIT_TYPES.input, required: true },
-        { title: '列名', dataIndex: 'field', width: 190, type: FIELD_EDIT_TYPES.input, required: true },
+        { title: '列名', dataIndex: 'name', width: 190, type: FIELD_EDIT_TYPES.input, required: true },
         { title: '表单类型', dataIndex: 'formType', width: 190, type: FIELD_EDIT_TYPES.select, options: FORM_ELEMENT_OPTIONS },
         { title: '选项', dataIndex: 'options', type: FIELD_EDIT_TYPES.tags, options: fieldOptions },
         {
@@ -107,7 +107,14 @@ export default config({
             dataSource = [];
         }
 
-        handleDataSourceChange(dataSource.map(item => ({ id: uuid(), ...item })));
+        handleDataSourceChange(dataSource.map(item => {
+            return {
+                id: uuid(),
+                formType: item?.types?.form,
+                javaType: item?.types?.java,
+                ...item,
+            };
+        }));
     }, [fetchColumns, fetchModuleNames, form, handleDataSourceChange]);
 
     // 模块名改变事件
@@ -135,7 +142,7 @@ export default config({
     // 模版改变事件
     const handleTemplateChange = useCallback((name, templateId) => {
         const record = templateOptions.find(item => item.value === templateId).record;
-        const { targetPath, options } = record;
+        const { targetPath, options, fieldOptions } = record;
 
         const files = form.getFieldValue('files');
         const file = form.getFieldValue(['files', name]);
@@ -146,7 +153,16 @@ export default config({
         form.setFieldsValue({ files: [...files] });
 
         handleFilesChange();
-    }, [form, handleFilesChange, templateOptions]);
+
+        const nextDataSource = dataSource.map(item => {
+            const options = Array.from(new Set([...item.options, ...fieldOptions]));
+            return {
+                ...item,
+                options,
+            };
+        });
+        handleDataSourceChange(nextDataSource);
+    }, [form, handleFilesChange, templateOptions, dataSource, handleDataSourceChange]);
 
     const handleAdd = useCallback((append = false) => {
         const length = dataSource.length;
@@ -185,6 +201,7 @@ export default config({
     // 从localStorage中恢复表单
     useEffect(() => {
         (async () => {
+            const localDataSource = storage.local.getItem(DATA_SOURCE_STORAGE_KEY);
             const values = storage.local.getItem(FORM_STORAGE_KEY) || {};
             form.setFieldsValue(values);
             const { dbUrl, tableName } = values;
@@ -196,10 +213,10 @@ export default config({
             }
 
             handleFilesChange();
-            console.log(storage.local.getItem(DATA_SOURCE_STORAGE_KEY));
-            handleDataSourceChange(storage.local.getItem(DATA_SOURCE_STORAGE_KEY) || []);
+
+            localDataSource && handleDataSourceChange(localDataSource);
         })();
-    }, [form, handleDbUrlChange, handleTableNameChange, handleDataSourceChange, handleFilesChange]);
+    }, [form, handleDbUrlChange, handleDataSourceChange, handleTableNameChange, handleFilesChange]);
 
     useEffect(() => {
         (async () => {
@@ -208,6 +225,14 @@ export default config({
             setTemplateOptions(templateOptions);
         })();
     }, [fetchTemplates]);
+
+    useEffect(() => {
+        const noOptionsRecord = dataSource.filter(item => !item.options);
+        if (!noOptionsRecord?.length) return;
+        noOptionsRecord.forEach(item => item.options = [...fieldOptions]);
+
+        handleDataSourceChange([...dataSource]);
+    }, [fieldOptions, dataSource, handleDataSourceChange]);
 
     const formItemProps = {
         // size: 'small',

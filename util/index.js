@@ -32,6 +32,7 @@ async function getLocalTemplates() {
     const files = getAllFiles(templatesDir);
 
     return files.map(filePath => {
+        // TODO  应为这个require，模版改了之后，node服务部重启，拿不到最新数据
         const template = require(filePath);
         const extname = path.extname(filePath);
         const templatePath = path.relative(templatesDir, filePath);
