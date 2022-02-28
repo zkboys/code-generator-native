@@ -2,6 +2,7 @@
 const path = require('path');
 const spawn = require('cross-spawn');
 const { initLocalTemplates, choosePort, openBrowser } = require('../util');
+const config = require('../config');
 
 const program = require('commander');
 
@@ -24,14 +25,15 @@ const HOST = options.host || '0.0.0.0';
 const DEFAULT_PORT = parseInt(options.port, 10) || 3001;
 const ROOT_PATH = path.join(__dirname, '..');
 
-
 (async () => {
     // 如果本地模版不存在，创建本地模版
     initLocalTemplates();
 
-    const port = await choosePort(HOST, DEFAULT_PORT);
-
-    spawn('node', ['index.js', `--port=${port}`], { stdio: 'inherit', cwd: ROOT_PATH });
+    const port = await choosePort(HOST, DEFAULT_PORT, true);
+    const cwd = process.cwd();
+    // 监听本地目录改变之后，重启服务
+    spawn('nodemon', ['-w', config.localDir, '--exec', `node index.js --port=${port} --nativePath=${cwd}`], { stdio: 'inherit', cwd: ROOT_PATH });
+    // spawn('node', ['index.js', `--port=${port}`], { stdio: 'inherit', cwd: ROOT_PATH });
 
     openBrowser(`http://${HOST}:${port}`);
 })();
