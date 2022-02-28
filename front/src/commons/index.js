@@ -1,5 +1,5 @@
-import { match } from 'path-to-regexp';
-import { BASE_NAME, HASH_ROUTER, NO_AUTH_ROUTES } from '../config';
+import {match} from 'path-to-regexp';
+import {BASE_NAME, HASH_ROUTER, NO_AUTH_ROUTES} from '../config';
 import pageConfigs from 'src/pages/page-configs';
 
 /**
@@ -169,4 +169,18 @@ export function getCursorPosition(input) {
         end,
         position,
     };
+}
+
+/**
+ * 触发window的热size事件
+ */
+export function triggerWindowResize() {
+    // 触发 window resize 事件，重新调整页面高度
+    if (document.createEvent) {
+        const ev = document.createEvent('HTMLEvents');
+        ev.initEvent('resize', true, true);
+        window.dispatchEvent(ev);
+    } else if (document.createEventObject) {
+        window.fireEvent('onresize');
+    }
 }

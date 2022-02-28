@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Form, Space, Button } from 'antd';
-import { MinusCircleOutlined, PlusOutlined, FileAddOutlined, CodeOutlined, FormOutlined } from '@ant-design/icons';
-import { PageContent, FormItem, storage, Operator } from '@ra-lib/admin';
+import React, {useState, useEffect, useCallback} from 'react';
+import {Form, Space, Button} from 'antd';
+import {MinusCircleOutlined, PlusOutlined, CodeOutlined, FormOutlined} from '@ant-design/icons';
+import {PageContent, FormItem, storage, Operator} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
-import { OptionsTag, EditTable } from 'src/components';
+import {OptionsTag, EditTable} from 'src/components';
 import s from './style.less';
-import { v4 as uuid } from 'uuid';
-import { FORM_ELEMENT_OPTIONS, FIELD_EDIT_TYPES } from './constant';
+import {v4 as uuid} from 'uuid';
+import {FORM_ELEMENT_OPTIONS, FIELD_EDIT_TYPES} from './constant';
+import {triggerWindowResize} from 'src/commons';
 
 const FORM_STORAGE_KEY = 'single_form_values';
 const DATA_SOURCE_STORAGE_KEY = 'single_data_source';
@@ -54,7 +55,7 @@ export default config({
                     },
                 ];
 
-                return <Operator items={items} />;
+                return <Operator items={items}/>;
             },
         },
 
@@ -95,11 +96,13 @@ export default config({
         //TODO
     }, []);
 
-    // 表单同步localStorage
     const handleFormChange = useCallback(() => {
         // 解决删除一行文件，获取不到最新数据问题
         setTimeout(() => {
+            // 表单同步localStorage
             storage.local.setItem(FORM_STORAGE_KEY, form.getFieldsValue());
+            // 触发窗口事件，表格高度重新计算
+            triggerWindowResize();
         });
     }, [form]);
     useEffect(() => form.setFieldsValue(storage.local.getItem(FORM_STORAGE_KEY) || {}), [form]);
@@ -135,7 +138,7 @@ export default config({
                     labelCol={{ flex: '120px' }}
                     style={{ width: 300 }}
                     align="right"
-                    label="数据库地址"
+                    label="数据库连接"
                     name="dbUrl"
                     placeholder="mysql://username:password@host:port/database"
                     onChange={handleDbUrlChange}
@@ -143,8 +146,8 @@ export default config({
                 />
                 <FormItem
                     {...formItemProps}
+                    labelCol={{ flex: '100px' }}
                     style={{ width: 300 }}
-                    labelCol={{ flex: '91px' }}
                     type="select"
                     showSearch
                     label="数据库表"
@@ -154,9 +157,9 @@ export default config({
                 />
                 <FormItem
                     {...formItemProps}
+                    labelCol={{ flex: '91px' }}
                     style={{ width: 200 }}
                     label="模块名"
-                    labelCol={{ flex: '91px' }}
                     name="moduleName"
                     placeholder="比如：user-center"
                     onChange={handleModuleNameChange}
@@ -168,23 +171,41 @@ export default config({
                             <>
                                 {fields.map(({ key, name, isListField, ...restField }, index) => {
                                     const backgroundColor = index % 2 ? '#fff' : '#eee';
+                                    // const isLast = index === fields.length - 1;
+                                    const isFirst = index === 0;
+                                    const number = index + 1;
+                                    let label = number;
+                                    if (isFirst) label = `文件${number}`;
+
                                     return (
-                                        <Space
+                                        <div
                                             key={key}
                                             style={{
                                                 display: 'flex',
+                                                alignItems: 'center',
                                                 paddingTop: 7,
+                                                paddingLeft: 30,
                                                 backgroundColor,
                                             }}
-                                            align="baseline"
                                         >
-                                            <div style={{ width: 421 }}>
+                                            <div style={{ width: 408, position: 'relative' }}>
+                                                {isFirst && (
+                                                    <Button
+                                                        type="primary"
+                                                        ghost
+                                                        shape="circle"
+                                                        size="small"
+                                                        style={{ position: 'absolute', top: 4, zIndex: 1 }}
+                                                        icon={<PlusOutlined/>}
+                                                        onClick={() => add({})}
+                                                    />
+                                                )}
                                                 <FormItem
                                                     {...formItemProps}
                                                     {...restField}
-                                                    labelCol={{ flex: '120px' }}
+                                                    labelCol={{ flex: '90px' }}
                                                     style={{ width: 300 }}
-                                                    label={`生成文件${index + 1}`}
+                                                    label={label}
                                                     name={[name, 'template']}
                                                     required
                                                     options={templateOptions}
@@ -195,7 +216,7 @@ export default config({
                                                 {...formItemProps}
                                                 {...restField}
                                                 style={{ width: 300 }}
-                                                label="目标文件"
+                                                label="目标位置"
                                                 name={[name, 'targetPath']}
                                                 required
                                                 rules={[
@@ -226,43 +247,37 @@ export default config({
                                                     onClick={() => remove(name)}
                                                 />
                                             )}
-                                        </Space>
+                                        </div>
                                     );
                                 })}
-                                <Space style={{ marginTop: 8 }}>
-                                    <Button
-                                        icon={<FileAddOutlined />}
-                                        type="primary"
-                                        onClick={() => add({})}
-                                    >
-                                        添加文件
-                                    </Button>
-                                    <Button
-                                        icon={<PlusOutlined />}
-                                        type="primary"
-                                        ghost
-                                        onClick={() => handleAdd()}
-                                    >
-                                        添加一行
-                                    </Button>
-                                    <Button
-                                        icon={<CodeOutlined />}
-                                        onClick={() => handlePreviewCode()}
-                                    >
-                                        代码预览
-                                    </Button>
-                                    <Button
-                                        icon={<FormOutlined />}
-                                        onClick={() => handleFastEdit()}
-                                    >
-                                        快速编辑
-                                    </Button>
-                                </Space>
                             </>
                         )}
                     </Form.List>
                 </div>
             </Form>
+            <Space style={{ marginBottom: 8 }}>
+                <Button
+                    icon={<PlusOutlined/>}
+                    type="primary"
+                    onClick={() => handleAdd()}
+                >
+                    添加一行
+                </Button>
+                <Button
+                    icon={<CodeOutlined/>}
+                    type="primary"
+                    ghost
+                    onClick={() => handlePreviewCode()}
+                >
+                    代码预览
+                </Button>
+                <Button
+                    icon={<FormOutlined/>}
+                    onClick={() => handleFastEdit()}
+                >
+                    快速编辑
+                </Button>
+            </Space>
             <EditTable
                 otherHeight={72}
                 columns={columns}
