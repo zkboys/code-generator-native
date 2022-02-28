@@ -7,7 +7,7 @@ import { OptionsTag, EditTable } from 'src/components';
 import s from './style.less';
 import { v4 as uuid } from 'uuid';
 import { FORM_ELEMENT_OPTIONS, FIELD_EDIT_TYPES } from './constant';
-import { triggerWindowResize } from 'src/commons';
+import { stringFormat, triggerWindowResize } from 'src/commons';
 
 export default config({
     path: '/',
@@ -18,6 +18,7 @@ export default config({
     const [tableOptions, setTableOptions] = useState([]);
     const [templateOptions, setTemplateOptions] = useState([]);
     const [optionColumns, setOptionColumns] = useState([]);
+    const [moduleNames, setModuleNames] = useState({});
     const [form] = Form.useForm();
 
     const fetchDbTables = useCallback(async (dbUrl) => {
@@ -88,6 +89,7 @@ export default config({
     const handleTableNameChange = useCallback(async (tableName) => {
         let dataSource;
         const moduleNames = await fetchModuleNames(tableName);
+        setModuleNames(moduleNames);
         form.setFieldsValue({ moduleName: moduleNames['module-name'] });
 
         try {
@@ -110,9 +112,12 @@ export default config({
     }, [fetchColumns, fetchModuleNames, form]);
 
     // 模块名改变事件
-    const handleModuleNameChange = useCallback(() => {
-        // TODO
-    }, []);
+    const handleModuleNameBlur = useCallback(async (e) => {
+        const moduleName = e.target.value;
+        if (!moduleName) return;
+        const moduleNames = await fetchModuleNames(moduleName);
+        setModuleNames(moduleNames);
+    }, [fetchModuleNames]);
 
     // 文件列表改变事件
     const handleFilesChange = useCallback(() => {
@@ -150,7 +155,9 @@ export default config({
         form.setFieldsValue({ files: [...files] });
 
         handleFilesChange();
-    }, [form, handleFilesChange, templateOptions]);
+        // 强制刷新 targetPath
+        setModuleNames({ ...moduleNames });
+    }, [form, handleFilesChange, templateOptions, moduleNames]);
 
     // 表格新增一行事件
     const handleAdd = useCallback((append = false) => {
@@ -234,6 +241,20 @@ export default config({
         changed && setDataSource([...dataSource]);
     }, [dataSource, optionColumns]);
 
+    // 处理模板的目标位置
+    useEffect(() => {
+        const files = form.getFieldValue('files') || [];
+        const nextFiles = files.map(item => {
+            if (item.targetPath) {
+                const record = templateOptions.find(it => it.value === item.templateId).record;
+                item.targetPath = stringFormat(record.targetPath, moduleNames);
+            }
+
+            return { ...item };
+        });
+        form.setFieldsValue({ files: nextFiles });
+    }, [form, moduleNames, templateOptions]);
+
     const formItemProps = {
         // size: 'small',
     };
@@ -277,7 +298,7 @@ export default config({
                     label="模块名"
                     name="moduleName"
                     placeholder="比如：user-center"
-                    onChange={handleModuleNameChange}
+                    onBlur={handleModuleNameBlur}
                     required
                 />
                 <div style={{ width: '100%', marginTop: 8 }}>
