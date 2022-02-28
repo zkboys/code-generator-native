@@ -27,3 +27,8 @@ export const FIELD_EDIT_TYPES = {
     select: 'select',
     tags: 'tags',
 };
+
+export const JAVA_TYPE_OPTIONS = [
+    { value: 'String', label: 'String' },
+    { value: 'Timestamp', label: 'Timestamp' },
+];

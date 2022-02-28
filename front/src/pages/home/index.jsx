@@ -12,7 +12,7 @@ import config from 'src/commons/config-hoc';
 import { OptionsTag, EditTable } from 'src/components';
 import s from './style.less';
 import { v4 as uuid } from 'uuid';
-import { FORM_ELEMENT_OPTIONS, FIELD_EDIT_TYPES } from './constant';
+import { FORM_ELEMENT_OPTIONS, FIELD_EDIT_TYPES, JAVA_TYPE_OPTIONS } from './constant';
 import { stringFormat, triggerWindowResize } from 'src/commons';
 
 export default config({
@@ -70,8 +70,9 @@ export default config({
         },
         { title: '注释', dataIndex: 'comment', width: 150 },
         { title: '列名', dataIndex: 'name', width: 150, isNewEdit: true, type: FIELD_EDIT_TYPES.input, required: true },
+        { title: 'Java类型', dataIndex: 'javaType', width: 130, type: FIELD_EDIT_TYPES.select, options: JAVA_TYPE_OPTIONS },
         { title: '中文名', dataIndex: 'chinese', width: 190, type: FIELD_EDIT_TYPES.input, required: true },
-        { title: '表单类型', dataIndex: 'formType', width: 130, type: FIELD_EDIT_TYPES.select, options: FORM_ELEMENT_OPTIONS },
+        { title: '表单类型', dataIndex: 'formType', width: 150, type: FIELD_EDIT_TYPES.select, options: FORM_ELEMENT_OPTIONS },
         ...optionColumns,
     ];
 
@@ -176,6 +177,7 @@ export default config({
             chinese: `新增列${length + 1}`,
             field: `field${length + 1}`,
             formType: 'input',
+            javaType: 'String',
             __isNew: true,
         };
 
