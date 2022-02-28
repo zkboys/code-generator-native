@@ -1,6 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Form, Space, Button, Modal } from 'antd';
-import { MinusCircleOutlined, PlusCircleOutlined, PlusOutlined, CodeOutlined, FormOutlined } from '@ant-design/icons';
+import {
+    MinusCircleOutlined,
+    PlusCircleOutlined,
+    PlusOutlined,
+    CodeOutlined,
+    FileDoneOutlined,
+} from '@ant-design/icons';
 import { PageContent, FormItem, Operator, storage } from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
 import { OptionsTag, EditTable } from 'src/components';
@@ -20,6 +26,7 @@ export default config({
     const [optionColumns, setOptionColumns] = useState([]);
     const [moduleNames, setModuleNames] = useState({});
     const [form] = Form.useForm();
+    const editTableRef = useRef();
 
     const fetchDbTables = useCallback(async (dbUrl) => {
         return await props.ajax.get('/db/tables', { dbUrl }, { errorTip: false });
@@ -44,13 +51,8 @@ export default config({
     }, [dataSource]);
 
     const columns = [
-        { title: '注释', dataIndex: 'comment', width: 150 },
-        { title: '列名', dataIndex: 'name', width: 190, type: FIELD_EDIT_TYPES.input, required: true },
-        { title: '中文名', dataIndex: 'chinese', width: 190, type: FIELD_EDIT_TYPES.input, required: true },
-        { title: '表单类型', dataIndex: 'formType', width: 130, type: FIELD_EDIT_TYPES.select, options: FORM_ELEMENT_OPTIONS },
-        ...optionColumns,
         {
-            title: '操作', dataIndex: 'operator', width: 100,
+            title: '操作', dataIndex: 'operator', width: 60,
             render: (value, record) => {
                 const { id, chinese } = record;
                 const items = [
@@ -63,11 +65,14 @@ export default config({
                         },
                     },
                 ];
-
                 return <Operator items={items} />;
             },
         },
-
+        { title: '注释', dataIndex: 'comment', width: 150 },
+        { title: '列名', dataIndex: 'name', width: 150, isNewEdit: true, type: FIELD_EDIT_TYPES.input, required: true },
+        { title: '中文名', dataIndex: 'chinese', width: 190, type: FIELD_EDIT_TYPES.input, required: true },
+        { title: '表单类型', dataIndex: 'formType', width: 130, type: FIELD_EDIT_TYPES.select, options: FORM_ELEMENT_OPTIONS },
+        ...optionColumns,
     ];
 
     // 数据库连接改变事件
@@ -119,10 +124,9 @@ export default config({
         setModuleNames(moduleNames);
     }, [fetchModuleNames]);
 
-    // 文件列表改变事件
-    const handleFilesChange = useCallback(() => {
+    const getOptionColumns = useCallback((templateOptions) => {
         const files = form.getFieldValue('files');
-        const optionColumns = files.filter(item => item.templateId)
+        return files.filter(item => item.templateId)
             .map(({ templateId }) => {
                 const record = templateOptions.find(item => item.value === templateId)?.record;
                 const title = record?.name;
@@ -136,10 +140,13 @@ export default config({
                     options,
                 };
             });
+    }, [form]);
 
+    // 文件列表改变事件
+    const handleFilesChange = useCallback(() => {
+        const optionColumns = getOptionColumns(templateOptions);
         setOptionColumns(optionColumns);
-
-    }, [form, templateOptions]);
+    }, [getOptionColumns, templateOptions]);
 
     // 模版改变事件
     const handleTemplateChange = useCallback((name, templateId) => {
@@ -169,6 +176,7 @@ export default config({
             chinese: `新增列${length + 1}`,
             field: `field${length + 1}`,
             formType: 'input',
+            __isNew: true,
         };
 
         append ? dataSource.push(newRecord) : dataSource.unshift(newRecord);
@@ -180,10 +188,24 @@ export default config({
         //TODO
     }, []);
 
-    // 快速编辑按钮事件
-    const handleFastEdit = useCallback(() => {
-        //TODO
-    }, []);
+    // 生成代码
+    const handleGenerate = useCallback(async () => {
+        try {
+            const values = await form.validateFields();
+            await editTableRef.current.form.validateFields();
+
+            if (!dataSource?.length) return Modal.info({ title: '温馨提示', content: '表格的字段配置不能为空！' });
+
+            console.log(values);
+            console.log(dataSource);
+            // TODO
+        } catch (e) {
+            if (e?.errorFields?.length) {
+                return Modal.info({ title: '温馨提示', content: '表单填写有误，请检查后再提交！' });
+            }
+            console.error(e);
+        }
+    }, [form, dataSource]);
 
     // 表单改变事件
     const handleFormChange = useCallback(() => {
@@ -205,8 +227,11 @@ export default config({
                 options: [...(item.options || [])],
             }));
             form.setFieldsValue({ files });
+
+            const optionColumns = getOptionColumns(templateOptions);
+            setOptionColumns(optionColumns);
         })();
-    }, [fetchTemplates, form]);
+    }, [fetchTemplates, form, getOptionColumns]);
 
     // 从本地同步数据库链接
     useEffect(() => {
@@ -259,6 +284,7 @@ export default config({
         // size: 'small',
     };
 
+    console.log(123);
     return (
         <PageContent className={s.root} loading={loading}>
             <Form
@@ -423,6 +449,7 @@ export default config({
             <Space style={{ marginBottom: 8 }}>
                 <Button
                     icon={<PlusOutlined />}
+                    ghost
                     type="primary"
                     onClick={() => handleAdd()}
                 >
@@ -430,20 +457,22 @@ export default config({
                 </Button>
                 <Button
                     icon={<CodeOutlined />}
-                    type="primary"
-                    ghost
                     onClick={() => handlePreviewCode()}
                 >
                     代码预览
                 </Button>
                 <Button
-                    icon={<FormOutlined />}
-                    onClick={() => handleFastEdit()}
+                    type="primary"
+                    icon={<FileDoneOutlined />}
+                    onClick={() => handleGenerate()}
                 >
-                    快速编辑
+                    生成文件
                 </Button>
+                <span style={{ marginLeft: 24 }}>共<span style={{ fontSize: 16, margin: '0 8px' }}>{dataSource?.length || 0}</span>条数据</span>
             </Space>
             <EditTable
+                ref={editTableRef}
+                serialNumber={false}
                 otherHeight={72}
                 columns={columns}
                 onAdd={handleAdd}

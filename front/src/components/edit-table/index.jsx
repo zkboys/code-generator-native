@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useEffect, useState, useRef } from 'react';
+import React, { useCallback, useMemo, useEffect, useState, useRef, useImperativeHandle } from 'react';
 import { Table, tableRowDraggable } from '@ra-lib/admin';
 import { Button, Form } from 'antd';
 import { OptionsTag } from 'src/components';
@@ -9,7 +9,7 @@ const RowDraggableTable = tableRowDraggable(Table);
 
 const FIELD_NAME = 'dataSource';
 
-export default function EditTable(props) {
+const EditTable = React.forwardRef((props, ref) => {
     const {
         dataSource,
         onChange,
@@ -25,6 +25,9 @@ export default function EditTable(props) {
     // 失去焦点延迟句柄
     const blurStRef = useRef(0);
 
+    useImperativeHandle(ref, () => {
+        return { form };
+    }, [form]);
     // dataSource改变，同步到form中
     useEffect(() => form.setFieldsValue({ [FIELD_NAME]: [...dataSource] }), [form, dataSource]);
 
@@ -138,14 +141,17 @@ export default function EditTable(props) {
         const totalRow = dataSource.length;
 
         const inputColumn = (colOptions) => {
-            const { title, dataIndex, required } = colOptions;
+            const { title, dataIndex, required, isNewEdit } = colOptions;
             const _columnIndex = columnIndex++;
 
             return {
                 ...colOptions,
                 render: (value, record, index) => {
+                    if (isNewEdit && !record.__isNew) return value;
+
                     const tabIndex = totalRow * _columnIndex + index + 1;
-                    const showForm = showFormIndex.includes(index);
+                    let showForm = showFormIndex.includes(index);
+                    if (required && !value) showForm = true;
 
                     return (
                         <CellFormItem
@@ -163,8 +169,7 @@ export default function EditTable(props) {
                         />
                     );
                 },
-            }
-                ;
+            };
         };
 
         const selectColumn = (colOptions) => {
@@ -173,8 +178,12 @@ export default function EditTable(props) {
             return {
                 ...colOptions,
                 render: (value, record, index) => {
+                    let showForm = showFormIndex.includes(index);
+                    if (required && !value) showForm = true;
+
                     return (
                         <CellFormItem
+                            showForm={showForm}
                             name={[FIELD_NAME, index, dataIndex].flat()}
                             renderCell={value => options.find(item => item.value === value)?.label}
                             type="select"
@@ -195,8 +204,12 @@ export default function EditTable(props) {
             return {
                 ...colOptions,
                 render: (value, record, index) => {
+                    let showForm = showFormIndex.includes(index);
+                    if (required && !value) showForm = true;
+
                     return (
                         <CellFormItem
+                            showForm={showForm}
                             type="tags"
                             name={[FIELD_NAME, index, dataIndex].flat()}
                             options={options}
@@ -259,4 +272,6 @@ export default function EditTable(props) {
             />
         </Form>
     );
-}
+});
+
+export default EditTable;
