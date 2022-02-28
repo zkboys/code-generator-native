@@ -1,6 +1,6 @@
-import React, {useCallback, useEffect} from 'react';
+import React, { useCallback, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import {Tag} from 'antd';
+import { Tag } from 'antd';
 import stringToColor from 'string-to-color';
 import s from './style.less';
 
@@ -47,6 +47,7 @@ function OptionsTag(props) {
 
                 return (
                     <Tag
+                        style={{ margin: 2 }}
                         key={label}
                         color={isSelected ? color : '#bbbbbb'}
                         onClick={(e) => handleClick(e, label)}

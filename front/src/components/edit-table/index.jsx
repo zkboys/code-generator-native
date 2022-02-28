@@ -1,9 +1,9 @@
-import React, {useCallback, useMemo, useEffect, useState, useRef} from 'react';
-import {Table, tableRowDraggable} from '@ra-lib/admin';
-import {Button, Form} from 'antd';
-import {OptionsTag} from 'src/components';
+import React, { useCallback, useMemo, useEffect, useState, useRef } from 'react';
+import { Table, tableRowDraggable } from '@ra-lib/admin';
+import { Button, Form } from 'antd';
+import { OptionsTag } from 'src/components';
 import CellFormItem from './CellFormItem';
-import {getCursorPosition} from 'src/commons';
+import { getCursorPosition } from 'src/commons';
 
 const RowDraggableTable = tableRowDraggable(Table);
 
@@ -152,7 +152,7 @@ export default function EditTable(props) {
                             showForm={showForm}
                             value={value}
                             type="input"
-                            name={[FIELD_NAME, index, dataIndex]}
+                            name={[FIELD_NAME, index, dataIndex].flat()}
                             required={required}
                             tabIndex={tabIndex}
                             onKeyDown={e => handleKeyDown(e, tabIndex, _columnIndex, columnIndex, totalRow)}
@@ -175,7 +175,7 @@ export default function EditTable(props) {
                 render: (value, record, index) => {
                     return (
                         <CellFormItem
-                            name={[FIELD_NAME, index, dataIndex]}
+                            name={[FIELD_NAME, index, dataIndex].flat()}
                             renderCell={value => options.find(item => item.value === value)?.label}
                             type="select"
                             options={options}
@@ -190,7 +190,7 @@ export default function EditTable(props) {
 
 
         const tagsColumn = (colOptions) => {
-            const { title, options, required } = colOptions;
+            const { title, dataIndex, options, required } = colOptions;
 
             return {
                 ...colOptions,
@@ -198,13 +198,13 @@ export default function EditTable(props) {
                     return (
                         <CellFormItem
                             type="tags"
-                            name={[FIELD_NAME, index, 'options']}
+                            name={[FIELD_NAME, index, dataIndex].flat()}
                             options={options}
-                            renderCell={value => <OptionsTag value={value} options={options}/>}
+                            renderCell={value => <OptionsTag value={value} options={options} />}
                             required={required}
                             rules={[{ required, message: `请请选择${title}!` }]}
                         >
-                            <OptionsTag options={options}/>
+                            <OptionsTag options={options} />
                         </CellFormItem>
                     );
                 },
@@ -223,7 +223,6 @@ export default function EditTable(props) {
 
     return (
         <Form
-            layout={'inline'}
             form={form}
             onValuesChange={() => {
                 // 不改变DataSource引用方式，同步数据，否则输入框会失去焦点

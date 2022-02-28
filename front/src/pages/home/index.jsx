@@ -1,16 +1,13 @@
-import React, {useState, useEffect, useCallback} from 'react';
-import {Form, Space, Button, Modal} from 'antd';
-import {MinusCircleOutlined, PlusOutlined, CodeOutlined, FormOutlined} from '@ant-design/icons';
-import {PageContent, FormItem, storage, Operator} from '@ra-lib/admin';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Form, Space, Button, Modal } from 'antd';
+import { MinusCircleOutlined, PlusCircleOutlined, PlusOutlined, CodeOutlined, FormOutlined } from '@ant-design/icons';
+import { PageContent, FormItem, Operator, storage } from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
-import {OptionsTag, EditTable} from 'src/components';
+import { OptionsTag, EditTable } from 'src/components';
 import s from './style.less';
-import {v4 as uuid} from 'uuid';
-import {FORM_ELEMENT_OPTIONS, FIELD_EDIT_TYPES} from './constant';
-import {triggerWindowResize} from 'src/commons';
-
-const FORM_STORAGE_KEY = 'single_form_values';
-const DATA_SOURCE_STORAGE_KEY = 'single_data_source';
+import { v4 as uuid } from 'uuid';
+import { FORM_ELEMENT_OPTIONS, FIELD_EDIT_TYPES } from './constant';
+import { triggerWindowResize } from 'src/commons';
 
 export default config({
     path: '/',
@@ -18,9 +15,9 @@ export default config({
 })(function Home(props) {
     const [loading, setLoading] = useState(false);
     const [dataSource, setDataSource] = useState([]);
-    const [fieldOptions, setFieldOptions] = useState([]);
     const [tableOptions, setTableOptions] = useState([]);
     const [templateOptions, setTemplateOptions] = useState([]);
+    const [optionColumns, setOptionColumns] = useState([]);
     const [form] = Form.useForm();
 
     const fetchDbTables = useCallback(async (dbUrl) => {
@@ -39,24 +36,18 @@ export default config({
         return await props.ajax.get('/templates', null, { errorTip: false });
     }, [props.ajax]);
 
-    // dataSource 改变
-    const handleDataSourceChange = useCallback(values => {
-        setDataSource(values);
-        storage.local.setItem(DATA_SOURCE_STORAGE_KEY, values);
-    }, []);
-
     // 删除行
     const handleDelete = useCallback((id) => {
         const nextDataSource = dataSource.filter(item => item.id !== id);
-        handleDataSourceChange(nextDataSource);
-    }, [dataSource, handleDataSourceChange]);
+        setDataSource(nextDataSource);
+    }, [dataSource]);
 
     const columns = [
         { title: '注释', dataIndex: 'comment', width: 150 },
-        { title: '中文名', dataIndex: 'chinese', width: 190, type: FIELD_EDIT_TYPES.input, required: true },
         { title: '列名', dataIndex: 'name', width: 190, type: FIELD_EDIT_TYPES.input, required: true },
-        { title: '表单类型', dataIndex: 'formType', width: 190, type: FIELD_EDIT_TYPES.select, options: FORM_ELEMENT_OPTIONS },
-        { title: '选项', dataIndex: 'options', type: FIELD_EDIT_TYPES.tags, options: fieldOptions },
+        { title: '中文名', dataIndex: 'chinese', width: 190, type: FIELD_EDIT_TYPES.input, required: true },
+        { title: '表单类型', dataIndex: 'formType', width: 130, type: FIELD_EDIT_TYPES.select, options: FORM_ELEMENT_OPTIONS },
+        ...optionColumns,
         {
             title: '操作', dataIndex: 'operator', width: 100,
             render: (value, record) => {
@@ -72,7 +63,7 @@ export default config({
                     },
                 ];
 
-                return <Operator items={items}/>;
+                return <Operator items={items} />;
             },
         },
 
@@ -83,6 +74,7 @@ export default config({
         let tableOptions;
         try {
             const dbUrl = e.target.value;
+            storage.local.setItem('dbUrl', dbUrl);
             const tables = await fetchDbTables(dbUrl);
             tableOptions = tables.map(item => ({ value: item.name, label: item.name }));
         } catch (e) {
@@ -107,7 +99,7 @@ export default config({
             dataSource = [];
         }
 
-        handleDataSourceChange(dataSource.map(item => {
+        setDataSource(dataSource.map(item => {
             return {
                 id: uuid(),
                 formType: item?.types?.form,
@@ -115,34 +107,39 @@ export default config({
                 ...item,
             };
         }));
-    }, [fetchColumns, fetchModuleNames, form, handleDataSourceChange]);
+    }, [fetchColumns, fetchModuleNames, form]);
 
     // 模块名改变事件
     const handleModuleNameChange = useCallback(() => {
         // TODO
     }, []);
 
-
     // 文件列表改变事件
     const handleFilesChange = useCallback(() => {
         const files = form.getFieldValue('files');
+        const optionColumns = files.filter(item => item.templateId)
+            .map(({ templateId }) => {
+                const record = templateOptions.find(item => item.value === templateId)?.record;
+                const title = record?.name;
+                const dataIndex = ['options', record?.id];
+                const options = record?.fieldOptions || [];
+                const type = FIELD_EDIT_TYPES.tags;
+                return {
+                    title,
+                    dataIndex,
+                    type,
+                    options,
+                };
+            });
 
-        const fieldOptions = files.reduce((prev, curr) => {
-            const { templateId } = curr;
-            const record = templateOptions.find(item => item.value === templateId)?.record;
-            return Array.from(new Set([
-                ...prev,
-                ...(record?.fieldOptions || []),
-            ]));
-        }, []);
+        setOptionColumns(optionColumns);
 
-        setFieldOptions(fieldOptions);
     }, [form, templateOptions]);
 
     // 模版改变事件
     const handleTemplateChange = useCallback((name, templateId) => {
         const record = templateOptions.find(item => item.value === templateId).record;
-        const { targetPath, options, fieldOptions } = record;
+        const { targetPath, options } = record;
 
         const files = form.getFieldValue('files');
         const file = form.getFieldValue(['files', name]);
@@ -153,17 +150,9 @@ export default config({
         form.setFieldsValue({ files: [...files] });
 
         handleFilesChange();
+    }, [form, handleFilesChange, templateOptions]);
 
-        const nextDataSource = dataSource.map(item => {
-            const options = Array.from(new Set([...item.options, ...fieldOptions]));
-            return {
-                ...item,
-                options,
-            };
-        });
-        handleDataSourceChange(nextDataSource);
-    }, [form, handleFilesChange, templateOptions, dataSource, handleDataSourceChange]);
-
+    // 表格新增一行事件
     const handleAdd = useCallback((append = false) => {
         const length = dataSource.length;
 
@@ -173,66 +162,77 @@ export default config({
             chinese: `新增列${length + 1}`,
             field: `field${length + 1}`,
             formType: 'input',
-            options: [...fieldOptions],
         };
 
         append ? dataSource.push(newRecord) : dataSource.unshift(newRecord);
-        handleDataSourceChange([...dataSource]);
-    }, [dataSource, fieldOptions, handleDataSourceChange]);
+        setDataSource([...dataSource]);
+    }, [dataSource]);
 
+    // 代码预览按钮事件
     const handlePreviewCode = useCallback(() => {
         //TODO
     }, []);
 
+    // 快速编辑按钮事件
     const handleFastEdit = useCallback(() => {
         //TODO
     }, []);
 
+    // 表单改变事件
     const handleFormChange = useCallback(() => {
-        // 解决删除一行文件，获取不到最新数据问题
-        setTimeout(() => {
-            // 表单同步localStorage
-            storage.local.setItem(FORM_STORAGE_KEY, form.getFieldsValue());
-            // 触发窗口事件，表格高度重新计算
-            triggerWindowResize();
-        });
-    }, [form]);
+        //  触发窗口事件，表格高度重新计算
+        triggerWindowResize();
+    }, []);
 
-    // 从localStorage中恢复表单
-    useEffect(() => {
-        (async () => {
-            const localDataSource = storage.local.getItem(DATA_SOURCE_STORAGE_KEY);
-            const values = storage.local.getItem(FORM_STORAGE_KEY) || {};
-            form.setFieldsValue(values);
-            const { dbUrl, tableName } = values;
-            if (dbUrl) {
-                await handleDbUrlChange({ target: { value: dbUrl } });
-            }
-            if (tableName) {
-                await handleTableNameChange(tableName);
-            }
-
-            handleFilesChange();
-
-            localDataSource && handleDataSourceChange(localDataSource);
-        })();
-    }, [form, handleDbUrlChange, handleDataSourceChange, handleTableNameChange, handleFilesChange]);
-
+    // 初始化时，加载模板
     useEffect(() => {
         (async () => {
             const templates = await fetchTemplates();
             const templateOptions = templates.map(item => ({ record: item, value: item.id, label: item.name }));
             setTemplateOptions(templateOptions);
+
+            // 默认展示全部模板
+            const files = templates.map(item => ({
+                templateId: item.id,
+                targetPath: item.targetPath,
+                options: [...(item.options || [])],
+            }));
+            form.setFieldsValue({ files });
         })();
-    }, [fetchTemplates]);
+    }, [fetchTemplates, form]);
 
+    // 从本地同步数据库链接
     useEffect(() => {
-        const noOptionsRecord = dataSource.filter(item => !item.options);
-        if (!noOptionsRecord?.length) return;
-        noOptionsRecord.forEach(item => item.options = [...fieldOptions]);
+        (async () => {
+            const dbUrl = storage.local.getItem('dbUrl');
+            if (!dbUrl) return;
 
-        handleDataSourceChange([...dataSource]);
-    }, [fieldOptions, dataSource, handleDataSourceChange]);
+            form.setFieldsValue({ dbUrl });
+            await handleDbUrlChange({ target: { value: dbUrl } });
+        })();
+    }, [form, handleDbUrlChange]);
+
+    // 设置字段选项默认值，默认全选
+    useEffect(() => {
+        let changed;
+        optionColumns.forEach(col => {
+            const [, templateId] = col.dataIndex;
+            const options = [...col.options];
+
+            dataSource.forEach(item => {
+                if (!item.options) item.options = {};
+
+                if (!item.options[templateId]) {
+                    item.options[templateId] = [...options];
+                    changed = true;
+                }
+            });
+
+        });
+
+        // 防止死循环
+        changed && setDataSource([...dataSource]);
+    }, [dataSource, optionColumns]);
 
     const formItemProps = {
         // size: 'small',
@@ -286,7 +286,7 @@ export default config({
                             <>
                                 {fields.map(({ key, name, isListField, ...restField }, index) => {
                                     const backgroundColor = index % 2 ? '#fff' : '#eee';
-                                    // const isLast = index === fields.length - 1;
+                                    const isLast = index === fields.length - 1;
                                     const isFirst = index === 0;
                                     const number = index + 1;
                                     let label = number;
@@ -304,32 +304,56 @@ export default config({
                                             }}
                                         >
                                             <div style={{ width: 408, position: 'relative' }}>
-                                                {isFirst && (
-                                                    <Button
-                                                        type="primary"
-                                                        ghost
-                                                        shape="circle"
-                                                        size="small"
-                                                        style={{ position: 'absolute', top: 4, zIndex: 1 }}
-                                                        icon={<PlusOutlined/>}
-                                                        onClick={() => {
-                                                            add({});
-                                                            handleFilesChange();
-                                                        }}
-                                                    />
-                                                )}
-                                                <FormItem
-                                                    {...formItemProps}
-                                                    {...restField}
-                                                    labelCol={{ flex: '90px' }}
-                                                    style={{ width: 300 }}
-                                                    label={label}
-                                                    name={[name, 'templateId']}
-                                                    required
-                                                    options={templateOptions}
-                                                    placeholder="请选择模板"
-                                                    onChange={(id) => handleTemplateChange(name, id)}
-                                                />
+                                                <div style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    position: 'absolute',
+                                                    height: '100%',
+                                                    zIndex: 10,
+                                                }}>
+                                                    {fields?.length > 1 && (
+                                                        <MinusCircleOutlined
+                                                            style={{ color: 'red', marginTop: -5, marginRight: 16 }}
+                                                            onClick={() => {
+                                                                remove(name);
+                                                                handleFilesChange();
+                                                            }}
+                                                        />
+                                                    )}
+                                                    {isLast && (fields.length < templateOptions.length) && (
+                                                        <PlusCircleOutlined
+                                                            style={{ color: 'green', marginTop: -5 }}
+                                                            onClick={() => {
+                                                                add({});
+                                                                handleFilesChange();
+                                                            }}
+                                                        />
+                                                    )}
+                                                </div>
+                                                <FormItem noStyle shouldUpdate>
+                                                    {({ getFieldValue }) => {
+                                                        const files = getFieldValue('files');
+                                                        const templateId = getFieldValue(['files', name, 'templateId']);
+                                                        const options = templateOptions.filter(item => {
+                                                            if (templateId === item.value) return true;
+                                                            return !files.find(f => f.templateId === item.value);
+                                                        });
+                                                        return (
+                                                            <FormItem
+                                                                {...formItemProps}
+                                                                {...restField}
+                                                                labelCol={{ flex: '90px', style: { userSelect: 'none' } }}
+                                                                style={{ width: 300 }}
+                                                                label={label}
+                                                                name={[name, 'templateId']}
+                                                                required
+                                                                options={options}
+                                                                placeholder="请选择模板"
+                                                                onChange={(id) => handleTemplateChange(name, id)}
+                                                            />
+                                                        );
+                                                    }}
+                                                </FormItem>
                                             </div>
                                             <FormItem
                                                 {...formItemProps}
@@ -362,20 +386,11 @@ export default config({
                                                             {...restField}
                                                             name={[name, 'options']}
                                                         >
-                                                            <OptionsTag options={options}/>
+                                                            <OptionsTag options={options} />
                                                         </FormItem>
                                                     );
                                                 }}
                                             </FormItem>
-                                            {fields?.length > 1 && (
-                                                <MinusCircleOutlined
-                                                    style={{ color: 'red' }}
-                                                    onClick={() => {
-                                                        remove(name);
-                                                        handleFilesChange();
-                                                    }}
-                                                />
-                                            )}
                                         </div>
                                     );
                                 })}
@@ -386,14 +401,14 @@ export default config({
             </Form>
             <Space style={{ marginBottom: 8 }}>
                 <Button
-                    icon={<PlusOutlined/>}
+                    icon={<PlusOutlined />}
                     type="primary"
                     onClick={() => handleAdd()}
                 >
                     添加一行
                 </Button>
                 <Button
-                    icon={<CodeOutlined/>}
+                    icon={<CodeOutlined />}
                     type="primary"
                     ghost
                     onClick={() => handlePreviewCode()}
@@ -401,7 +416,7 @@ export default config({
                     代码预览
                 </Button>
                 <Button
-                    icon={<FormOutlined/>}
+                    icon={<FormOutlined />}
                     onClick={() => handleFastEdit()}
                 >
                     快速编辑
@@ -411,8 +426,8 @@ export default config({
                 otherHeight={72}
                 columns={columns}
                 onAdd={handleAdd}
-                dataSource={dataSource}
-                onChange={handleDataSourceChange}
+                dataSource={optionColumns?.length ? dataSource : []}
+                onChange={setDataSource}
                 footer={() => null}
             />
         </PageContent>
