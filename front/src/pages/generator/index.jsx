@@ -8,7 +8,7 @@ import s from './style.less';
 
 const { TabPane } = Tabs;
 
-export default config({path: '/'})(function Gen() {
+export default config({path: '/gen'})(function Gen() {
     const [activeKey, setActiveKey] = useState('single');
     useEffect(() => {
         // 触发 window resize 事件，重新调整页面高度

@@ -1,9 +1,9 @@
-import React, { useCallback, useMemo, useEffect, useState, useRef } from 'react';
-import { Table, tableRowDraggable } from '@ra-lib/admin';
-import { Button, Form } from 'antd';
-import { OptionsTag } from 'src/components';
+import React, {useCallback, useMemo, useEffect, useState, useRef} from 'react';
+import {Table, tableRowDraggable} from '@ra-lib/admin';
+import {Button, Form} from 'antd';
+import {OptionsTag} from 'src/components';
 import CellFormItem from './CellFormItem';
-import { getCursorPosition } from 'src/commons';
+import {getCursorPosition} from 'src/commons';
 
 const RowDraggableTable = tableRowDraggable(Table);
 
@@ -26,11 +26,14 @@ export default function EditTable(props) {
     const blurStRef = useRef(0);
 
     // dataSource改变，同步到form中
-    useEffect(() => form.setFieldsValue({ [FIELD_NAME]: dataSource }), [form, dataSource]);
+    useEffect(() => form.setFieldsValue({ [FIELD_NAME]: [...dataSource] }), [form, dataSource]);
 
     // 拖拽排序结束，交换位置
     const handleSortEnd = useCallback(({ oldIndex, newIndex }) => {
+        if (oldIndex === newIndex) return;
+
         dataSource.splice(newIndex - 1, 0, ...dataSource.splice(oldIndex - 1, 1));
+
         onChange && onChange([...dataSource]);
     }, [dataSource, onChange]);
 
@@ -121,7 +124,7 @@ export default function EditTable(props) {
     }, []);
 
     // 输入框失去焦点，延迟切换为展示内容
-    const handleBlur = useCallback((e, index) => {
+    const handleBlur = useCallback(() => {
         blurStRef.current = setTimeout(() => {
             setShowFormIndex([]);
         });
@@ -197,11 +200,11 @@ export default function EditTable(props) {
                             type="tags"
                             name={[FIELD_NAME, index, 'options']}
                             options={options}
-                            renderCell={value => <OptionsTag value={value} options={options} />}
+                            renderCell={value => <OptionsTag value={value} options={options}/>}
                             required={required}
                             rules={[{ required, message: `请请选择${title}!` }]}
                         >
-                            <OptionsTag options={options} />
+                            <OptionsTag options={options}/>
                         </CellFormItem>
                     );
                 },

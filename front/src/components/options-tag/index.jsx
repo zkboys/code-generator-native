@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect } from 'react';
+import React, {useCallback, useEffect} from 'react';
 import PropTypes from 'prop-types';
-import { Tag } from 'antd';
+import {Tag} from 'antd';
 import stringToColor from 'string-to-color';
 import s from './style.less';
 
@@ -42,6 +42,8 @@ function OptionsTag(props) {
                 let color = stringToColor(label);
 
                 if (label.includes('删除')) color = '#ff0000';
+
+                if (label === '详情') color = '#ff8500';
 
                 return (
                     <Tag

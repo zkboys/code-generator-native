@@ -13,15 +13,14 @@ const FORM_STORAGE_KEY = 'single_form_values';
 const DATA_SOURCE_STORAGE_KEY = 'single_data_source';
 
 export default config({
-    path: '/home',
+    path: '/',
     title: '首页',
 })(function Home(props) {
     const [loading, setLoading] = useState(false);
-    const [dataSource, setDataSource] = useState(storage.local.getItem(DATA_SOURCE_STORAGE_KEY) || []);
+    const [dataSource, setDataSource] = useState([]);
     const [fieldOptions, setFieldOptions] = useState([]);
     const [tableOptions, setTableOptions] = useState([]);
     const [templateOptions, setTemplateOptions] = useState([]);
-    const [fileOptions, setFileOptions] = useState([]);
     const [form] = Form.useForm();
 
     const fetchDbTables = useCallback(async (dbUrl) => {
@@ -108,40 +107,46 @@ export default config({
             dataSource = [];
         }
 
-        setDataSource(dataSource.map(item => ({ id: uuid(), ...item })));
-    }, [fetchColumns, fetchModuleNames, form]);
+        handleDataSourceChange(dataSource.map(item => ({ id: uuid(), ...item })));
+    }, [fetchColumns, fetchModuleNames, form, handleDataSourceChange]);
 
     // 模块名改变事件
     const handleModuleNameChange = useCallback(() => {
         // TODO
     }, []);
 
-    // 模版改变事件
-    const handleTemplateChange = useCallback((templateId) => {
-        const record = templateOptions.find(item => item.value === templateId).record;
-        const { targetPath, options } = record;
+
+    // 文件列表改变事件
+    const handleFilesChange = useCallback(() => {
         const files = form.getFieldValue('files');
-        const index = files.findIndex(item => item.templateId === templateId);
-        const file = files[index];
-        file.targetPath = targetPath;
-
-        form.setFieldsValue({ files: [...files] });
-
-        fileOptions[index] = options;
-
-        setFileOptions([...fileOptions]);
 
         const fieldOptions = files.reduce((prev, curr) => {
             const { templateId } = curr;
-            const record = templateOptions.find(item => item.value === templateId).record;
+            const record = templateOptions.find(item => item.value === templateId)?.record;
             return Array.from(new Set([
                 ...prev,
-                ...(record.fieldOptions || []),
+                ...(record?.fieldOptions || []),
             ]));
         }, []);
 
         setFieldOptions(fieldOptions);
-    }, [form, templateOptions, fileOptions]);
+    }, [form, templateOptions]);
+
+    // 模版改变事件
+    const handleTemplateChange = useCallback((name, templateId) => {
+        const record = templateOptions.find(item => item.value === templateId).record;
+        const { targetPath, options } = record;
+
+        const files = form.getFieldValue('files');
+        const file = form.getFieldValue(['files', name]);
+        file.targetPath = targetPath;
+        file.options = [...options];
+        files[name] = file;
+
+        form.setFieldsValue({ files: [...files] });
+
+        handleFilesChange();
+    }, [form, handleFilesChange, templateOptions]);
 
     const handleAdd = useCallback((append = false) => {
         const length = dataSource.length;
@@ -176,6 +181,8 @@ export default config({
             triggerWindowResize();
         });
     }, [form]);
+
+    // 从localStorage中恢复表单
     useEffect(() => {
         (async () => {
             const values = storage.local.getItem(FORM_STORAGE_KEY) || {};
@@ -187,8 +194,12 @@ export default config({
             if (tableName) {
                 await handleTableNameChange(tableName);
             }
+
+            handleFilesChange();
+            console.log(storage.local.getItem(DATA_SOURCE_STORAGE_KEY));
+            handleDataSourceChange(storage.local.getItem(DATA_SOURCE_STORAGE_KEY) || []);
         })();
-    }, [form, handleDbUrlChange, handleTableNameChange]);
+    }, [form, handleDbUrlChange, handleTableNameChange, handleDataSourceChange, handleFilesChange]);
 
     useEffect(() => {
         (async () => {
@@ -276,7 +287,10 @@ export default config({
                                                         size="small"
                                                         style={{ position: 'absolute', top: 4, zIndex: 1 }}
                                                         icon={<PlusOutlined/>}
-                                                        onClick={() => add({})}
+                                                        onClick={() => {
+                                                            add({});
+                                                            handleFilesChange();
+                                                        }}
                                                     />
                                                 )}
                                                 <FormItem
@@ -289,7 +303,7 @@ export default config({
                                                     required
                                                     options={templateOptions}
                                                     placeholder="请选择模板"
-                                                    onChange={handleTemplateChange}
+                                                    onChange={(id) => handleTemplateChange(name, id)}
                                                 />
                                             </div>
                                             <FormItem
@@ -312,19 +326,29 @@ export default config({
                                                     },
                                                 ]}
                                             />
-                                            <FormItem
-                                                {...formItemProps}
-                                                {...restField}
-                                                name={[name, 'options']}
-                                            >
-                                                <OptionsTag
-                                                    options={fileOptions[name]}
-                                                />
+                                            <FormItem noStyle shouldUpdate>
+                                                {({ getFieldValue }) => {
+                                                    const templateId = getFieldValue(['files', name, 'templateId']);
+                                                    const record = templateOptions.find(item => item.value === templateId)?.record;
+                                                    const options = record?.options || [];
+                                                    return (
+                                                        <FormItem
+                                                            {...formItemProps}
+                                                            {...restField}
+                                                            name={[name, 'options']}
+                                                        >
+                                                            <OptionsTag options={options}/>
+                                                        </FormItem>
+                                                    );
+                                                }}
                                             </FormItem>
                                             {fields?.length > 1 && (
                                                 <MinusCircleOutlined
                                                     style={{ color: 'red' }}
-                                                    onClick={() => remove(name)}
+                                                    onClick={() => {
+                                                        remove(name);
+                                                        handleFilesChange();
+                                                    }}
                                                 />
                                             )}
                                         </div>
