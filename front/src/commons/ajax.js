@@ -32,7 +32,11 @@ ajax.instance.interceptors.response.use(
         // Do something before response
 
         // 后端自定义失败，前端直接抛出，走handleError逻辑
-        // if (typeof res.data === 'object' && 'code' in res.data && res.data.code !== 0) return Promise.reject(res.data);
+        if (typeof res.data === 'object' && 'code' in res.data) {
+            if (res.data.code !== 0) return Promise.reject(res.data);
+
+            res.data = res.data.data;
+        }
 
         return res;
     },
@@ -41,6 +45,7 @@ ajax.instance.interceptors.response.use(
         return Promise.reject(error);
     },
 );
+
 
 const hooks = createAjaxHooks(ajax);
 const hoc = createAjaxHoc(ajax);

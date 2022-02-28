@@ -7,7 +7,6 @@ import config from 'src/commons/config-hoc';
 import {toLogin} from 'src/commons';
 import PasswordModal from './PasswordModal';
 import styles from './style.less';
-import {Proxy} from 'src/components';
 
 export default config({
     router: true,
@@ -47,8 +46,6 @@ export default config({
                 paddingRight: IS_MOBILE ? 0 : 12,
             }}
         >
-            <Proxy className={styles.action} />
-
             {IS_MOBILE ? null : (
                 <>
                     <div className={styles.action}>

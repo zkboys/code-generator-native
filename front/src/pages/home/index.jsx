@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useCallback} from 'react';
-import {Form, Space, Button} from 'antd';
+import {Form, Space, Button, Modal} from 'antd';
 import {MinusCircleOutlined, PlusOutlined, CodeOutlined, FormOutlined} from '@ant-design/icons';
 import {PageContent, FormItem, storage, Operator} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
@@ -16,13 +16,31 @@ export default config({
     path: '/home',
     title: '首页',
 })(function Home(props) {
+    const [loading, setLoading] = useState(false);
     const [dataSource, setDataSource] = useState(storage.local.getItem(DATA_SOURCE_STORAGE_KEY) || []);
     const [fieldOptions, setFieldOptions] = useState([]);
     const [tableOptions, setTableOptions] = useState([]);
     const [templateOptions, setTemplateOptions] = useState([]);
+    const [fileOptions, setFileOptions] = useState([]);
     const [form] = Form.useForm();
 
-    // DataSource 改变
+    const fetchDbTables = useCallback(async (dbUrl) => {
+        return await props.ajax.get('/db/tables', { dbUrl }, { errorTip: false });
+    }, [props.ajax]);
+
+    const fetchColumns = useCallback(async (dbUrl, tableName) => {
+        return await props.ajax.get(`/db/tables/${tableName}`, { dbUrl }, { errorTip: false, setLoading });
+    }, [props.ajax]);
+
+    const fetchModuleNames = useCallback(async (name) => {
+        return await props.ajax.get(`/moduleNames/${name}`, null, { errorTip: false });
+    }, [props.ajax]);
+
+    const fetchTemplates = useCallback(async () => {
+        return await props.ajax.get('/templates', null, { errorTip: false });
+    }, [props.ajax]);
+
+    // dataSource 改变
     const handleDataSourceChange = useCallback(values => {
         setDataSource(values);
         storage.local.setItem(DATA_SOURCE_STORAGE_KEY, values);
@@ -61,17 +79,70 @@ export default config({
 
     ];
 
-    const handleDbUrlChange = useCallback(() => {
-        // TODO
-    }, []);
+    // 数据库连接改变事件
+    const handleDbUrlChange = useCallback(async (e) => {
+        let tableOptions;
+        try {
+            const dbUrl = e.target.value;
+            const tables = await fetchDbTables(dbUrl);
+            tableOptions = tables.map(item => ({ value: item.name, label: item.name }));
+        } catch (e) {
+            tableOptions = [];
+        }
 
-    const handleTableNameChange = useCallback(() => {
-        // TODO
-    }, []);
+        setTableOptions(tableOptions);
+    }, [fetchDbTables]);
 
+    // 数据库表改变事件
+    const handleTableNameChange = useCallback(async (tableName) => {
+        let dataSource;
+        const moduleNames = await fetchModuleNames(tableName);
+        form.setFieldsValue({ moduleName: moduleNames['module-name'] });
+
+        try {
+            const dbUrl = form.getFieldValue('dbUrl');
+            if (!dbUrl) return Modal.info({ title: '温馨提示', content: '请先输入正确的数据库连接！' });
+
+            dataSource = await fetchColumns(dbUrl, tableName);
+        } catch (e) {
+            dataSource = [];
+        }
+
+        setDataSource(dataSource.map(item => ({ id: uuid(), ...item })));
+    }, [fetchColumns, fetchModuleNames, form]);
+
+    // 模块名改变事件
     const handleModuleNameChange = useCallback(() => {
         // TODO
     }, []);
+
+    // 模版改变事件
+    const handleTemplateChange = useCallback((templateId) => {
+        const record = templateOptions.find(item => item.value === templateId).record;
+        const { targetPath, options } = record;
+        const files = form.getFieldValue('files');
+        const index = files.findIndex(item => item.templateId === templateId);
+        const file = files[index];
+        file.targetPath = targetPath;
+
+        form.setFieldsValue({ files: [...files] });
+
+        fileOptions[index] = options;
+
+        setFileOptions([...fileOptions]);
+
+        const fieldOptions = files.reduce((prev, curr) => {
+            const { templateId } = curr;
+            const record = templateOptions.find(item => item.value === templateId).record;
+            return Array.from(new Set([
+                ...prev,
+                ...(record.fieldOptions || []),
+            ]));
+        }, []);
+
+        setFieldOptions(fieldOptions);
+    }, [form, templateOptions, fileOptions]);
+
     const handleAdd = useCallback((append = false) => {
         const length = dataSource.length;
 
@@ -105,26 +176,34 @@ export default config({
             triggerWindowResize();
         });
     }, [form]);
-    useEffect(() => form.setFieldsValue(storage.local.getItem(FORM_STORAGE_KEY) || {}), [form]);
-
-    // 测试数据
     useEffect(() => {
-        setTemplateOptions([
-            { value: 'listPage', label: '列表页' },
-            { value: 'editModal', label: '编辑弹框' },
-        ]);
-        setTableOptions([
-            { value: 'user_center_adfafd_asdfadf', label: 'user_center_adfafd_asdfadf' },
-        ]);
-        setFieldOptions(['条件', '表格']);
-    }, []);
+        (async () => {
+            const values = storage.local.getItem(FORM_STORAGE_KEY) || {};
+            form.setFieldsValue(values);
+            const { dbUrl, tableName } = values;
+            if (dbUrl) {
+                await handleDbUrlChange({ target: { value: dbUrl } });
+            }
+            if (tableName) {
+                await handleTableNameChange(tableName);
+            }
+        })();
+    }, [form, handleDbUrlChange, handleTableNameChange]);
+
+    useEffect(() => {
+        (async () => {
+            const templates = await fetchTemplates();
+            const templateOptions = templates.map(item => ({ record: item, value: item.id, label: item.name }));
+            setTemplateOptions(templateOptions);
+        })();
+    }, [fetchTemplates]);
 
     const formItemProps = {
         // size: 'small',
     };
 
     return (
-        <PageContent className={s.root}>
+        <PageContent className={s.root} loading={loading}>
             <Form
                 className={s.query}
                 style={{ marginBottom: 8 }}
@@ -206,10 +285,11 @@ export default config({
                                                     labelCol={{ flex: '90px' }}
                                                     style={{ width: 300 }}
                                                     label={label}
-                                                    name={[name, 'template']}
+                                                    name={[name, 'templateId']}
                                                     required
                                                     options={templateOptions}
                                                     placeholder="请选择模板"
+                                                    onChange={handleTemplateChange}
                                                 />
                                             </div>
                                             <FormItem
@@ -238,7 +318,7 @@ export default config({
                                                 name={[name, 'options']}
                                             >
                                                 <OptionsTag
-                                                    options={['表格选中', '表格序号', '分页', '导入', '导出', '添加', '批量删除', '弹框编辑']}
+                                                    options={fileOptions[name]}
                                                 />
                                             </FormItem>
                                             {fields?.length > 1 && (

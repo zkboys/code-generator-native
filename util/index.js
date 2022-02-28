@@ -38,8 +38,6 @@ async function getLocalTemplates() {
         const fileName = templatePath.replace(extname, '');
         return {
             id: fileName.replace(/\W/g, '_'),
-            fileName,
-            filePath,
             ...template,
         };
     });
@@ -104,72 +102,67 @@ function serveStatic(prefix, filePath, options = {}) {
  * 获取各种类型的名字，驼峰、下划线、连字符等等
  * @param name
  */
-function getNames(name) {
-    name = name.replace(/-/g, '_');
-
-    const names = {
-        module_name: '',
-        module_names: '',
-        Module_name: '',
-        Module_names: '',
-        Module_Name: '',
-        Module_Names: '',
-
-        ['module-name']: '',
-        ['module-names']: '',
-        ['Module-name']: '',
-        ['Module-names']: '',
-        ['Module-Name']: '',
-        ['Module-Names']: '',
-
-        moduleName: '',
-        ModuleName: '',
-        moduleNames: '',
-        ModuleNames: '',
-    };
-
-    // 复数 users
-    const pluralize = inflection.pluralize(name);
-    // 单数 user
-    const singularize = inflection.singularize(name);
-    // 首字母小写驼峰 userName
-    const camelize = inflection.camelize(name, true);
-    // 首字母大写驼峰 UserName
-    const Camelize = inflection.camelize(name);
-    // 下划线，首字母小写 user_name
-    const underscore = inflection.underscore(name);
-    // 下划线转空格，首字母大写 User name
-    const Humanize = inflection.humanize(name);
-    // 下划线转空格，首字母消息 user name
-    const humanize = inflection.humanize(name, true);
-    // 首字母大写 User_name
-    const capitalize = inflection.capitalize(name);
-    // 连字符 user-name
-    const dasherize = inflection.dasherize(name);
-    // 数据库表 user_names
-    const tableize = inflection.tableize(name);
-    // java类名 UserName
-    const classify = inflection.classify(name);
-    // 数据库外键
-    const foreign_key = inflection.foreign_key(name);
-
-
-    return {
+function getModuleNames(name) {
+    const {
         pluralize,
         singularize,
         camelize,
-        Camelize,
         underscore,
-        Humanize,
-        humanize,
         capitalize,
         dasherize,
-        tableize,
-        classify,
-        foreign_key,
+        titleize,
+    } = inflection;
+    name = name.replace(/-/g, '_');
+
+    const moduleName = singularize(camelize(name, true));
+    const ModuleName = singularize(camelize(name));
+    const moduleNames = pluralize(moduleName);
+    const ModuleNames = pluralize(ModuleName);
+    const module_name = underscore(moduleName);
+    const module_names = underscore(moduleNames);
+    const Module_name = capitalize(module_name);
+    const Module_names = capitalize(module_names);
+    const Module_Name = titleize(module_name).replace(/\s/g, '_');
+    const Module_Names = titleize(module_names).replace(/\s/g, '_');
+
+    return {
+        moduleName,
+        ModuleName,
+        moduleNames,
+        ModuleNames,
+
+        module_name,
+        module_names,
+        Module_name,
+        Module_names,
+        Module_Name,
+        Module_Names,
+
+        'module-name': dasherize(module_name),
+        'module-names': dasherize(module_names),
+        'Module-name': dasherize(Module_name),
+        'Module-names': dasherize(Module_names),
+        'Module-Name': dasherize(Module_Name),
+        'Module-Names': dasherize(Module_Names),
     };
 }
 
+/**
+ * 格式化字符串
+ * @param str  eg: /front/pages/{module-name}/index.jsx
+ * @param data eg: {'module-name': 'user-center'}
+ * @returns {string}  eg: /front/pages/user-center/index.jsx
+ */
+function stringFormat(str, data) {
+    if (!str || typeof str !== 'string' || !data) return str;
+
+    return Object.entries(data)
+        .reduce((prev, curr) => {
+            const [key, value] = curr;
+            const reg = new RegExp('({)?\\{' + key + '\\}(?!})', 'gm');
+            return prev.replace(reg, value);
+        }, str);
+}
 
 module.exports = {
     processArgs,
@@ -178,5 +171,6 @@ module.exports = {
     choosePort,
     openBrowser,
     serveStatic,
-    getNames,
+    getModuleNames,
+    stringFormat,
 };

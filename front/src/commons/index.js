@@ -184,3 +184,21 @@ export function triggerWindowResize() {
         window.fireEvent('onresize');
     }
 }
+
+
+/**
+ * 格式化字符串
+ * @param str  eg: /front/pages/{module-name}/index.jsx
+ * @param data eg: {'module-name': 'user-center'}
+ * @returns {string}  eg: /front/pages/user-center/index.jsx
+ */
+export function stringFormat(str, data) {
+    if (!str || typeof str !== 'string' || !data) return str;
+
+    return Object.entries(data)
+        .reduce((prev, curr) => {
+            const [key, value] = curr;
+            const reg = new RegExp('({)?\\{' + key + '\\}(?!})', 'gm');
+            return prev.replace(reg, value);
+        }, str);
+}
