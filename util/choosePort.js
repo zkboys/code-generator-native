@@ -11,7 +11,7 @@ function clearConsole() {
     );
 }
 
-function choosePort(host, defaultPort) {
+function choosePort(host, defaultPort, yes) {
     return detect(defaultPort, host).then(
         port =>
             new Promise(resolve => {
@@ -25,23 +25,27 @@ function choosePort(host, defaultPort) {
                 if (isInteractive) {
                     clearConsole();
                     const existingProcess = getProcessForPort(defaultPort);
-                    const question = {
-                        type: 'confirm',
-                        name: 'shouldChangePort',
-                        message:
-                            chalk.yellow(
-                                message +
-                                `${existingProcess ? ` Probably:\n  ${existingProcess}` : ''}`,
-                            ) + '\n\nWould you like to run the app on another port instead?',
-                        initial: true,
-                    };
-                    prompts(question).then(answer => {
-                        if (answer.shouldChangePort) {
-                            resolve(port);
-                        } else {
-                            resolve(null);
-                        }
-                    });
+                    if (yes) {
+                        resolve(port);
+                    } else {
+                        const question = {
+                            type: 'confirm',
+                            name: 'shouldChangePort',
+                            message:
+                                chalk.yellow(
+                                    message +
+                                    `${existingProcess ? ` Probably:\n  ${existingProcess}` : ''}`,
+                                ) + '\n\nWould you like to run the app on another port instead?',
+                            initial: true,
+                        };
+                        prompts(question).then(answer => {
+                            if (answer.shouldChangePort) {
+                                resolve(port);
+                            } else {
+                                resolve(null);
+                            }
+                        });
+                    }
                 } else {
                     console.log(chalk.red(message));
                     resolve(null);

@@ -7,7 +7,7 @@
     "ra-gen": "bin/index.js"
   },
   "scripts": {
-    "start": "nodemon --ignore front/ --ignore public/ --exec \"node index.js\""
+    "start": "nodemon --ignore front/ --ignore public/  --exec \"node index.js\""
   },
   "author": "",
   "license": "ISC",

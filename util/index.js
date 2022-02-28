@@ -6,22 +6,6 @@ const openBrowser = require('./openBrowser');
 const choosePort = require('./choosePort');
 const config = require('../config');
 
-
-/**
- * 获取命令行参数 --port=3000 --name=user  => {port: 3000, name: 'user'}
- * @returns {*}
- */
-function processArgs() {
-    return process.argv.slice(2).reduce((prev, curr) => {
-        const key = curr.split('=')[0].replace('--', '');
-        const value = curr.split('=')[1];
-        return {
-            ...prev,
-            [key]: value,
-        };
-    }, {});
-}
-
 /**
  * 获取本地项目模板
  * @returns {Promise<{[p: string]: *}[]>}
@@ -91,7 +75,7 @@ function initLocalTemplates() {
  * @returns {(function(*, *): Promise<*|number|undefined>)|*}
  */
 function serveStatic(prefix, filePath, options = {}) {
-    return staticCache(path.resolve(__dirname, filePath), {
+    return staticCache(filePath, {
         prefix: prefix,
         gzip: true,
         dynamic: true,
@@ -166,7 +150,6 @@ function stringFormat(str, data) {
 }
 
 module.exports = {
-    processArgs,
     getLocalTemplates,
     initLocalTemplates,
     choosePort,
