@@ -2,8 +2,12 @@ const path = require('path');
 const fs = require('fs-extra');
 const openBrowser = require('./openBrowser');
 const choosePort = require('./choosePort');
+const config = require('../config');
 
-
+/**
+ * 获取命令行参数 --port=3000 --name=user  => {port: 3000, name: 'user'}
+ * @returns {*}
+ */
 function processArgs() {
     return process.argv.slice(2).reduce((prev, curr) => {
         const key = curr.split('=')[0].replace('--', '');
@@ -15,9 +19,12 @@ function processArgs() {
     }, {});
 }
 
+/**
+ * 获取本地项目模板
+ * @returns {Promise<{[p: string]: *}[]>}
+ */
 async function getLocalTemplates() {
-    const projectRootPath = process.cwd();
-    const templatesDir = path.join(projectRootPath, '.generator-templates');
+    const templatesDir = config.localTemplatesPath;
 
     const files = getAllFiles(templatesDir);
 
@@ -27,14 +34,20 @@ async function getLocalTemplates() {
         const templatePath = path.relative(templatesDir, filePath);
         const fileName = templatePath.replace(extname, '');
         return {
+            id: fileName,
             fileName,
             filePath,
-            extname,
             ...template,
         };
     });
 }
 
+/**
+ * 递归获取目录下所有文件
+ * @param dir
+ * @param fileList
+ * @returns {*[]}
+ */
 function getAllFiles(dir, fileList = []) {
     const exist = fs.existsSync(dir);
 
@@ -54,13 +67,15 @@ function getAllFiles(dir, fileList = []) {
     return fileList;
 }
 
+/**
+ * 基于系统模板，初始化本地项目模板
+ */
 function initLocalTemplates() {
-    const projectRootPath = process.cwd();
-    const templatesDir = path.join(projectRootPath, '.generator-templates');
+    const templatesDir = config.localTemplatesPath;
     if (fs.existsSync(templatesDir)) return;
 
     // 目标项目的本地模版不存在，初始化默认模板
-    const defaultTemplatesDir = path.join(__dirname, '.generator-templates');
+    const defaultTemplatesDir = config.systemTemplatesPath;
 
     fs.copySync(defaultTemplatesDir, templatesDir);
 }
