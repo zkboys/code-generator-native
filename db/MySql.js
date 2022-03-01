@@ -21,23 +21,23 @@ const TYPES = {
   },
   INTEGER: {
     form: 'number',
-    data: 'Long',
+    data: 'long',
   },
   TINYINT: {
     form: 'number',
-    data: 'Integer',
+    data: 'int',
   },
   SMALLINT: {
     form: 'number',
-    data: 'Integer',
+    data: 'int',
   },
   MEDIUMINT: {
     form: 'number',
-    data: 'Integer',
+    data: 'int',
   },
   BIT: {
     form: 'switch',
-    data: 'Boolean',
+    data: 'boolean',
   },
   BIGINT: {
     form: 'number',
@@ -45,11 +45,11 @@ const TYPES = {
   },
   FLOAT: {
     form: 'number',
-    data: 'Float',
+    data: 'float',
   },
   DOUBLE: {
     form: 'number',
-    data: 'Double',
+    data: 'double',
   },
   DECIMAL: {
     form: 'number',
@@ -57,11 +57,11 @@ const TYPES = {
   },
   BOOLEAN: {
     form: 'switch',
-    data: 'Boolean',
+    data: 'boolean',
   },
   ID: {
     form: 'input',
-    data: 'Long',
+    data: 'long',
   },
   DATE: {
     form: 'date',

@@ -31,5 +31,14 @@ export const FIELD_EDIT_TYPES = {
 // 后端数据类型，以java为准，如果后端是其他类型，编写模板时，基于java再次转换
 export const DATA_TYPE_OPTIONS = [
     { value: 'String', label: 'String' },
+    { value: 'int', label: 'int' },
+    { value: 'long', label: 'long' },
+    { value: 'boolean', label: 'boolean' },
+    { value: 'BigInteger', label: 'BigInteger' },
+    { value: 'float', label: 'float' },
+    { value: 'double', label: 'double' },
+    { value: 'BigDecimal', label: 'BigDecimal' },
+    { value: 'Date', label: 'Date' },
+    { value: 'Time', label: 'Time' },
     { value: 'Timestamp', label: 'Timestamp' },
 ];
