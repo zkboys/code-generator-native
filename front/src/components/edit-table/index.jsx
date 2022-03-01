@@ -1,9 +1,9 @@
-import React, { useCallback, useMemo, useEffect, useState, useRef, useImperativeHandle } from 'react';
-import { Table, tableRowDraggable } from '@ra-lib/admin';
-import { Button, Form } from 'antd';
-import { OptionsTag } from 'src/components';
+import React, {useCallback, useMemo, useEffect, useState, useRef, useImperativeHandle} from 'react';
+import {Table, tableRowDraggable} from '@ra-lib/admin';
+import {Button, Form} from 'antd';
+import {OptionsTag} from 'src/components';
 import CellFormItem from './CellFormItem';
-import { getCursorPosition } from 'src/commons';
+import {getCursorPosition} from 'src/commons';
 
 const RowDraggableTable = tableRowDraggable(Table);
 
@@ -30,7 +30,6 @@ const EditTable = React.forwardRef((props, ref) => {
     }, [form]);
     // dataSource改变，同步到form中
     useEffect(() => form.setFieldsValue({ [FIELD_NAME]: [...dataSource] }), [form, dataSource]);
-
     // 拖拽排序结束，交换位置
     const handleSortEnd = useCallback(({ oldIndex, newIndex }) => {
         if (oldIndex === newIndex) return;
@@ -213,11 +212,11 @@ const EditTable = React.forwardRef((props, ref) => {
                             type="tags"
                             name={[FIELD_NAME, index, dataIndex].flat()}
                             options={options}
-                            renderCell={value => <OptionsTag value={value} options={options} />}
+                            renderCell={value => <OptionsTag value={value} options={options}/>}
                             required={required}
                             rules={[{ required, message: `请请选择${title}!` }]}
                         >
-                            <OptionsTag options={options} />
+                            <OptionsTag options={options}/>
                         </CellFormItem>
                     );
                 },

@@ -32,7 +32,7 @@ const ROOT_PATH = path.join(__dirname, '..');
     const port = await choosePort(HOST, DEFAULT_PORT, true);
     const cwd = process.cwd();
     // 监听本地目录改变之后，重启服务
-    spawn('nodemon', ['-w', config.localDir, '--exec', `node index.js --port=${port} --nativePath=${cwd}`], { stdio: 'inherit', cwd: ROOT_PATH });
+    spawn('nodemon', ['-w', config.localDir, '--exec', `node index.js --port=${port} --nativeRoot=${cwd}`], { stdio: 'inherit', cwd: ROOT_PATH });
     // spawn('node', ['index.js', `--port=${port}`], { stdio: 'inherit', cwd: ROOT_PATH });
 
     openBrowser(`http://${HOST}:${port}`);

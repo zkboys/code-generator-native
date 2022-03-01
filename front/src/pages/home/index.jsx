@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Form, Space, Button, Modal } from 'antd';
+import React, {useState, useEffect, useCallback, useRef} from 'react';
+import {Form, Space, Button, Modal} from 'antd';
 import {
     MinusCircleOutlined,
     PlusCircleOutlined,
@@ -7,13 +7,14 @@ import {
     CodeOutlined,
     FileDoneOutlined,
 } from '@ant-design/icons';
-import { PageContent, FormItem, Operator, storage } from '@ra-lib/admin';
+import {PageContent, FormItem, Operator, storage} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
-import { OptionsTag, EditTable } from 'src/components';
+import {OptionsTag, EditTable} from 'src/components';
 import s from './style.less';
-import { v4 as uuid } from 'uuid';
-import { FORM_ELEMENT_OPTIONS, FIELD_EDIT_TYPES, DATA_TYPE_OPTIONS } from './constant';
-import { stringFormat, triggerWindowResize } from 'src/commons';
+import {v4 as uuid} from 'uuid';
+import {FORM_ELEMENT_OPTIONS, FIELD_EDIT_TYPES, DATA_TYPE_OPTIONS} from './constant';
+import {stringFormat, triggerWindowResize} from 'src/commons';
+import PreviewModal from './PreviewModal';
 
 export default config({
     path: '/',
@@ -25,6 +26,7 @@ export default config({
     const [templateOptions, setTemplateOptions] = useState([]);
     const [optionColumns, setOptionColumns] = useState([]);
     const [moduleNames, setModuleNames] = useState({});
+    const [previewParams, setPreviewParams] = useState(null);
     const [form] = Form.useForm();
     const editTableRef = useRef();
 
@@ -42,6 +44,10 @@ export default config({
 
     const fetchTemplates = useCallback(async () => {
         return await props.ajax.get('/templates', null, { errorTip: false });
+    }, [props.ajax]);
+
+    const fetchGenerateFiles = useCallback(async (params) => {
+        return await props.ajax.post('/generate/files', params);
     }, [props.ajax]);
 
     // 删除行
@@ -65,7 +71,7 @@ export default config({
                         },
                     },
                 ];
-                return <Operator items={items} />;
+                return <Operator items={items}/>;
             },
         },
         { title: '注释', dataIndex: 'comment', width: 150 },
@@ -123,12 +129,13 @@ export default config({
         setModuleNames(moduleNames);
     }, [fetchModuleNames]);
 
+    // 获取文件选项列
     const getOptionColumns = useCallback((templateOptions) => {
         const files = form.getFieldValue('files');
         return files.filter(item => item.templateId)
             .map(({ templateId }) => {
                 const record = templateOptions.find(item => item.value === templateId)?.record;
-                const title = record?.name;
+                const title = record?.shortName;
                 const dataIndex = ['options', record?.id];
                 const options = record?.fieldOptions || [];
                 const type = FIELD_EDIT_TYPES.tags;
@@ -183,29 +190,36 @@ export default config({
         setDataSource([...dataSource]);
     }, [dataSource]);
 
-    // 代码预览按钮事件
-    const handlePreviewCode = useCallback(() => {
-        //TODO
-    }, []);
-
-    // 生成代码
-    const handleGenerate = useCallback(async () => {
+    // 生成代码、代码预览
+    const handleGenerate = useCallback(async (preview = false) => {
         try {
             const values = await form.validateFields();
             await editTableRef.current.form.validateFields();
 
             if (!dataSource?.length) return Modal.info({ title: '温馨提示', content: '表格的字段配置不能为空！' });
 
-            console.log(values);
-            console.log(dataSource);
-            // TODO
+            const { files } = values;
+
+            const params = {
+                files,
+                config: dataSource,
+            };
+
+            if (preview) {
+                setPreviewParams(params);
+            } else {
+                const res = await fetchGenerateFiles(params);
+                console.log(res);
+                // TODO
+            }
+
         } catch (e) {
             if (e?.errorFields?.length) {
                 return Modal.info({ title: '温馨提示', content: '表单填写有误，请检查后再提交！' });
             }
             console.error(e);
         }
-    }, [form, dataSource]);
+    }, [form, dataSource, fetchGenerateFiles]);
 
     // 表单改变事件
     const handleFormChange = useCallback(() => {
@@ -332,7 +346,6 @@ export default config({
                         {(fields, { add, remove }) => (
                             <>
                                 {fields.map(({ key, name, isListField, ...restField }, index) => {
-                                    const backgroundColor = index % 2 ? '#fff' : '#eee';
                                     const isLast = index === fields.length - 1;
                                     const isFirst = index === 0;
                                     const number = index + 1;
@@ -340,57 +353,41 @@ export default config({
                                     if (isFirst) label = `文件${number}`;
 
                                     return (
-                                        <div
-                                            key={key}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                paddingTop: 7,
-                                                paddingLeft: 30,
-                                                backgroundColor,
-                                            }}
-                                        >
-                                            <div style={{ width: 288, position: 'relative' }}>
-                                                <div style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    position: 'absolute',
-                                                    height: '100%',
-                                                    zIndex: 10,
-                                                    left: -20,
-                                                }}>
-                                                    {fields?.length > 1 && (
-                                                        <MinusCircleOutlined
-                                                            style={{ color: 'red', marginTop: -5, marginRight: 16 }}
-                                                            onClick={() => {
-                                                                remove(name);
-                                                                handleFilesChange();
-                                                            }}
-                                                        />
-                                                    )}
-                                                    {isLast && (fields.length < templateOptions.length) && (
-                                                        <PlusCircleOutlined
-                                                            style={{ color: 'green', marginTop: -5 }}
-                                                            onClick={() => {
-                                                                add({});
-                                                                handleFilesChange();
-                                                            }}
-                                                        />
-                                                    )}
-                                                </div>
-                                                <FormItem noStyle shouldUpdate>
-                                                    {({ getFieldValue }) => {
-                                                        const files = getFieldValue('files');
-                                                        const templateId = getFieldValue(['files', name, 'templateId']);
-                                                        const options = templateOptions.filter(item => {
-                                                            if (templateId === item.value) return true;
-                                                            return !files.find(f => f.templateId === item.value);
-                                                        });
-                                                        return (
+                                        <div key={key} className={s.fileRow}>
+                                            <Space className={s.fileOperator}>
+                                                {fields?.length > 1 && (
+                                                    <MinusCircleOutlined
+                                                        className={s.fileMinus}
+                                                        onClick={() => {
+                                                            remove(name);
+                                                            handleFilesChange();
+                                                        }}
+                                                    />
+                                                )}
+                                                {isLast && (fields.length < templateOptions.length) && (
+                                                    <PlusCircleOutlined
+                                                        className={s.filePlus}
+                                                        onClick={() => {
+                                                            add({});
+                                                            handleFilesChange();
+                                                        }}
+                                                    />
+                                                )}
+                                            </Space>
+                                            <FormItem noStyle shouldUpdate>
+                                                {({ getFieldValue }) => {
+                                                    const files = getFieldValue('files');
+                                                    const templateId = getFieldValue(['files', name, 'templateId']);
+                                                    const options = templateOptions.filter(item => {
+                                                        if (templateId === item.value) return true;
+                                                        return !files.find(f => f.templateId === item.value);
+                                                    });
+                                                    return (
+                                                        <div style={{ width: 318 }}>
                                                             <FormItem
                                                                 {...formItemProps}
                                                                 {...restField}
-                                                                labelCol={{ flex: '70px', style: { userSelect: 'none' } }}
+                                                                labelCol={{ flex: '100px', style: { userSelect: 'none' } }}
                                                                 style={{ width: 200 }}
                                                                 label={label}
                                                                 name={[name, 'templateId']}
@@ -399,10 +396,10 @@ export default config({
                                                                 placeholder="请选择模板"
                                                                 onChange={(id) => handleTemplateChange(name, id)}
                                                             />
-                                                        );
-                                                    }}
-                                                </FormItem>
-                                            </div>
+                                                        </div>
+                                                    );
+                                                }}
+                                            </FormItem>
                                             <FormItem
                                                 {...formItemProps}
                                                 {...restField}
@@ -434,7 +431,7 @@ export default config({
                                                             {...restField}
                                                             name={[name, 'options']}
                                                         >
-                                                            <OptionsTag options={options} />
+                                                            <OptionsTag options={options}/>
                                                         </FormItem>
                                                     );
                                                 }}
@@ -449,7 +446,7 @@ export default config({
             </Form>
             <Space style={{ marginBottom: 8 }}>
                 <Button
-                    icon={<PlusOutlined />}
+                    icon={<PlusOutlined/>}
                     ghost
                     type="primary"
                     onClick={() => handleAdd()}
@@ -457,14 +454,14 @@ export default config({
                     添加一行
                 </Button>
                 <Button
-                    icon={<CodeOutlined />}
-                    onClick={() => handlePreviewCode()}
+                    icon={<CodeOutlined/>}
+                    onClick={() => handleGenerate(true)}
                 >
                     代码预览
                 </Button>
                 <Button
                     type="primary"
-                    icon={<FileDoneOutlined />}
+                    icon={<FileDoneOutlined/>}
                     onClick={() => handleGenerate()}
                 >
                     生成文件
@@ -481,6 +478,12 @@ export default config({
                 dataSource={optionColumns?.length ? dataSource : []}
                 onChange={setDataSource}
                 footer={() => null}
+            />
+            <PreviewModal
+                visible={!!previewParams}
+                params={previewParams}
+                onOk={() => setPreviewParams(null)}
+                onCancel={() => setPreviewParams(null)}
             />
         </PageContent>
     );

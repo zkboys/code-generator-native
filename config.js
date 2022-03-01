@@ -7,18 +7,22 @@ const args = process.argv.slice(2).reduce((prev, curr) => {
     return { ...prev, [key]: value };
 }, {});
 
-const nativeProjectRootPath = args.nativePath || process.cwd();
-// const nativeProjectRootPath = process.cwd();
-const localDir = path.join(nativeProjectRootPath, '.generator');
+const port = args.port || 3001;
+
+const nativeRoot = args.nativeRoot || process.cwd();
+// const nativeRoot = process.cwd();
+const localGeneratorPath = path.join(nativeRoot, '.generator');
+const localTemplatesPath = path.join(localGeneratorPath, 'templates');
+const systemTemplatesPath = path.join(__dirname, '.generator', 'templates');
 
 module.exports = {
     // 端口
-    port: args.port || 3001,
-    // 本地项目文件目录，存放模板等
-    localDir,
+    port,
+    // 本地项目根目录
+    nativeRoot,
     // 本地模版文件夹
-    localTemplatesPath: path.join(localDir, 'templates'),
+    localTemplatesPath,
     // 系统模板文件夹
-    systemTemplatesPath: path.join(__dirname, '.generator', 'templates'),
+    systemTemplatesPath,
 };
 
