@@ -8,11 +8,36 @@
             margin-bottom: 0;
         }
 
-        .@{ant-prefix}-tabs-tab {
+        .@{ant-prefix}-form-item {
+            margin-bottom: 0;
         }
+    }
+
+    tbody > tr {
+        cursor: move;
     }
 }
 
 .tabColumn {
     background: rgba(24, 144, 255, .05);
 }
+
+.helper {
+    display: table-row;
+}
+
+.helper td {
+    border-bottom: 1px solid #f0f0f0;
+    border-top: 1px solid #f0f0f0;
+    padding: 8px;
+    display: table-cell;
+    vertical-align: center;
+    background: #fff;
+    width: 10000px;
+    border-collapse: collapse;
+}
+
+.helper .@{ant-prefix}-form-item {
+    margin-bottom: 0;
+}
+

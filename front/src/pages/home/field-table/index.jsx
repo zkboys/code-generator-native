@@ -1,14 +1,32 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Tabs, Table } from 'antd';
 import { Operator } from '@ra-lib/admin';
+// import rowDraggable from './row-draggable';
+import virtualTable from './virtual-table';
 import s from './style.less';
+
+const MyTable = virtualTable((Table));
 
 const { TabPane } = Tabs;
 
 // TODO 可编辑、拖拽排序、固定高度、虚拟表格
-
 export default function FieldTable(props) {
-    let { dataSource = [] } = props;
+    console.log('FieldTable render');
+    const [dataSource, setDataSource] = useState(Array.from({ length: 5000 }).map((item, index) => {
+        const number = index + 1;
+        return {
+            id: `id-${number}`,
+            comment: `comment-${number}`,
+            name: `name-${number}`,
+            type: `type-${number}`,
+            length: number * 100,
+            defaultValue: `value-${number}`,
+            nullable: '是',
+            chinese: `chinese-${number}`,
+            validation: '如果很长的文字怎么办呢？，就是很长的，很长的呢',
+        };
+    }));
+
     const [activeKey, setActiveKey] = useState('type');
     const handleDelete = useCallback(async (id) => {
         // TODO
@@ -46,14 +64,15 @@ export default function FieldTable(props) {
             {
                 title: '操作', dataIndex: 'operator', width: 60,
                 render: (value, record) => {
-                    const { id, chinese } = record;
+                    const { id, name } = record;
                     const items = [
                         {
                             label: '删除',
                             color: 'red',
                             confirm: {
-                                title: `您确定删除"${chinese}"?`,
+                                title: `您确定删除"${name}"?`,
                                 onConfirm: () => handleDelete(id),
+                                // placement: 'right',
                             },
                         },
                     ];
@@ -70,31 +89,26 @@ export default function FieldTable(props) {
         ].filter(Boolean);
     }, [activeKey, handleDelete, tabPotions]);
 
-    dataSource = Array.from({ length: 10 }).map((item, index) => {
-        const number = index + 1;
-        return {
-            id: `id-${number}`,
-            comment: `comment-${number}`,
-            name: `name-${number}`,
-            type: `type-${number}`,
-            length: number * 100,
-            defaultValue: `value-${number}`,
-            nullable: '是',
-            chinese: `chinese-${number}`,
-        };
-    });
+    const handleSortEnd = useCallback((sortProps) => {
+        let { oldIndex, newIndex } = sortProps;
+        console.log(oldIndex, newIndex);
+        dataSource.splice(newIndex, 0, ...dataSource.splice(oldIndex, 1));
+        setDataSource([...dataSource]);
+    }, [dataSource]);
 
     return (
         <div className={s.root}>
             <Tabs activeKey={activeKey} onChange={setActiveKey}>
                 {tabPotions.map(item => <TabPane key={item.key} tab={item.tab} />)}
             </Tabs>
-            <Table
+            <MyTable
+                onSortEnd={handleSortEnd}
                 size="small"
                 columns={columns}
                 pagination={false}
                 dataSource={dataSource}
                 rowKey="id"
+                scroll={{ y: 500 }}
             />
         </div>
     );
