@@ -59,13 +59,17 @@ module.exports = apiRouter
 
         return getModuleNames(name);
     })
+    .post('/generate/files/exist', async ctx => {
+        const { files } = ctx.request.body;
+        const filePaths = files.filter(item => !item.force).map(item => item.targetPath);
+        return await checkFilesExist(filePaths);
+    })
     .post('/generate/files', async ctx => {
         const { files, config } = ctx.request.body;
-        const filePaths = files.filter(item => !item.force).map(item => item.targetPath);
-        const existResult = await checkFilesExist(filePaths);
-        if (existResult) return existResult.map(item => files.find(it => it.targetPath === item));
+        const nextFiles = files.filter(item => item.rewrite !== false);
 
-        await writeFile(files, config);
+        await writeFile(nextFiles, config);
+        return nextFiles.map(item => item.targetPath);
     })
     .post('/generate/preview', async ctx => {
         const { files, config } = ctx.request.body;

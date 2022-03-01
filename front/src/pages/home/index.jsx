@@ -7,7 +7,7 @@ import {
     CodeOutlined,
     FileDoneOutlined,
 } from '@ant-design/icons';
-import {PageContent, FormItem, Operator, storage} from '@ra-lib/admin';
+import {PageContent, FormItem, Operator, storage, confirm} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
 import {OptionsTag, EditTable} from 'src/components';
 import s from './style.less';
@@ -25,6 +25,7 @@ export default config({
     const [tableOptions, setTableOptions] = useState([]);
     const [templateOptions, setTemplateOptions] = useState([]);
     const [optionColumns, setOptionColumns] = useState([]);
+    const [formTypeColumnVisible, setFormTypeColumnVisible] = useState(false);
     const [moduleNames, setModuleNames] = useState({});
     const [previewParams, setPreviewParams] = useState(null);
     const [form] = Form.useForm();
@@ -49,6 +50,11 @@ export default config({
     const fetchGenerateFiles = useCallback(async (params) => {
         return await props.ajax.post('/generate/files', params);
     }, [props.ajax]);
+
+    const fetchCheckFilesExist = useCallback(async (params) => {
+        return await props.ajax.post('/generate/files/exist', params);
+    }, [props.ajax]);
+
 
     // 删除行
     const handleDelete = useCallback((id) => {
@@ -78,9 +84,9 @@ export default config({
         { title: '列名', dataIndex: 'name', width: 150, isNewEdit: true, type: FIELD_EDIT_TYPES.input, required: true },
         { title: '数据类型', dataIndex: 'dataType', width: 130, type: FIELD_EDIT_TYPES.select, options: DATA_TYPE_OPTIONS },
         { title: '中文名', dataIndex: 'chinese', width: 190, type: FIELD_EDIT_TYPES.input, required: true },
-        { title: '表单类型', dataIndex: 'formType', width: 150, type: FIELD_EDIT_TYPES.select, options: FORM_ELEMENT_OPTIONS },
+        formTypeColumnVisible && { title: '表单类型', dataIndex: 'formType', width: 150, type: FIELD_EDIT_TYPES.select, options: FORM_ELEMENT_OPTIONS },
         ...optionColumns,
-    ];
+    ].filter(Boolean);
 
     // 数据库连接改变事件
     const handleDbUrlChange = useCallback(async (e) => {
@@ -148,11 +154,23 @@ export default config({
             });
     }, [form]);
 
+    const getFormTypeColumnVisible = useCallback(() => {
+        const files = form.getFieldValue('files');
+        const types = ['jsx', 'tsx', 'vue', 'vux', 'html'];
+        return files.some(item => {
+            const extname = item.targetPath.split('.').pop();
+            return types.includes(extname);
+        });
+    }, [form]);
+
     // 文件列表改变事件
     const handleFilesChange = useCallback(() => {
         const optionColumns = getOptionColumns(templateOptions);
         setOptionColumns(optionColumns);
-    }, [getOptionColumns, templateOptions]);
+
+        const formTypeColumnVisible = getFormTypeColumnVisible();
+        setFormTypeColumnVisible(formTypeColumnVisible);
+    }, [getFormTypeColumnVisible, getOptionColumns, templateOptions]);
 
     // 模版改变事件
     const handleTemplateChange = useCallback((name, templateId) => {
@@ -208,18 +226,49 @@ export default config({
             if (preview) {
                 setPreviewParams(params);
             } else {
-                const res = await fetchGenerateFiles(params);
-                console.log(res);
-                // TODO
-            }
+                // 检测文件是否存在
+                const res = await fetchCheckFilesExist({ files }) || [];
 
+                // 用户选择是否覆盖
+                for (let targetPath of res) {
+                    const file = files.find(it => it.targetPath === targetPath);
+
+                    try {
+                        await confirm({
+                            width: 600,
+                            title: '文件已存在',
+                            content: targetPath,
+                            okText: '覆盖',
+                            okButtonProps: {
+                                danger: true,
+                            },
+                        });
+                        file.rewrite = true;
+                    } catch (e) {
+                        file.rewrite = false;
+                    }
+                }
+
+                const paths = await fetchGenerateFiles(params);
+                if (!paths?.length) return Modal.info({ title: '温馨提示', content: '未生成任何文件！' });
+
+                Modal.info({
+                    width: 600,
+                    title: '生成文件如下',
+                    content: (
+                        <div>
+                            {paths.map(p => <div key={p}>{p}</div>)}
+                        </div>
+                    ),
+                });
+            }
         } catch (e) {
             if (e?.errorFields?.length) {
                 return Modal.info({ title: '温馨提示', content: '表单填写有误，请检查后再提交！' });
             }
             console.error(e);
         }
-    }, [form, dataSource, fetchGenerateFiles]);
+    }, [form, dataSource, fetchCheckFilesExist, fetchGenerateFiles]);
 
     // 表单改变事件
     const handleFormChange = useCallback(() => {
@@ -244,8 +293,11 @@ export default config({
 
             const optionColumns = getOptionColumns(templateOptions);
             setOptionColumns(optionColumns);
+
+            const formTypeColumnVisible = getFormTypeColumnVisible();
+            setFormTypeColumnVisible(formTypeColumnVisible);
         })();
-    }, [fetchTemplates, form, getOptionColumns]);
+    }, [fetchTemplates, form, getFormTypeColumnVisible, getOptionColumns]);
 
     // 从本地同步数据库链接
     useEffect(() => {
