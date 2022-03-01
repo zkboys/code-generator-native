@@ -5,96 +5,96 @@ const { getInfoByComment, getFormTypeByChinese } = require('./util');
 const TYPES = {
   VARCHAR: {
     form: 'input',
-    java: 'String',
+    data: 'String',
   },
   CHAR: {
     form: 'input',
-    java: 'String',
+    data: 'String',
   },
   BLOB: {
     form: 'input',
-    java: 'String',
+    data: 'String',
   },
   TEXT: {
     form: 'textarea',
-    java: 'String',
+    data: 'String',
   },
   INTEGER: {
     form: 'number',
-    java: 'Long',
+    data: 'Long',
   },
   TINYINT: {
     form: 'number',
-    java: 'Integer',
+    data: 'Integer',
   },
   SMALLINT: {
     form: 'number',
-    java: 'Integer',
+    data: 'Integer',
   },
   MEDIUMINT: {
     form: 'number',
-    java: 'Integer',
+    data: 'Integer',
   },
   BIT: {
     form: 'switch',
-    java: 'Boolean',
+    data: 'Boolean',
   },
   BIGINT: {
     form: 'number',
-    java: 'BigInteger',
+    data: 'BigInteger',
   },
   FLOAT: {
     form: 'number',
-    java: 'Float',
+    data: 'Float',
   },
   DOUBLE: {
     form: 'number',
-    java: 'Double',
+    data: 'Double',
   },
   DECIMAL: {
     form: 'number',
-    java: 'BigDecimal',
+    data: 'BigDecimal',
   },
   BOOLEAN: {
     form: 'switch',
-    java: 'Boolean',
+    data: 'Boolean',
   },
   ID: {
     form: 'input',
-    java: 'Long',
+    data: 'Long',
   },
   DATE: {
     form: 'date',
-    java: 'Date',
+    data: 'Date',
   },
   TIME: {
     form: 'time',
-    java: 'Time',
+    data: 'Time',
   },
   DATETIME: {
     form: 'date-time',
-    java: 'Timestamp',
+    data: 'Timestamp',
   },
   TIMESTAMP: {
     form: 'date-time',
-    java: 'Timestamp',
+    data: 'Timestamp',
   },
   YEAR: {
     form: 'date',
-    java: 'Date',
+    data: 'Date',
   },
 };
 
 function getTypes(type, chinese) {
   const types = TYPES[type.toUpperCase()] || {};
-  const defaultForm = 'input';
-  const defaultJava = 'String';
-  const form = getFormTypeByChinese(chinese, types.form || defaultForm);
-  const java = types.java || defaultJava;
+  const defaultFormType = 'input';
+  const defaultDataType = 'String';
+  const form = getFormTypeByChinese(chinese, types.form || defaultFormType);
+  const data = types.data || defaultDataType;
 
   return {
     form,
-    java,
+    data,
   };
 }
 
@@ -176,7 +176,8 @@ module.exports = class MySql extends DbInterface {
 
           return {
             type,
-            types,
+            formType: types.form,
+            dataType: types.data,
             name,
             isNullable,
             comment,

@@ -20,8 +20,10 @@ async function getLocalTemplates() {
     const extname = path.extname(filePath);
     const basename = path.basename(filePath);
 
-    const id = path.relative(templatesDir, filePath).replace(extname, '').replace(/\W/g, '_');
-    const name = template.name || basename.replace(extname, '');
+    const fileName = path.relative(templatesDir, filePath).replace(extname, '');
+    const id = fileName.replace(/\W/g, '_');
+    // const name = template.name || basename.replace(extname, '');
+    const name = template.name || fileName;
     return {
       ...template,
       id,

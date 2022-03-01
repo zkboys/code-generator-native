@@ -12,7 +12,7 @@ import config from 'src/commons/config-hoc';
 import { OptionsTag, EditTable } from 'src/components';
 import s from './style.less';
 import { v4 as uuid } from 'uuid';
-import { FORM_ELEMENT_OPTIONS, FIELD_EDIT_TYPES, JAVA_TYPE_OPTIONS } from './constant';
+import { FORM_ELEMENT_OPTIONS, FIELD_EDIT_TYPES, DATA_TYPE_OPTIONS } from './constant';
 import { stringFormat, triggerWindowResize } from 'src/commons';
 
 export default config({
@@ -70,7 +70,7 @@ export default config({
         },
         { title: '注释', dataIndex: 'comment', width: 150 },
         { title: '列名', dataIndex: 'name', width: 150, isNewEdit: true, type: FIELD_EDIT_TYPES.input, required: true },
-        { title: 'Java类型', dataIndex: 'javaType', width: 130, type: FIELD_EDIT_TYPES.select, options: JAVA_TYPE_OPTIONS },
+        { title: '数据类型', dataIndex: 'dataType', width: 130, type: FIELD_EDIT_TYPES.select, options: DATA_TYPE_OPTIONS },
         { title: '中文名', dataIndex: 'chinese', width: 190, type: FIELD_EDIT_TYPES.input, required: true },
         { title: '表单类型', dataIndex: 'formType', width: 150, type: FIELD_EDIT_TYPES.select, options: FORM_ELEMENT_OPTIONS },
         ...optionColumns,
@@ -110,8 +110,6 @@ export default config({
         setDataSource(dataSource.map(item => {
             return {
                 id: uuid(),
-                formType: item?.types?.form,
-                javaType: item?.types?.java,
                 ...item,
             };
         }));
@@ -177,7 +175,7 @@ export default config({
             chinese: `新增列${length + 1}`,
             field: `field${length + 1}`,
             formType: 'input',
-            javaType: 'String',
+            dataType: 'String',
             __isNew: true,
         };
 
@@ -299,10 +297,10 @@ export default config({
             >
                 <FormItem
                     {...formItemProps}
-                    labelCol={{ flex: '120px' }}
+                    labelCol={{ flex: '100px' }}
                     style={{ width: 300 }}
                     align="right"
-                    label="数据库连接"
+                    label="数据库"
                     name="dbUrl"
                     placeholder="mysql://username:password@host:port/database"
                     onChange={handleDbUrlChange}
@@ -311,7 +309,7 @@ export default config({
                 <FormItem
                     {...formItemProps}
                     labelCol={{ flex: '100px' }}
-                    style={{ width: 300 }}
+                    style={{ width: 308 }}
                     type="select"
                     showSearch
                     label="数据库表"
@@ -352,13 +350,14 @@ export default config({
                                                 backgroundColor,
                                             }}
                                         >
-                                            <div style={{ width: 408, position: 'relative' }}>
+                                            <div style={{ width: 288, position: 'relative' }}>
                                                 <div style={{
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     position: 'absolute',
                                                     height: '100%',
                                                     zIndex: 10,
+                                                    left: -20,
                                                 }}>
                                                     {fields?.length > 1 && (
                                                         <MinusCircleOutlined
@@ -391,8 +390,8 @@ export default config({
                                                             <FormItem
                                                                 {...formItemProps}
                                                                 {...restField}
-                                                                labelCol={{ flex: '90px', style: { userSelect: 'none' } }}
-                                                                style={{ width: 300 }}
+                                                                labelCol={{ flex: '70px', style: { userSelect: 'none' } }}
+                                                                style={{ width: 200 }}
                                                                 label={label}
                                                                 name={[name, 'templateId']}
                                                                 required
@@ -407,7 +406,7 @@ export default config({
                                             <FormItem
                                                 {...formItemProps}
                                                 {...restField}
-                                                style={{ width: 300 }}
+                                                style={{ width: 400 }}
                                                 label="目标位置"
                                                 name={[name, 'targetPath']}
                                                 required
@@ -475,6 +474,7 @@ export default config({
             <EditTable
                 ref={editTableRef}
                 serialNumber={false}
+                fitHeight={false}
                 otherHeight={72}
                 columns={columns}
                 onAdd={handleAdd}
