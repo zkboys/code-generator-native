@@ -1,5 +1,5 @@
-import React, {useState, useEffect, useCallback, useRef} from 'react';
-import {Form, Space, Button, Modal} from 'antd';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Form, Space, Button, Modal } from 'antd';
 import {
     MinusCircleOutlined,
     PlusCircleOutlined,
@@ -7,14 +7,15 @@ import {
     CodeOutlined,
     FileDoneOutlined,
 } from '@ant-design/icons';
-import {PageContent, FormItem, Operator, storage, confirm} from '@ra-lib/admin';
+import { PageContent, FormItem, Operator, storage, confirm } from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
-import {OptionsTag, EditTable} from 'src/components';
+import { OptionsTag, EditTable } from 'src/components';
 import s from './style.less';
-import {v4 as uuid} from 'uuid';
-import {FORM_ELEMENT_OPTIONS, FIELD_EDIT_TYPES, DATA_TYPE_OPTIONS} from './constant';
-import {stringFormat, triggerWindowResize} from 'src/commons';
+import { v4 as uuid } from 'uuid';
+import { FORM_ELEMENT_OPTIONS, FIELD_EDIT_TYPES, DATA_TYPE_OPTIONS } from './constant';
+import { stringFormat, triggerWindowResize } from 'src/commons';
 import PreviewModal from './PreviewModal';
+import FieldTable from './field-table';
 
 export default config({
     path: '/',
@@ -77,7 +78,7 @@ export default config({
                         },
                     },
                 ];
-                return <Operator items={items}/>;
+                return <Operator items={items} />;
             },
         },
         { title: '注释', dataIndex: 'comment', width: 150 },
@@ -483,7 +484,7 @@ export default config({
                                                             {...restField}
                                                             name={[name, 'options']}
                                                         >
-                                                            <OptionsTag options={options}/>
+                                                            <OptionsTag options={options} />
                                                         </FormItem>
                                                     );
                                                 }}
@@ -498,7 +499,7 @@ export default config({
             </Form>
             <Space style={{ marginBottom: 8 }}>
                 <Button
-                    icon={<PlusOutlined/>}
+                    icon={<PlusOutlined />}
                     ghost
                     type="primary"
                     onClick={() => handleAdd()}
@@ -506,20 +507,21 @@ export default config({
                     添加一行
                 </Button>
                 <Button
-                    icon={<CodeOutlined/>}
+                    icon={<CodeOutlined />}
                     onClick={() => handleGenerate(true)}
                 >
                     代码预览
                 </Button>
                 <Button
                     type="primary"
-                    icon={<FileDoneOutlined/>}
+                    icon={<FileDoneOutlined />}
                     onClick={() => handleGenerate()}
                 >
                     生成文件
                 </Button>
                 <span style={{ marginLeft: 24 }}>共<span style={{ fontSize: 16, margin: '0 8px' }}>{dataSource?.length || 0}</span>条数据</span>
             </Space>
+            <FieldTable />
             <EditTable
                 ref={editTableRef}
                 serialNumber={false}
