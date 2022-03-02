@@ -1,10 +1,10 @@
 import React, {useCallback, useState} from 'react';
 import {FixedSizeList as List} from 'react-window';
 import ResizeObserver from 'rc-resize-observer';
+import {SortableContainer, SortableElement} from 'react-sortable-hoc';
 import classNames from 'classnames';
 import {getScrollBarWidth} from '@ra-lib/admin';
 import s from './virtual-table.less';
-import {SortableContainer, SortableElement} from 'react-sortable-hoc';
 
 const scrollBarWidth = getScrollBarWidth();
 
@@ -59,7 +59,9 @@ export default Table => {
                                     <div className={s.row} style={style}>
                                         {mergedColumns.map((column, columnIndex) => {
                                             const record = dataSource[rowIndex];
-                                            const value = record[column.dataIndex];
+                                            const value = Array.isArray(column.dataIndex)
+                                                ? column.dataIndex.reduce((prev, key) => (prev[key] || {}), record)
+                                                : record[column.dataIndex];
                                             const render = column.render || ((value) => value);
                                             const width = columnIndex === columns.length - 1 ? column.width - scrollBarWidth : column.width;
 

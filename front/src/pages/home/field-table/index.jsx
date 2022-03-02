@@ -3,6 +3,7 @@ import {Tabs, Table, Button, Space, Modal} from 'antd';
 import {v4 as uuid} from 'uuid';
 import {CodeOutlined, FileDoneOutlined, PlusOutlined} from '@ant-design/icons';
 import {Content, Operator, useHeight, confirm, FormItem} from '@ra-lib/admin';
+import {OptionsTag} from 'src/components';
 import {DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS} from '../constant';
 import PreviewModal from '../PreviewModal';
 import config from 'src/commons/config-hoc';
@@ -80,17 +81,16 @@ export default config()(function FieldTable(props) {
     const optionColumns = useMemo(() => {
         return (files || []).filter(item => item.templateId)
             .map(({ templateId }) => {
-                const record = templateOptions.find(item => item.value === templateId)?.record;
-                const title = record?.shortName;
-                const dataIndex = ['options', record?.id];
-                const options = record?.fieldOptions || [];
-                console.log(options);
+                const template = templateOptions.find(item => item.value === templateId)?.record;
+                const title = template?.shortName;
+                const dataIndex = ['options', template?.id];
+                const options = template?.fieldOptions || [];
                 return {
                     title,
                     dataIndex,
                     formProps: {
-                        type: 'select',
-                        options: options.map(value => ({ value, label: value })),
+                        type: 'tags',
+                        options,
                     },
                 };
             });
@@ -134,11 +134,31 @@ export default config()(function FieldTable(props) {
                     if (['select', 'switch'].includes(type)) return options?.find(it => it.value === value)?.label || value;
                     return value;
                 }
+
+                const name = ['dataSource', index, Array.isArray(dataIndex) ? dataIndex : [dataIndex]].flat();
+
+                if (type === 'tags') {
+                    return (
+                        <div className={c(s.element, required && s.required)}>
+                            <FormItem
+                                {...formProps}
+                                name={name}
+                                style={{ width: elementWidth }}
+                                rules={[{ required, message: `${placeholder}!` }]}
+                            >
+                                <OptionsTag
+                                    options={options}
+                                />
+                            </FormItem>
+                        </div>
+                    );
+                }
+
                 return (
                     <div className={c(s.element, required && s.required)}>
                         <FormItem
                             {...formProps}
-                            name={['dataSource', index, dataIndex]}
+                            name={name}
                             style={{ width: elementWidth }}
                             rules={[{ required, message: `${placeholder}!` }]}
                             placeholder={placeholder}
