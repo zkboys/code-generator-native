@@ -3,7 +3,7 @@ import {Tabs, Table, Button, Space, Modal} from 'antd';
 import {v4 as uuid} from 'uuid';
 import {CodeOutlined, FileDoneOutlined, PlusOutlined} from '@ant-design/icons';
 import {Content, Operator, useHeight, confirm, FormItem} from '@ra-lib/admin';
-import {FIELD_EDIT_TYPES} from '../constant';
+import {DATA_TYPE_OPTIONS, FIELD_EDIT_TYPES, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS} from '../constant';
 import PreviewModal from '../PreviewModal';
 import config from 'src/commons/config-hoc';
 import c from 'classnames';
@@ -30,6 +30,7 @@ export default config()(function FieldTable(props) {
     const [height] = useHeight(rootRef, 125, [files]);
     const [previewParams, setPreviewParams] = useState(null);
     const [activeKey, setActiveKey] = useState('type');
+    const [dbTypeOptions, setDbTypeOptions] = useState([]);
 
     const fetchGenerateFiles = useCallback(async (params) => {
         return await props.ajax.post('/generate/files', params, { setLoading });
@@ -37,6 +38,10 @@ export default config()(function FieldTable(props) {
 
     const fetchCheckFilesExist = useCallback(async (params) => {
         return await props.ajax.post('/generate/files/exist', params, { setLoading });
+    }, [props.ajax]);
+
+    const fetchDbTypeOptions = useCallback(async (params) => {
+        return await props.ajax.get('/db/types', params, { setLoading });
     }, [props.ajax]);
 
     // 拖拽排序结束
@@ -89,38 +94,49 @@ export default config()(function FieldTable(props) {
             });
     }, [files, templateOptions]);
 
-    // Tab 页配置
-    const tabPotions = useMemo(() => {
-        return [
-            {
-                key: 'type', tab: '类型&验证',
-                columns: [
-                    { title: '数据类型', dataIndex: 'dataType', width: 150 },
-                    { title: '表单类型', dataIndex: 'formType', width: 150 },
-                    { title: '校验规则', dataIndex: 'validation' },
-                ],
-            },
-            {
-                key: 'options', tab: '模板选项',
-                columns: [...optionColumns],
-            },
-        ];
-    }, [optionColumns]);
 
-    const renderElement = useCallback((column) => {
-        const { title, dataIndex, type, options, required, ...others } = column;
+    // 渲染表格中的表单项
+    const formColumn = useCallback((column) => {
+        if (!column?.formProps?.type) return column;
+
+        // 只有新增一行之后才可以编辑的列
+        const isNewEditFields = [
+            'name',
+            'type',
+            'length',
+            'defaultValue',
+            'isNullable',
+        ];
+        const {
+            title,
+            dataIndex,
+            width,
+            formProps,
+            ...others
+        } = column;
+        const { type = 'input', required = false, options = [] } = formProps;
 
         const placeholder = type === 'select' ? `请选择${title}` : `请输入${title}`;
+        let elementWidth = required ? width - 18 : width - 8;
+        if (type === 'switch') elementWidth = 'auto';
 
         return {
+            title,
+            dataIndex,
+            width,
             ...others,
-            title, dataIndex,
             render: (value, record, index) => {
+                const { __isNew } = record;
+                if (isNewEditFields.includes(dataIndex) && !__isNew) {
+                    if (['select', 'switch'].includes(type)) return options?.find(it => it.value === value)?.label || value;
+                    return value;
+                }
                 return (
                     <div className={c(s.element, required && s.required)}>
                         <FormItem
+                            {...formProps}
                             name={['dataSource', index, dataIndex]}
-                            type="input"
+                            style={{ width: elementWidth }}
                             rules={[{ required, message: `${placeholder}!` }]}
                             placeholder={placeholder}
                         />
@@ -130,6 +146,24 @@ export default config()(function FieldTable(props) {
         };
 
     }, []);
+
+    // Tab 页配置
+    const tabPotions = useMemo(() => {
+        return [
+            {
+                key: 'type', tab: '类型&验证',
+                columns: [
+                    { title: '数据类型', dataIndex: 'dataType', width: 150, formProps: { type: 'select', options: DATA_TYPE_OPTIONS } },
+                    { title: '表单类型', dataIndex: 'formType', width: 150, formProps: { type: 'select', options: FORM_ELEMENT_OPTIONS } },
+                    { title: '校验规则', dataIndex: 'validation', formProps: { type: 'select', options: VALIDATE_OPTIONS } },
+                ],
+            },
+            {
+                key: 'options', tab: '模板选项',
+                columns: [...optionColumns],
+            },
+        ];
+    }, [optionColumns]);
 
     // 表格列
     const columns = useMemo(() => {
@@ -157,15 +191,15 @@ export default config()(function FieldTable(props) {
                     return <Operator items={items}/>;
                 },
             },
-            renderElement({ title: '字段', dataIndex: 'name', width: 150, type: 'input', required: true }),
-            renderElement({ title: '备注', dataIndex: 'comment', width: 150, type: 'input', required: true }),
-            !isOption && { title: '类型', dataIndex: 'type', width: 80 },
-            !isOption && { title: '长度', dataIndex: 'length', width: 50 },
-            !isOption && { title: '默认值', dataIndex: 'defaultValue', width: 80 },
-            !isOption && { title: '可为空', dataIndex: 'nullable', width: 60 },
+            { title: '字段', dataIndex: 'name', width: 150, formProps: { type: 'input', required: true } },
+            { title: '备注', dataIndex: 'comment', width: 150, formProps: { type: 'input', required: true } },
+            !isOption && { title: '类型', dataIndex: 'type', width: 150, formProps: { type: 'select', required: true, options: dbTypeOptions } },
+            !isOption && { title: '长度', dataIndex: 'length', width: 85, formProps: { type: 'number', min: 0, step: 1 } },
+            !isOption && { title: '默认值', dataIndex: 'defaultValue', width: 150, formProps: { type: 'input' } },
+            !isOption && { title: '可为空', dataIndex: 'isNullable', width: 60, formProps: { type: 'switch', options: [{ value: true, label: '是' }, { value: false, label: '否' }] } },
             ...tabColumns,
-        ].filter(Boolean);
-    }, [activeKey, handleDelete, renderElement, tabPotions]);
+        ].filter(Boolean).map(column => formColumn(column));
+    }, [activeKey, dbTypeOptions, handleDelete, formColumn, tabPotions]);
 
     // 生成代码、代码预览
     const handleGenerate = useCallback(async (preview = false) => {
@@ -226,14 +260,18 @@ export default config()(function FieldTable(props) {
         }
     }, [form, dataSource, fetchCheckFilesExist, fetchGenerateFiles]);
 
+    useEffect(() => {
+        (async () => {
+            const dbTypeOptions = await fetchDbTypeOptions({ dbUrl });
+            setDbTypeOptions(dbTypeOptions);
+        })();
+    }, [dbUrl, fetchDbTypeOptions]);
+
     // 查询表格数据
     useEffect(() => {
         (async () => {
             // 相关参数不存在，清空数据
-            if (!dbUrl || !tableName) {
-                setDataSource([]);
-                return;
-            }
+            if (!dbUrl || !tableName) return setDataSource([]);
 
             const dataSource = await props.ajax.get(`/db/tables/${tableName}`, { dbUrl }, { errorTip: false, setLoading });
             setDataSource(dataSource);
@@ -263,8 +301,24 @@ export default config()(function FieldTable(props) {
         })();
     }, [dataSource, optionColumns]);
 
+    // dataSource改变，将数据同步到form中
+    useEffect(() => form.setFieldsValue({ dataSource }), [form, dataSource]);
+
     return (
         <Content loading={loading} ref={rootRef} className={s.root}>
+            {/* 表单改变，将数据同步到dataSource中 */}
+            <FormItem noStyle shouldUpdate>
+                {({ getFieldValue }) => {
+                    const formDataSource = getFieldValue('dataSource') || [];
+                    formDataSource.forEach(item => {
+                        const record = dataSource.find(it => it.id === item.id);
+                        if (!record) return;
+                        Object.entries(item).forEach(([key, value]) => {
+                            record[key] = value;
+                        });
+                    });
+                }}
+            </FormItem>
             <Tabs
                 tabBarExtraContent={{
                     left: (

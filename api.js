@@ -8,7 +8,7 @@ const {
     writeFile,
     getFilesContent,
 } = require('./util');
-
+const { DB_TYPES } = require('./db/MySql');
 
 const apiRouter = new Router({ prefix: '/api' });
 module.exports = apiRouter
@@ -37,6 +37,14 @@ module.exports = apiRouter
         assert(dbUrl, '数据库地址不能为空！');
 
         return db(dbUrl).getColumns(tableName);
+    })
+    /** 获取数据库类型 options */
+    .get('/db/types', async ctx => {
+        const { dbUrl } = ctx.query;
+
+        if (!dbUrl) return DB_TYPES;
+
+        return db(dbUrl).getTypeOptions();
     })
     /** 获取所有模版 */
     .get('/templates', async ctx => {

@@ -22,6 +22,7 @@ export const FORM_ELEMENT_OPTIONS = [
     { value: 'cascader', label: '级联下拉框' },
     { value: 'transfer', label: '穿梭框' },
 ];
+
 export const FIELD_EDIT_TYPES = {
     input: 'input',
     select: 'select',
@@ -41,4 +42,11 @@ export const DATA_TYPE_OPTIONS = [
     { value: 'Date', label: 'Date' },
     { value: 'Time', label: 'Time' },
     { value: 'Timestamp', label: 'Timestamp' },
+];
+
+export const VALIDATE_OPTIONS = [
+    { value: 'required', label: '必填' },
+    { value: 'mobile', label: '手机号' },
+    { value: 'email', label: '邮箱' },
+    { value: 'ip', label: 'IP地址' },
 ];

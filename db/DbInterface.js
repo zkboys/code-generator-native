@@ -5,7 +5,11 @@ module.exports = class DbInterface {
         this.url = url;
     }
 
-    async testConnection(){
+    async getTypeOptions() {
+        throw Error('The getTypeOptions method is not implemented!');
+    }
+
+    async testConnection() {
         throw Error('The testConnection method is not implemented!');
     }
 
