@@ -3,7 +3,7 @@ import {Tabs, Table, Button, Space, Modal} from 'antd';
 import {v4 as uuid} from 'uuid';
 import {CodeOutlined, FileDoneOutlined, PlusOutlined} from '@ant-design/icons';
 import {Content, Operator, useHeight, confirm, FormItem} from '@ra-lib/admin';
-import {DATA_TYPE_OPTIONS, FIELD_EDIT_TYPES, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS} from '../constant';
+import {DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS} from '../constant';
 import PreviewModal from '../PreviewModal';
 import config from 'src/commons/config-hoc';
 import c from 'classnames';
@@ -84,12 +84,14 @@ export default config()(function FieldTable(props) {
                 const title = record?.shortName;
                 const dataIndex = ['options', record?.id];
                 const options = record?.fieldOptions || [];
-                const type = FIELD_EDIT_TYPES.tags;
+                console.log(options);
                 return {
                     title,
                     dataIndex,
-                    type,
-                    options,
+                    formProps: {
+                        type: 'select',
+                        options: options.map(value => ({ value, label: value })),
+                    },
                 };
             });
     }, [files, templateOptions]);
@@ -119,6 +121,7 @@ export default config()(function FieldTable(props) {
         const placeholder = type === 'select' ? `请选择${title}` : `请输入${title}`;
         let elementWidth = required ? width - 18 : width - 8;
         if (type === 'switch') elementWidth = 'auto';
+        if (!elementWidth) elementWidth = 'auto';
 
         return {
             title,
@@ -285,7 +288,7 @@ export default config()(function FieldTable(props) {
             let changed;
             optionColumns.forEach(col => {
                 const [, templateId] = col.dataIndex;
-                const options = [...col.options];
+                const options = [...col.formProps.options];
 
                 dataSource.forEach(item => {
                     if (!item.options) item.options = {};
