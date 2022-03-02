@@ -156,7 +156,8 @@ export function getCursorPosition(input) {
     if (typeof input.selectionStart == 'number') { // 非IE浏览器
         position = input.selectionStart;
     } else { // IE
-        const range = document.selection.createRange();
+        const range = document.selection?.createRange();
+        if (!range) return;
         range.moveStart('character', -input.value.length);
         position = range.text.length;
     }

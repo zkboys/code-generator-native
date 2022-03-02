@@ -10,6 +10,7 @@ import config from 'src/commons/config-hoc';
 import c from 'classnames';
 import s from './style.less';
 import virtualTable from './virtual-table';
+import {getCursorPosition} from 'src/commons';
 
 const MyTable = virtualTable((Table));
 
@@ -77,6 +78,86 @@ export default config()(function FieldTable(props) {
     }, [dataSource]);
 
 
+    // 键盘时间，使输入框获取焦点，上、下、左、右、回车
+    const handleKeyDown = useCallback((e, tabIndex, columnIndex, totalColumn, totalRow) => {
+        const { keyCode, ctrlKey, shiftKey, altKey, metaKey } = e;
+
+        if (ctrlKey || shiftKey || altKey || metaKey) return;
+
+        const isUp = keyCode === 38;
+        const isRight = keyCode === 39;
+        const isDown = keyCode === 40 || keyCode === 13;
+        const isLeft = keyCode === 37;
+
+        // 移动光标
+        const cursorPosition = getCursorPosition(e.target);
+        if (isLeft && !cursorPosition.start) return;
+        if (isRight && !cursorPosition.end) return;
+
+        const columnStartTabIndex = columnIndex * totalRow + 1;
+        const columnEndTabIndex = (columnIndex + 1) * totalRow;
+
+        let nextTabIndex;
+        let isAdd;
+
+        if (isUp) {
+            // 到顶了
+            if (tabIndex === columnStartTabIndex) return;
+
+            nextTabIndex = tabIndex - 1;
+        }
+
+        if (isRight) {
+            // 右侧
+            if (columnIndex === totalColumn - 1) {
+                // 右下角
+                if (tabIndex === columnEndTabIndex) {
+                    isAdd = true;
+                    nextTabIndex = totalRow + 1;
+                } else {
+                    // 选中下一行第一个
+                    nextTabIndex = tabIndex - totalRow * columnIndex + 1;
+                }
+            } else {
+                // 选择右侧一个
+                nextTabIndex = tabIndex + totalRow;
+            }
+        }
+
+        if (isDown) {
+            if (tabIndex === columnEndTabIndex) {
+                isAdd = true;
+                nextTabIndex = tabIndex + columnIndex + 1;
+            } else {
+                nextTabIndex = tabIndex + 1;
+            }
+        }
+
+        if (isLeft) {
+            // 左上角
+            if (tabIndex === columnStartTabIndex && columnIndex === 0) return;
+
+            // 左侧第一列继续左移动，选中上一行最后一个
+            if (columnIndex === 0) nextTabIndex = (tabIndex - 1) + totalRow * (totalColumn - 1);
+
+            // 选择前一个
+            if (columnIndex !== 0) nextTabIndex = tabIndex - totalRow;
+        }
+
+        if (isAdd) {
+            handleAdd(true);
+        }
+
+        // 等待新增行渲染
+        setTimeout(() => {
+            const nextInput = document.querySelector(`input[tabindex='${nextTabIndex}']`);
+            if (!nextInput) return;
+            nextInput.focus();
+            nextInput.select();
+        });
+    }, [handleAdd]);
+
+
     // 选项列
     const optionColumns = useMemo(() => {
         return (files || []).filter(item => item.templateId)
@@ -98,6 +179,11 @@ export default config()(function FieldTable(props) {
 
 
     // 渲染表格中的表单项
+    // 标记当前未第几列
+    let columnIndex = 0;
+    // 一共多少行
+    const totalRow = dataSource.length;
+
     const formColumn = useCallback((column) => {
         if (!column?.formProps?.type) return column;
 
@@ -116,12 +202,19 @@ export default config()(function FieldTable(props) {
             formProps,
             ...others
         } = column;
+
         const { type = 'input', required = false, options = [] } = formProps;
 
         const placeholder = type === 'select' ? `请选择${title}` : `请输入${title}`;
         let elementWidth = required ? width - 18 : width - 8;
         if (type === 'switch') elementWidth = 'auto';
         if (!elementWidth) elementWidth = 'auto';
+        const isInputLike = ['input'].includes(type);
+
+        let _columnIndex;
+        if (isInputLike) {
+            _columnIndex = columnIndex++;
+        }
 
         return {
             title,
@@ -154,10 +247,17 @@ export default config()(function FieldTable(props) {
                     );
                 }
 
+                const extraProps = {};
+                if (isInputLike) {
+                    extraProps.tabIndex = totalRow * _columnIndex + index + 1;
+                    extraProps.onKeyDown = e => handleKeyDown(e, extraProps.tabIndex, _columnIndex, columnIndex, totalRow);
+                }
+
                 return (
                     <div className={c(s.element, required && s.required)}>
                         <FormItem
                             {...formProps}
+                            {...extraProps}
                             name={name}
                             style={{ width: elementWidth }}
                             rules={[{ required, message: `${placeholder}!` }]}
@@ -167,8 +267,7 @@ export default config()(function FieldTable(props) {
                 );
             },
         };
-
-    }, []);
+    }, [columnIndex, handleKeyDown, totalRow]);
 
     // Tab 页配置
     const tabPotions = useMemo(() => {
