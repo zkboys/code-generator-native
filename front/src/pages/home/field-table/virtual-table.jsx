@@ -1,10 +1,10 @@
-import React, { useCallback, useState } from 'react';
-import { FixedSizeList as List } from 'react-window';
+import React, {useCallback, useState} from 'react';
+import {FixedSizeList as List} from 'react-window';
 import ResizeObserver from 'rc-resize-observer';
 import classNames from 'classnames';
-import { getScrollBarWidth } from '@ra-lib/admin';
+import {getScrollBarWidth} from '@ra-lib/admin';
 import s from './virtual-table.less';
-import { SortableContainer, SortableElement } from 'react-sortable-hoc';
+import {SortableContainer, SortableElement} from 'react-sortable-hoc';
 
 const scrollBarWidth = getScrollBarWidth();
 
@@ -24,7 +24,7 @@ export default Table => {
         const totalWidth = columns.reduce((prev, { width = 0 }) => prev + width, 0);
 
         // 计算未指定宽度列的宽度
-        const mergedColumns = columns.map((column, index) => {
+        const mergedColumns = columns.map((column) => {
             if (column.width) return column;
 
             // 平均分配表格的剩余宽度
@@ -41,7 +41,7 @@ export default Table => {
             onSortEnd && onSortEnd(sortProps);
         }, [onSortEnd]);
 
-        const renderVirtualList = (dataSource, {/* scrollbarSize,*/ ref, onScroll }) => {
+        const renderVirtualList = (dataSource) => {
             return (
                 <BodyContainer
                     onSortEnd={handleSortEnd}
@@ -60,7 +60,7 @@ export default Table => {
                                         {mergedColumns.map((column, columnIndex) => {
                                             const record = dataSource[rowIndex];
                                             const value = record[column.dataIndex];
-                                            const render = column.render || ((value, record, index) => value);
+                                            const render = column.render || ((value) => value);
                                             const width = columnIndex === columns.length - 1 ? column.width - scrollBarWidth : column.width;
                                             return (
                                                 <div key={column.key || column.dataIndex} className={s.cell} style={{ width }}>

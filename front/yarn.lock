@@ -1644,14 +1644,14 @@
   resolved "https://registry.npmjs.org/@polka/url/-/url-1.0.0-next.12.tgz#431ec342a7195622f86688bbda82e3166ce8cb28"
   integrity sha512-6RglhutqrGFMO1MNUXp95RBuYIuc8wTnMAV5MUhLmjTOy78ncwOw7RgeQ/HeymkKXRhZd0s2DNrM1rL7unk3MQ==
 
-"@ra-lib/admin@^0.1.30":
-  version "0.1.30"
-  resolved "https://registry.npmjs.org/@ra-lib/admin/-/admin-0.1.30.tgz#518988db1bf1a19c1836e4303a93396f4bb47074"
-  integrity sha512-FK+BceOuHdZwmLrCCIh9C7Jxgan0ED2X68Qn6UA/E1f5u9T1TkbGt4OqUhFsNYg131+s1irUJyE7vKgSkiTlWQ==
+"@ra-lib/admin@^0.1.31":
+  version "0.1.31"
+  resolved "https://registry.npmjs.org/@ra-lib/admin/-/admin-0.1.31.tgz#691377c440a09e19770eaede56a3ba6dfd5d9d70"
+  integrity sha512-oeAKV2qQBVHH4dIuTDFnzbwJ4wp/rVeOng9TwfonLMDJ18kBJs2yeeLdXWdt+Mz3bU2o5R/M6ki+k8i4XzvQtw==
   dependencies:
     "@ra-lib/ajax" "0.1.35"
     "@ra-lib/babel-plugin-attribute-wrapper" "^0.0.18"
-    "@ra-lib/components" "0.1.97"
+    "@ra-lib/components" "0.1.98"
     "@ra-lib/config-loader" "0.1.8"
     "@ra-lib/hoc" "0.1.9"
     "@ra-lib/hooks" "0.1.10"
@@ -1668,10 +1668,10 @@
   resolved "https://registry.npmjs.org/@ra-lib/babel-plugin-attribute-wrapper/-/babel-plugin-attribute-wrapper-0.0.18.tgz#fa7981d63fdfbac971dada19d3d18ea598b64d69"
   integrity sha512-ELq1/b0wcaRMQ3hYaZfdglrtBDe83NbxWwQjtr18/9R+27gjo2SDnZZfiin9Aijv1JcNHjPk+VuRL7Z2QCyQ2w==
 
-"@ra-lib/components@0.1.97":
-  version "0.1.97"
-  resolved "https://registry.npmjs.org/@ra-lib/components/-/components-0.1.97.tgz#3e2050d205dd8d024273361c157ef9e563c23d25"
-  integrity sha512-sY9rJDo6fO8hRRG3AYXlvCE4hgkzbvAq3F3fvjYXgSLSYZ+CeJZGZYUrpwmGTSte4WqH0b1qZXsCfmOWH0T2YQ==
+"@ra-lib/components@0.1.98":
+  version "0.1.98"
+  resolved "https://registry.npmjs.org/@ra-lib/components/-/components-0.1.98.tgz#8c86534aef41916c4d8286a33d14f4da6888416d"
+  integrity sha512-OQF3+taRCsHLfYGhkbS2cH4eoYzXtgTEtp8HegtjuSBGGt2R9bB0VuVd62iFE5gD/2GkNNT5ByepupkPZoPOjg==
 
 "@ra-lib/config-loader@0.1.8":
   version "0.1.8"

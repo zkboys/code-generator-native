@@ -1,43 +1,24 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Form, Space, Button, Modal } from 'antd';
-import {
-    MinusCircleOutlined,
-    PlusCircleOutlined,
-    PlusOutlined,
-    CodeOutlined,
-    FileDoneOutlined,
-} from '@ant-design/icons';
-import { PageContent, FormItem, Operator, storage, confirm } from '@ra-lib/admin';
+import React, {useState, useEffect, useCallback} from 'react';
+import {Form, Space} from 'antd';
+import {MinusCircleOutlined, PlusCircleOutlined} from '@ant-design/icons';
+import {PageContent, FormItem, storage} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
-import { OptionsTag, EditTable } from 'src/components';
-import s from './style.less';
-import { v4 as uuid } from 'uuid';
-import { FORM_ELEMENT_OPTIONS, FIELD_EDIT_TYPES, DATA_TYPE_OPTIONS } from './constant';
-import { stringFormat, triggerWindowResize } from 'src/commons';
-import PreviewModal from './PreviewModal';
+import {OptionsTag} from 'src/components';
+import {stringFormat, triggerWindowResize} from 'src/commons';
 import FieldTable from './field-table';
+import s from './style.less';
 
 export default config({
     path: '/',
     title: '首页',
 })(function Home(props) {
-    const [loading, setLoading] = useState(false);
-    const [dataSource, setDataSource] = useState([]);
     const [tableOptions, setTableOptions] = useState([]);
     const [templateOptions, setTemplateOptions] = useState([]);
-    const [optionColumns, setOptionColumns] = useState([]);
-    const [formTypeColumnVisible, setFormTypeColumnVisible] = useState(false);
     const [moduleNames, setModuleNames] = useState({});
-    const [previewParams, setPreviewParams] = useState(null);
     const [form] = Form.useForm();
-    const editTableRef = useRef();
 
     const fetchDbTables = useCallback(async (dbUrl) => {
         return await props.ajax.get('/db/tables', { dbUrl }, { errorTip: false });
-    }, [props.ajax]);
-
-    const fetchColumns = useCallback(async (dbUrl, tableName) => {
-        return await props.ajax.get(`/db/tables/${tableName}`, { dbUrl }, { errorTip: false, setLoading });
     }, [props.ajax]);
 
     const fetchModuleNames = useCallback(async (name) => {
@@ -47,47 +28,6 @@ export default config({
     const fetchTemplates = useCallback(async () => {
         return await props.ajax.get('/templates', null, { errorTip: false });
     }, [props.ajax]);
-
-    const fetchGenerateFiles = useCallback(async (params) => {
-        return await props.ajax.post('/generate/files', params);
-    }, [props.ajax]);
-
-    const fetchCheckFilesExist = useCallback(async (params) => {
-        return await props.ajax.post('/generate/files/exist', params);
-    }, [props.ajax]);
-
-
-    // 删除行
-    const handleDelete = useCallback((id) => {
-        const nextDataSource = dataSource.filter(item => item.id !== id);
-        setDataSource(nextDataSource);
-    }, [dataSource]);
-
-    const columns = [
-        {
-            title: '操作', dataIndex: 'operator', width: 60,
-            render: (value, record) => {
-                const { id, chinese } = record;
-                const items = [
-                    {
-                        label: '删除',
-                        color: 'red',
-                        confirm: {
-                            title: `您确定删除"${chinese}"?`,
-                            onConfirm: () => handleDelete(id),
-                        },
-                    },
-                ];
-                return <Operator items={items} />;
-            },
-        },
-        { title: '注释', dataIndex: 'comment', width: 150 },
-        { title: '列名', dataIndex: 'name', width: 150, isNewEdit: true, type: FIELD_EDIT_TYPES.input, required: true },
-        { title: '数据类型', dataIndex: 'dataType', width: 130, type: FIELD_EDIT_TYPES.select, options: DATA_TYPE_OPTIONS },
-        { title: '中文名', dataIndex: 'chinese', width: 190, type: FIELD_EDIT_TYPES.input, required: true },
-        formTypeColumnVisible && { title: '表单类型', dataIndex: 'formType', width: 150, type: FIELD_EDIT_TYPES.select, options: FORM_ELEMENT_OPTIONS },
-        ...optionColumns,
-    ].filter(Boolean);
 
     // 数据库连接改变事件
     const handleDbUrlChange = useCallback(async (e) => {
@@ -106,27 +46,10 @@ export default config({
 
     // 数据库表改变事件
     const handleTableNameChange = useCallback(async (tableName) => {
-        let dataSource;
         const moduleNames = await fetchModuleNames(tableName);
         setModuleNames(moduleNames);
         form.setFieldsValue({ moduleName: moduleNames['module-name'] });
-
-        try {
-            const dbUrl = form.getFieldValue('dbUrl');
-            if (!dbUrl) return Modal.info({ title: '温馨提示', content: '请先输入正确的数据库连接！' });
-
-            dataSource = await fetchColumns(dbUrl, tableName);
-        } catch (e) {
-            dataSource = [];
-        }
-
-        setDataSource(dataSource.map(item => {
-            return {
-                id: uuid(),
-                ...item,
-            };
-        }));
-    }, [fetchColumns, fetchModuleNames, form]);
+    }, [fetchModuleNames, form]);
 
     // 模块名改变事件
     const handleModuleNameBlur = useCallback(async (e) => {
@@ -136,25 +59,6 @@ export default config({
         setModuleNames(moduleNames);
     }, [fetchModuleNames]);
 
-    // 获取文件选项列
-    const getOptionColumns = useCallback((templateOptions) => {
-        const files = form.getFieldValue('files');
-        return files.filter(item => item.templateId)
-            .map(({ templateId }) => {
-                const record = templateOptions.find(item => item.value === templateId)?.record;
-                const title = record?.shortName;
-                const dataIndex = ['options', record?.id];
-                const options = record?.fieldOptions || [];
-                const type = FIELD_EDIT_TYPES.tags;
-                return {
-                    title,
-                    dataIndex,
-                    type,
-                    options,
-                };
-            });
-    }, [form]);
-
     const getFormTypeColumnVisible = useCallback(() => {
         const files = form.getFieldValue('files');
         const types = ['jsx', 'tsx', 'vue', 'vux', 'html'];
@@ -163,15 +67,6 @@ export default config({
             return types.includes(extname);
         });
     }, [form]);
-
-    // 文件列表改变事件
-    const handleFilesChange = useCallback(() => {
-        const optionColumns = getOptionColumns(templateOptions);
-        setOptionColumns(optionColumns);
-
-        const formTypeColumnVisible = getFormTypeColumnVisible();
-        setFormTypeColumnVisible(formTypeColumnVisible);
-    }, [getFormTypeColumnVisible, getOptionColumns, templateOptions]);
 
     // 模版改变事件
     const handleTemplateChange = useCallback((name, templateId) => {
@@ -186,90 +81,9 @@ export default config({
 
         form.setFieldsValue({ files: [...files] });
 
-        handleFilesChange();
         // 强制刷新 targetPath
         setModuleNames({ ...moduleNames });
-    }, [form, handleFilesChange, templateOptions, moduleNames]);
-
-    // 表格新增一行事件
-    const handleAdd = useCallback((append = false) => {
-        const length = dataSource.length;
-
-        const newRecord = {
-            id: uuid(),
-            comment: `新增列${length + 1}`,
-            chinese: `新增列${length + 1}`,
-            field: `field${length + 1}`,
-            formType: 'input',
-            dataType: 'String',
-            __isNew: true,
-        };
-
-        append ? dataSource.push(newRecord) : dataSource.unshift(newRecord);
-        setDataSource([...dataSource]);
-    }, [dataSource]);
-
-    // 生成代码、代码预览
-    const handleGenerate = useCallback(async (preview = false) => {
-        try {
-            const values = await form.validateFields();
-            await editTableRef.current.form.validateFields();
-
-            if (!dataSource?.length) return Modal.info({ title: '温馨提示', content: '表格的字段配置不能为空！' });
-
-            const { files } = values;
-
-            const params = {
-                files,
-                config: dataSource,
-            };
-
-            if (preview) {
-                setPreviewParams(params);
-            } else {
-                // 检测文件是否存在
-                const res = await fetchCheckFilesExist({ files }) || [];
-
-                // 用户选择是否覆盖
-                for (let targetPath of res) {
-                    const file = files.find(it => it.targetPath === targetPath);
-
-                    try {
-                        await confirm({
-                            width: 600,
-                            title: '文件已存在',
-                            content: targetPath,
-                            okText: '覆盖',
-                            okButtonProps: {
-                                danger: true,
-                            },
-                        });
-                        file.rewrite = true;
-                    } catch (e) {
-                        file.rewrite = false;
-                    }
-                }
-
-                const paths = await fetchGenerateFiles(params);
-                if (!paths?.length) return Modal.info({ title: '温馨提示', content: '未生成任何文件！' });
-
-                Modal.info({
-                    width: 600,
-                    title: '生成文件如下',
-                    content: (
-                        <div>
-                            {paths.map(p => <div key={p}>{p}</div>)}
-                        </div>
-                    ),
-                });
-            }
-        } catch (e) {
-            if (e?.errorFields?.length) {
-                return Modal.info({ title: '温馨提示', content: '表单填写有误，请检查后再提交！' });
-            }
-            console.error(e);
-        }
-    }, [form, dataSource, fetchCheckFilesExist, fetchGenerateFiles]);
+    }, [form, templateOptions, moduleNames]);
 
     // 表单改变事件
     const handleFormChange = useCallback(() => {
@@ -292,13 +106,8 @@ export default config({
             }));
             form.setFieldsValue({ files });
 
-            const optionColumns = getOptionColumns(templateOptions);
-            setOptionColumns(optionColumns);
-
-            const formTypeColumnVisible = getFormTypeColumnVisible();
-            setFormTypeColumnVisible(formTypeColumnVisible);
         })();
-    }, [fetchTemplates, form, getFormTypeColumnVisible, getOptionColumns]);
+    }, [fetchTemplates, form, getFormTypeColumnVisible]);
 
     // 从本地同步数据库链接
     useEffect(() => {
@@ -310,28 +119,6 @@ export default config({
             await handleDbUrlChange({ target: { value: dbUrl } });
         })();
     }, [form, handleDbUrlChange]);
-
-    // 设置字段选项默认值，默认全选
-    useEffect(() => {
-        let changed;
-        optionColumns.forEach(col => {
-            const [, templateId] = col.dataIndex;
-            const options = [...col.options];
-
-            dataSource.forEach(item => {
-                if (!item.options) item.options = {};
-
-                if (!item.options[templateId]) {
-                    item.options[templateId] = [...options];
-                    changed = true;
-                }
-            });
-
-        });
-
-        // 防止死循环
-        changed && setDataSource([...dataSource]);
-    }, [dataSource, optionColumns]);
 
     // 处理模板的目标位置
     useEffect(() => {
@@ -351,9 +138,9 @@ export default config({
         // size: 'small',
     };
 
-    console.log(123);
+    console.log('index render');
     return (
-        <PageContent className={s.root} loading={loading}>
+        <PageContent className={s.root}>
             <Form
                 className={s.query}
                 style={{ marginBottom: 8 }}
@@ -411,19 +198,13 @@ export default config({
                                                 {fields?.length > 1 && (
                                                     <MinusCircleOutlined
                                                         className={s.fileMinus}
-                                                        onClick={() => {
-                                                            remove(name);
-                                                            handleFilesChange();
-                                                        }}
+                                                        onClick={() => remove(name)}
                                                     />
                                                 )}
                                                 {isLast && (fields.length < templateOptions.length) && (
                                                     <PlusCircleOutlined
                                                         className={s.filePlus}
-                                                        onClick={() => {
-                                                            add({});
-                                                            handleFilesChange();
-                                                        }}
+                                                        onClick={() => add({})}
                                                     />
                                                 )}
                                             </Space>
@@ -484,7 +265,7 @@ export default config({
                                                             {...restField}
                                                             name={[name, 'options']}
                                                         >
-                                                            <OptionsTag options={options} />
+                                                            <OptionsTag options={options}/>
                                                         </FormItem>
                                                     );
                                                 }}
@@ -496,49 +277,22 @@ export default config({
                         )}
                     </Form.List>
                 </div>
+
+                <FormItem shouldUpdate noStyle>
+                    {({ getFieldsValue }) => {
+                        const { dbUrl, tableName, files } = getFieldsValue();
+                        return (
+                            <FieldTable
+                                form={form}
+                                dbUrl={dbUrl}
+                                tableName={tableName}
+                                files={files}
+                                templateOptions={templateOptions}
+                            />
+                        );
+                    }}
+                </FormItem>
             </Form>
-            <Space style={{ marginBottom: 8 }}>
-                <Button
-                    icon={<PlusOutlined />}
-                    ghost
-                    type="primary"
-                    onClick={() => handleAdd()}
-                >
-                    添加一行
-                </Button>
-                <Button
-                    icon={<CodeOutlined />}
-                    onClick={() => handleGenerate(true)}
-                >
-                    代码预览
-                </Button>
-                <Button
-                    type="primary"
-                    icon={<FileDoneOutlined />}
-                    onClick={() => handleGenerate()}
-                >
-                    生成文件
-                </Button>
-                <span style={{ marginLeft: 24 }}>共<span style={{ fontSize: 16, margin: '0 8px' }}>{dataSource?.length || 0}</span>条数据</span>
-            </Space>
-            <FieldTable />
-            <EditTable
-                ref={editTableRef}
-                serialNumber={false}
-                fitHeight={false}
-                otherHeight={72}
-                columns={columns}
-                onAdd={handleAdd}
-                dataSource={optionColumns?.length ? dataSource : []}
-                onChange={setDataSource}
-                footer={() => null}
-            />
-            <PreviewModal
-                visible={!!previewParams}
-                params={previewParams}
-                onOk={() => setPreviewParams(null)}
-                onCancel={() => setPreviewParams(null)}
-            />
         </PageContent>
     );
 });
