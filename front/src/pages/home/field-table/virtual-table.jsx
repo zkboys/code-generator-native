@@ -62,11 +62,16 @@ export default Table => {
                                             const value = record[column.dataIndex];
                                             const render = column.render || ((value) => value);
                                             const width = columnIndex === columns.length - 1 ? column.width - scrollBarWidth : column.width;
+
+                                            const val = render(value, record, rowIndex);
+
                                             return (
                                                 <div key={column.key || column.dataIndex} className={s.cell} style={{ width }}>
-                                                    <div title={typeof value === 'string' ? value : ''}>
-                                                        {render(value, record, rowIndex)}
-                                                    </div>
+                                                    {typeof val === 'string' ? (
+                                                        <div className={s.text} title={val}>
+                                                            {render(value, record, rowIndex)}
+                                                        </div>
+                                                    ) : val}
                                                 </div>
                                             );
                                         })}

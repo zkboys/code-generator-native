@@ -22,6 +22,26 @@
     }
 }
 
+.element {
+    position: relative;
+
+    &.required {
+        padding-left: 10px;
+    }
+
+    &.required:before {
+        position: absolute;
+        display: inline-block;
+        left: 0;
+        top: 10px;
+        color: #ff4d4f;
+        font-size: 14px;
+        font-family: SimSun, sans-serif;
+        line-height: 1;
+        content: '*';
+    }
+}
+
 .tabColumn {
     background: rgba(24, 144, 255, .05);
 }

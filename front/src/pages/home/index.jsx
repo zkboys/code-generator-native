@@ -278,7 +278,13 @@ export default config({
                     </Form.List>
                 </div>
 
-                <FormItem shouldUpdate noStyle>
+                <FormItem
+                    shouldUpdate={(prevValue, curValue) => {
+                        const fields = ['dbUrl', 'tableName', 'files'];
+                        return fields.some(field => prevValue?.[field] !== curValue?.[field]);
+                    }}
+                    noStyle
+                >
                     {({ getFieldsValue }) => {
                         const { dbUrl, tableName, files } = getFieldsValue();
                         return (

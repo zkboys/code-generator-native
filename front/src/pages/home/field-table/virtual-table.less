@@ -24,6 +24,13 @@
     :global {
         .@{ant-prefix}-form-item {
             margin: 0 !important;
+            position: relative;
+        }
+
+        .@{ant-prefix}-form-item-explain {
+            position: absolute;
+            bottom: -21px;
+            z-index: 10;
         }
     }
 }
@@ -36,7 +43,7 @@
     width: 0;
     box-sizing: border-box;
 
-    & > div {
+    .text {
         width: 100%;
         overflow: hidden;
         text-overflow: ellipsis;

@@ -6,6 +6,7 @@ import {Content, Operator, useHeight, confirm, FormItem} from '@ra-lib/admin';
 import {FIELD_EDIT_TYPES} from '../constant';
 import PreviewModal from '../PreviewModal';
 import config from 'src/commons/config-hoc';
+import c from 'classnames';
 import s from './style.less';
 import virtualTable from './virtual-table';
 
@@ -109,17 +110,21 @@ export default config()(function FieldTable(props) {
     const renderElement = useCallback((column) => {
         const { title, dataIndex, type, options, required, ...others } = column;
 
+        const placeholder = type === 'select' ? `请选择${title}` : `请输入${title}`;
+
         return {
             ...others,
             title, dataIndex,
             render: (value, record, index) => {
                 return (
-                    <FormItem
-                        name={['dataSource', index, dataIndex]}
-                        type="input"
-                        required={required}
-                        placeholder={`请输入${title}`}
-                    />
+                    <div className={c(s.element, required && s.required)}>
+                        <FormItem
+                            name={['dataSource', index, dataIndex]}
+                            type="input"
+                            rules={[{ required, message: `${placeholder}!` }]}
+                            placeholder={placeholder}
+                        />
+                    </div>
                 );
             },
         };
@@ -225,13 +230,21 @@ export default config()(function FieldTable(props) {
     useEffect(() => {
         (async () => {
             // 相关参数不存在，清空数据
-            if (!dbUrl || !tableName || !files?.length) {
+            if (!dbUrl || !tableName) {
                 setDataSource([]);
                 return;
             }
 
             const dataSource = await props.ajax.get(`/db/tables/${tableName}`, { dbUrl }, { errorTip: false, setLoading });
-            // 默认文件选项全选
+            setDataSource(dataSource);
+        })();
+    }, [dbUrl, tableName, props.ajax]);
+
+
+    // 默认文件选项全选
+    useEffect(() => {
+        (async () => {
+            let changed;
             optionColumns.forEach(col => {
                 const [, templateId] = col.dataIndex;
                 const options = [...col.options];
@@ -241,13 +254,14 @@ export default config()(function FieldTable(props) {
 
                     if (!item.options[templateId]) {
                         item.options[templateId] = [...options];
+                        changed = true;
                     }
                 });
             });
 
-            setDataSource(dataSource);
+            setDataSource(changed ? [...dataSource] : dataSource);
         })();
-    }, [dbUrl, files, optionColumns, props.ajax, tableName, templateOptions]);
+    }, [dataSource, optionColumns]);
 
     return (
         <Content loading={loading} ref={rootRef} className={s.root}>
