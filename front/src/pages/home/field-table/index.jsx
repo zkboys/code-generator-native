@@ -329,8 +329,9 @@ export default config()(function FieldTable(props) {
             if (!dataSource?.length) return Modal.info({ title: '温馨提示', content: '表格的字段配置不能为空！' });
 
             const values = await form.validateFields();
-            const { files } = values;
+            const { files, moduleName } = values;
             const params = {
+                moduleName,
                 files,
                 config: dataSource,
             };
@@ -364,7 +365,7 @@ export default config()(function FieldTable(props) {
                 const paths = await fetchGenerateFiles(params);
                 if (!paths?.length) return Modal.info({ title: '温馨提示', content: '未生成任何文件！' });
 
-                Modal.info({
+                Modal.success({
                     width: 600,
                     title: '生成文件如下',
                     content: (

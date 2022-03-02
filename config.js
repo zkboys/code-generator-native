@@ -11,9 +11,10 @@ const port = args.port || 3001;
 
 const nativeRoot = args.nativeRoot || process.cwd();
 // const nativeRoot = process.cwd();
-const localGeneratorPath = path.join(nativeRoot, '.generator');
+const generatorPath = 'generator';
+const localGeneratorPath = path.join(nativeRoot, generatorPath);
 const localTemplatesPath = path.join(localGeneratorPath, 'templates');
-const systemTemplatesPath = path.join(__dirname, '.generator', 'templates');
+const systemTemplatesPath = path.join(__dirname, generatorPath, 'templates');
 
 module.exports = {
     // 端口

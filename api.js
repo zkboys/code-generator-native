@@ -73,14 +73,14 @@ module.exports = apiRouter
         return await checkFilesExist(filePaths);
     })
     .post('/generate/files', async ctx => {
-        const { files, config } = ctx.request.body;
+        const { files, moduleName, config } = ctx.request.body;
         const nextFiles = files.filter(item => item.rewrite !== false);
 
-        await writeFile(nextFiles, config);
+        await writeFile(nextFiles, moduleName, config);
         return nextFiles.map(item => item.targetPath);
     })
     .post('/generate/preview', async ctx => {
-        const { files, config } = ctx.request.body;
-        return await getFilesContent(files, config);
+        const { files, moduleName, config } = ctx.request.body;
+        return await getFilesContent(files, moduleName, config);
     })
 ;

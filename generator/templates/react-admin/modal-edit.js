@@ -1,3 +1,11 @@
+module.exports = {
+    // name: '弹框编辑页',
+    options: ['添加', '修改', '详情'],
+    fieldOptions: ['表单'],
+    targetPath: '/front/src/pages/{module-name}/EditModal.jsx',
+    getContent: config => {
+        const { moduleNames: mn, fields } = config;
+        return `
 import {useCallback, useState, useEffect} from 'react';
 import {Form} from 'antd';
 import {ModalContent, FormItem} from '@ra-lib/admin';
@@ -5,11 +13,11 @@ import config from 'src/commons/config-hoc';
 
 export default config({
     modal: {
-        title: (props) => (props.isEdit ? '编辑角色' : '创建角色'),
+        title: (props) => (props.isEdit ? '编辑' : '创建'),
         width: '70%',
         top: 50,
     },
-})(function Edit(props) {
+})(function ${mn.ModuleName}EditModal(props) {
     const { record, isEdit, onOk } = props;
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
@@ -20,9 +28,9 @@ export default config({
         };
 
         if (isEdit) {
-            await props.ajax.post('/role/updateRoleById', params, { setLoading, successTip: '修改成功！' });
+            await props.ajax.put('/${mn.module_names}', params, { setLoading, successTip: '修改成功！' });
         } else {
-            await props.ajax.post('/role/updateRoleById', params, { setLoading, successTip: '修改成功！' });
+            await props.ajax.post('/${mn.module_names}', params, { setLoading, successTip: '修改成功！' });
         }
 
         onOk();
@@ -31,7 +39,7 @@ export default config({
     // 初始化，查询详情数据
     useEffect(() => {
         (async () => {
-            const res = await props.ajax.get('/role/getRoleDetailById', { id: record?.id }, [], { setLoading });
+            const res = await props.ajax.get('/${mn.module_names}', { id: record?.id }, [], { setLoading });
             form.setFieldsValue(res || {});
         })();
     }, [form, props.ajax, record?.id]);
@@ -78,3 +86,6 @@ export default config({
         </Form>
     );
 });
+        `.trim();
+    },
+};

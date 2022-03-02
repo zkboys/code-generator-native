@@ -61,10 +61,11 @@ function getAllFiles(dir, fileList = []) {
 /**
  * 获取文件内容
  * @param files
- * @param fileConfig
+ * @param moduleName
+ * @param fields
  * @returns {Promise<*>}
  */
-function getFilesContent(files, fileConfig) {
+function getFilesContent(files, moduleName, fields) {
     const templates = getLocalTemplates();
 
     return files.map(file => {
@@ -73,7 +74,9 @@ function getFilesContent(files, fileConfig) {
 
         assert(template, `${name} 模版不存在!`);
 
-        const content = template.getContent(fileConfig);
+        const moduleNames = getModuleNames(moduleName);
+
+        const content = template.getContent({ file, files, moduleNames, fields });
         return {
             ...template,
             ...file,
@@ -103,11 +106,12 @@ async function checkFilesExist(filePaths) {
 /**
  * 写入文件
  * @param files
- * @param fileConfig
+ * @param moduleName
+ * @param fields
  * @returns {Promise<void>}
  */
-async function writeFile(files, fileConfig) {
-    const filesContents = getFilesContent(files, fileConfig);
+async function writeFile(files, moduleName, fields) {
+    const filesContents = getFilesContent(files, moduleName, fields);
     for (let file of filesContents) {
         const { targetPath, content } = file;
 

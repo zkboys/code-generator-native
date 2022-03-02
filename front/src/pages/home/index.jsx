@@ -280,7 +280,7 @@ export default config({
 
                 <FormItem
                     shouldUpdate={(prevValue, curValue) => {
-                        const fields = ['dbUrl', 'tableName', 'files'];
+                        const fields = ['dbUrl', 'tableName', 'moduleName', 'files'];
                         return fields.some(field => prevValue?.[field] !== curValue?.[field]);
                     }}
                     noStyle
