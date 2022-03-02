@@ -1,5 +1,5 @@
 import {useCallback, useState, useEffect} from 'react';
-import {Button, Form, Space} from 'antd';
+import {Button, Form, Space, } from 'antd';
 import {PageContent, QueryBar, FormItem, Table, Pagination, Operator} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
 import EditModal from './EditModal';
@@ -17,9 +17,10 @@ export default config({
     const [form] = Form.useForm();
 
     let columns = [
-        { title: '角色名称', dataIndex: 'name' },
-        { title: '启用', dataIndex: 'enabled' },
-        { title: '备注', dataIndex: 'remark' },
+        { title: '用户', dataIndex: 'userId' },
+        { title: '部门', dataIndex: 'departmentId' },
+        { title: '是否是领导', dataIndex: 'isLeader' },
+        { title: '排序', dataIndex: 'order' },
         {
             title: '操作',
             dataIndex: 'operator',
@@ -29,7 +30,10 @@ export default config({
                 const items = [
                     {
                         label: '编辑',
-                        onClick: () => setRecord(record) || setVisible(true),
+                        onClick: () => {
+                            setRecord(record);
+                            setVisible(true);   
+                        },
                     },
                     {
                         label: '删除',
@@ -54,16 +58,20 @@ export default config({
             pageSize: options.pageSize || pageSize,
         };
         const res = await props.ajax.get('/department_users', params, { setLoading });
-        const dataSource = (res?.content || []).filter((item) => item.type === 3);
+        const dataSource = res?.content || [{ id: 1 }, { id: 2 }];
         const total = res?.totalElements || 0;
         setDataSource(dataSource);
         setTotal(total);
     }, [form, pageNum, pageSize, props.ajax]);
 
+    // 添加
     const handleAdd = useCallback(() => {
         setRecord(null);
         setVisible(true);
     }, []);
+
+
+
 
     // 删除
     const handleDelete = useCallback(async (id) => {
@@ -94,52 +102,31 @@ export default config({
                         await handleSearch({ pageNum: 1 });
                     }}
                 >
-                    <FormItem {...layout} label="角色名称" name="name"/>
+                    <FormItem {...layout} type="select" label="用户" name="userId"/>
+                    <FormItem {...layout} type="select" label="部门" name="departmentId"/>
                     <FormItem>
                         <Space>
                             <Button type="primary" htmlType="submit">
                                 查询
                             </Button>
-                            <Button htmlType="reset">重置</Button>
-                            <Button
-                                type="primary"
-                                onClick={handleAdd}
-                            >
+                            <Button htmlType="reset">
+                                重置
+                            </Button>
+                            <Button type="primary" onClick={handleAdd}>
                                 添加
-                            </Button>
-                            <Button
-                                type="primary"
-                                danger
-                                onClick={() => {
-                                    setRecord(null);
-                                    setVisible(true);
-                                }}
-                            >
-                                批量删除
-                            </Button>
-                            <Button
-                                type="primary"
-                                ghost
-                                onClick={() => {
-                                    setRecord(null);
-                                    setVisible(true);
-                                }}
-                            >
-                                导入
-                            </Button>
-                            <Button
-                                onClick={() => {
-                                    setRecord(null);
-                                    setVisible(true);
-                                }}
-                            >
-                                导出
                             </Button>
                         </Space>
                     </FormItem>
                 </Form>
             </QueryBar>
-            <Table fitHeight dataSource={dataSource} columns={columns} rowKey="id"/>
+            <Table
+                pageNum={pageNum}
+                pageSize={pageSize}
+                fitHeight
+                dataSource={dataSource}
+                columns={columns}
+                rowKey="id"
+            />
             <Pagination
                 total={total}
                 pageNum={pageNum}

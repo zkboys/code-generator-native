@@ -54,18 +54,16 @@ export default config({
                     <Col span={12}>
                         <FormItem
                             {...layout}
-                            type="input"
+                            type="select"
                             label="用户"
                             name="userId"
-                            required
-                            noSpace
                             maxLength={36}
                         />        
                     </Col>
                     <Col span={12}>
                         <FormItem
                             {...layout}
-                            type="input"
+                            type="select"
                             label="部门"
                             name="departmentId"
                         />        

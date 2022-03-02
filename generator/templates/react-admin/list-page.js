@@ -2,100 +2,152 @@ module.exports = {
     // 模版名称
     // name: '列表页',
     // 文件级别选项
-    options: ['选中', '序号', '分页', '导入', '导出', '添加', '批量删除'],
+    options: ['选中', '序号', '分页', '导入', '导出', '添加', '编辑', '删除', '批量删除'],
     // 字段级别选项
     fieldOptions: ['条件', '列表'],
     // 生成文件的默认目标路径
     targetPath: '/front/src/pages/{module-name}/index.jsx',
     // 获取文件内容
     getContent: config => {
-        const { file, moduleNames: mn, fields } = config;
+        const { NULL_LINE, file, moduleNames: mn, fields } = config;
+
+        const ignore = ['id', 'updatedAt', 'createdAt', 'isDeleted'];
+        const queryFields = fields.filter(item => item.fieldOptions.includes('条件') && !ignore.includes(item.__names.moduleName));
+        const tableFields = fields.filter(item => item.fieldOptions.includes('列表') && !ignore.includes(item.__names.moduleName));
 
         const { options = [] } = file;
-        let hasSelect = options.includes('选中');
-        const hasNumber = options.includes('序号');
-        const hasPage = options.includes('分页');
-        const hasImport = options.includes('导入');
-        const hasExport = options.includes('导出');
-        const hasAdd = options.includes('添加');
-        const hasBatchDelete = options.includes('批量删除');
+        let _select = options.includes('选中');
+        let _number = options.includes('序号');
+        const _page = options.includes('分页');
+        const _import = options.includes('导入');
+        const _export = options.includes('导出');
+        const _add = options.includes('添加');
+        const _edit = options.includes('编辑');
+        const _delete = options.includes('删除');
+        const _batchDelete = options.includes('批量删除');
 
         // 批量删除必须要选中
-        if (hasBatchDelete) hasSelect = true;
+        if (_batchDelete) _select = true;
+
+        if (!_page) _number = false;
+
+        const has = (flag, str, nullLine = true) => flag ? str : (nullLine ? NULL_LINE : '');
 
         return `
 import {useCallback, useState, useEffect} from 'react';
-import {Button, Form, Space} from 'antd';
-import {PageContent, QueryBar, FormItem, Table, Pagination, Operator} from '@ra-lib/admin';
+import {Button, Form, Space, ${has(_batchDelete, 'Modal, ', false)}${has(_import, 'Upload, notification', false)}} from 'antd';
+import {PageContent, QueryBar, FormItem, Table, ${has(_page, 'Pagination, ', false)}${has(_edit || _delete, 'Operator', false)}} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
-import EditModal from './EditModal';
+${has(_add || _edit, 'import EditModal from \'./EditModal\';')}
 
 export default config({
     path: '/${mn.module_names}',
-})(function ${mn.ModuleName}List (props) {
+})(function DepartmentUserList(props) {
     const [loading, setLoading] = useState(false);
-    const [pageNum, setPageNum] = useState(1);
-    const [pageSize, setPageSize] = useState(20);
+    ${has(_page, 'const [pageNum, setPageNum] = useState(1);')}
+    ${has(_page, 'const [pageSize, setPageSize] = useState(20);')}
     const [dataSource, setDataSource] = useState([]);
-    const [total, setTotal] = useState(0);
-    const [record, setRecord] = useState(null);
-    const [visible, setVisible] = useState(false);
+    ${has(_page, 'const [total, setTotal] = useState(0);')}
+    ${has(_add || _edit, 'const [record, setRecord] = useState(null);')}
+    ${has(_add || _edit, 'const [visible, setVisible] = useState(false);')}
+    ${has(_select, 'const [selectedRowKeys, setSelectedRowKeys] = useState([]);')}
+    ${has(_import, 'const [uploading, setUploading] = useState(false);')}
     const [form] = Form.useForm();
 
     let columns = [
-        { title: '角色名称', dataIndex: 'name' },
-        { title: '启用', dataIndex: 'enabled' },
-        { title: '备注', dataIndex: 'remark' },
-        {
+        ${tableFields.map(item => `{ title: '${item.chinese}', dataIndex: '${item.__names.moduleName}' },`).join('\n        ')}
+        ${has(_edit || _delete, `{
             title: '操作',
             dataIndex: 'operator',
             width: 100,
             render: (value, record) => {
-                const { id, name } = record;
+                ${has(_delete, 'const { id, name } = record')};
                 const items = [
-                    {
+                    ${has(_edit, `{
                         label: '编辑',
-                        onClick: () => setRecord(record) || setVisible(true),
-                    },
-                    {
+                        onClick: () => {
+                            setRecord(record);
+                            setVisible(true);   
+                        },
+                    },`)}
+                    ${has(_delete, `{
                         label: '删除',
                         color: 'red',
                         confirm: {
                             title: \`您确定删除「\${name}」吗？\`,
                             onConfirm: () => handleDelete(id),
                         },
-                    },
+                    },`)}
                 ];
                 return <Operator items={items}/>;
             },
-        },
+        },`)}
     ];
 
     // 查询
-    const handleSearch = useCallback(async (options = {}) => {
+    const handleSearch = useCallback(async (${has(_page, 'options = {}', false)}) => {
         const values = await form.validateFields();
         const params = {
             ...values,
-            pageNum: options.pageNum || pageNum,
-            pageSize: options.pageSize || pageSize,
+            ${has(_page, 'pageNum: options.pageNum || pageNum,')}
+            ${has(_page, 'pageSize: options.pageSize || pageSize,')}
         };
         const res = await props.ajax.get('/${mn.module_names}', params, { setLoading });
-        const dataSource = (res?.content || []).filter((item) => item.type === 3);
-        const total = res?.totalElements || 0;
+        const dataSource = res?.content || [{ id: 1 }, { id: 2 }];
+        ${has(_page, 'const total = res?.totalElements || 0;')}
         setDataSource(dataSource);
-        setTotal(total);
-    }, [form, pageNum, pageSize, props.ajax]);
+        ${has(_page, 'setTotal(total);')}
+    }, [form,${has(_page, ' pageNum, pageSize,', false)} props.ajax]);
 
-    // 删除
+    ${has(_add, `// 添加
+    const handleAdd = useCallback(() => {
+        setRecord(null);
+        setVisible(true);
+    }, []);`)}
+
+    ${has(_batchDelete, `// 批量删除
+    const handleBatchDelete = useCallback(async () => {
+        if (!selectedRowKeys?.length) return Modal.info({ title: '温馨提示', content: '请选择要删除的数据！' });
+        await props.ajax.del('/${mn.module_names}', { ids: selectedRowKeys }, { setLoading, successTip: '删除成功！' });
+        await handleSearch();
+    }, [handleSearch, props.ajax, selectedRowKeys]);`)}
+
+    ${has(_import, `// 导入
+    const handleImport = useCallback(async (info) => {
+        if (info.file.status === 'uploading') setUploading(true);
+        if (info.file.status === 'done') {
+            setUploading(false);
+            notification.success({
+                message: '导入成功！',
+                duration: 2,
+            });
+            await handleSearch();
+        }
+        if (info.file.status === 'error') {
+            setUploading(false);
+            notification.error({
+                message: '导入失败！',
+                duration: 2,
+            });
+        }
+    }, [handleSearch]);`)}
+
+    ${has(_export, `// 导出
+    const handleExport = useCallback(async () => {
+        const values = await form.validateFields();
+        await props.ajax.download('/${mn.module_names}/export', values);
+    }, [form, props.ajax]);`)}
+
+    ${has(_delete, `// 删除
     const handleDelete = useCallback(async (id) => {
         await props.ajax.del(\`/${mn.module_names}/\${id}\`, null, { setLoading, successTip: '删除成功！' });
         await handleSearch();
-    }, [handleSearch, props.ajax]);
+    }, [handleSearch, props.ajax]);`)}
 
     // 初始化查询
     useEffect(() => {
         (async () => {
-            await handleSearch({ pageNum: 1 });
+            await handleSearch(${has(_page, '{ pageNum: 1 }', false)});
         })();
         // eslint-disable-next-line
     }, []);
@@ -105,66 +157,64 @@ export default config({
     };
 
     return (
-        <PageContent loading={loading}>
+        <PageContent loading={loading${has(_import, ' || uploading', false)}}>
             <QueryBar>
                 <Form
                     layout="inline"
                     form={form}
                     onFinish={async () => {
-                        setPageNum(1);
-                        await handleSearch({ pageNum: 1 });
+                        ${has(_page, 'setPageNum(1);')}
+                        await handleSearch(${has(_page, '{ pageNum: 1 }', false)});
                     }}
                 >
-                    <FormItem {...layout} label="角色名称" name="name"/>
+                    ${queryFields.map(item => `<FormItem {...layout} type="${item.formType}" label="${item.chinese}" name="${item.__names.moduleName}"/>`).join('\n                    ')}
                     <FormItem>
                         <Space>
                             <Button type="primary" htmlType="submit">
                                 查询
                             </Button>
-                            <Button htmlType="reset">重置</Button>
-                            <Button
-                                type="primary"
-                                onClick={() => {
-                                    setRecord(null);
-                                    setVisible(true);
-                                }}
-                            >
+                            <Button htmlType="reset">
+                                重置
+                            </Button>
+                            ${has(_add, `<Button type="primary" onClick={handleAdd}>
                                 添加
-                            </Button>
-                            <Button
-                                type="primary"
-                                danger
-                                onClick={() => {
-                                    setRecord(null);
-                                    setVisible(true);
-                                }}
-                            >
+                            </Button>`)}
+                            ${has(_batchDelete, `<Button type="primary" danger onClick={handleBatchDelete}>
                                 批量删除
-                            </Button>
-                            <Button
-                                type="primary"
-                                ghost
-                                onClick={() => {
-                                    setRecord(null);
-                                    setVisible(true);
-                                }}
+                            </Button>`)}
+                            ${has(_import, `<Upload
+                                name="file"
+                                accept=".xlsx,.xls"
+                                action="/api/${mn.module_names}/import"
+                                showUploadList={false}
+                                headers={{}}
+                                onChange={handleImport}
                             >
-                                导入
-                            </Button>
-                            <Button
-                                onClick={() => {
-                                    setRecord(null);
-                                    setVisible(true);
-                                }}
-                            >
+                                <Button type="primary" ghost>
+                                    导入
+                                </Button>
+                            </Upload>`)}
+                            ${has(_export, `<Button onClick={handleExport}>
                                 导出
-                            </Button>
+                            </Button>`)}
                         </Space>
                     </FormItem>
                 </Form>
             </QueryBar>
-            <Table fitHeight dataSource={dataSource} columns={columns} rowKey="id"/>
-            <Pagination
+            <Table
+                ${has(_number, 'serialNumber')}
+                ${has(_page, 'pageNum={pageNum}')}
+                ${has(_page, 'pageSize={pageSize}')}
+                fitHeight
+                dataSource={dataSource}
+                columns={columns}
+                rowKey="id"
+                ${has(_select, `rowSelection={{
+                    selectedRowKeys,
+                    onChange: selectedRowKeys => setSelectedRowKeys(selectedRowKeys),
+                }}`)}
+            />
+            ${has(_page, `<Pagination
                 total={total}
                 pageNum={pageNum}
                 pageSize={pageSize}
@@ -177,8 +227,8 @@ export default config({
                     setPageSize(pageSize);
                     await handleSearch({ pageNum: 1, pageSize });
                 }}
-            />
-            <EditModal
+            />`)}
+            ${has(_add || _edit, `<EditModal
                 visible={visible}
                 isEdit={!!record}
                 record={record}
@@ -187,10 +237,10 @@ export default config({
                     await handleSearch();
                 }}
                 onCancel={() => setVisible(false)}
-            />
+            />`)}
         </PageContent>
     );
 });
-        `.trim();
+        `;
     },
 };
