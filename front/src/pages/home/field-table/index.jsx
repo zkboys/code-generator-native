@@ -208,7 +208,7 @@ export default config()(function FieldTable(props) {
         const placeholder = type === 'select' ? `请选择${title}` : `请输入${title}`;
         let elementWidth = required ? width - 18 : width - 8;
         if (type === 'switch') elementWidth = 'auto';
-        if (!elementWidth) elementWidth = 'auto';
+        if (!elementWidth) elementWidth = '100%';
         const isInputLike = ['input'].includes(type);
 
         let _columnIndex;
@@ -277,7 +277,7 @@ export default config()(function FieldTable(props) {
                 columns: [
                     { title: '数据类型', dataIndex: 'dataType', width: 150, formProps: { type: 'select', options: DATA_TYPE_OPTIONS } },
                     { title: '表单类型', dataIndex: 'formType', width: 150, formProps: { type: 'select', options: FORM_ELEMENT_OPTIONS } },
-                    { title: '校验规则', dataIndex: 'validation', formProps: { type: 'select', options: VALIDATE_OPTIONS } },
+                    { title: '校验规则', dataIndex: 'validation', formProps: { type: 'select', mode: 'multiple', options: VALIDATE_OPTIONS } },
                 ],
             },
             {

@@ -4,10 +4,13 @@ module.exports = {
     fieldOptions: ['表单'],
     targetPath: '/front/src/pages/{module-name}/EditModal.jsx',
     getContent: config => {
-        const { moduleNames: mn, fields } = config;
+        const { moduleNames: mn, fields, NULL_LINE } = config;
+        const ignore = ['id', 'updatedAt', 'createdAt', 'isDeleted'];
+        const formFields = fields.filter(item => item.fieldOptions.includes('表单') && !ignore.includes(item.__names.moduleName));
+
         return `
 import {useCallback, useState, useEffect} from 'react';
-import {Form} from 'antd';
+import {Form, Row, Col} from 'antd';
 import {ModalContent, FormItem} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
 
@@ -58,34 +61,23 @@ export default config({
                 onCancel={() => form.resetFields()}
             >
                 {isEdit ? <FormItem hidden name="id"/> : null}
-                <FormItem
-                    {...layout}
-                    label="角色名称"
-                    name="name"
-                    required
-                    noSpace
-                    maxLength={50}
-                />
-                <FormItem
-                    {...layout}
-                    type={'switch'}
-                    label="启用"
-                    name="enabled"
-                    checkedChildren="启"
-                    unCheckedChildren="禁"
-                    required
-                />
-                <FormItem
-                    {...layout}
-                    type="textarea"
-                    label="备注"
-                    name="remark"
-                    maxLength={250}
-                />
+                <Row>
+                    ${formFields.map(item => `<Col span={12}>
+                        <FormItem
+                            {...layout}
+                            type="${item.formType}"
+                            label="${item.chinese}"
+                            name="${item.__names.moduleName}"
+                            ${item.validation.includes('required') ? 'required' : NULL_LINE}
+                            ${item.validation.includes('noSpace') ? 'noSpace' : NULL_LINE}
+                            ${item.length ? `maxLength={${item.length}}` : NULL_LINE}
+                        />        
+                    </Col>`).join('\n                    ')}
+                </Row>
             </ModalContent>
         </Form>
     );
 });
-        `.trim();
+        `;
     },
 };

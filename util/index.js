@@ -76,7 +76,24 @@ function getFilesContent(files, moduleName, fields) {
 
         const moduleNames = getModuleNames(moduleName);
 
-        const content = template.getContent({ file, files, moduleNames, fields });
+        const fis = fields.map(item => {
+            const fieldOptions = item.options?.[templateId] || [];
+            const __names = getModuleNames(item.name);
+            return {
+                ...item,
+                validation: item.validation || [],
+                __names,
+                fieldOptions,
+            };
+        });
+        const NULL_LINE = '_____NULL_LINE_____';
+        const cfg = { NULL_LINE, file, files, moduleNames, fields: fis };
+        const content = template.getContent(cfg)
+            .trim()
+            .split('\n')
+            .filter(item => !item.includes(NULL_LINE))
+            .join('\n');
+
         return {
             ...template,
             ...file,

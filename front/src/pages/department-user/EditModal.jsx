@@ -1,5 +1,5 @@
 import {useCallback, useState, useEffect} from 'react';
-import {Form} from 'antd';
+import {Form, Row, Col} from 'antd';
 import {ModalContent, FormItem} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
 
@@ -50,30 +50,43 @@ export default config({
                 onCancel={() => form.resetFields()}
             >
                 {isEdit ? <FormItem hidden name="id"/> : null}
-                <FormItem
-                    {...layout}
-                    label="角色名称"
-                    name="name"
-                    required
-                    noSpace
-                    maxLength={50}
-                />
-                <FormItem
-                    {...layout}
-                    type={'switch'}
-                    label="启用"
-                    name="enabled"
-                    checkedChildren="启"
-                    unCheckedChildren="禁"
-                    required
-                />
-                <FormItem
-                    {...layout}
-                    type="textarea"
-                    label="备注"
-                    name="remark"
-                    maxLength={250}
-                />
+                <Row>
+                    <Col span={12}>
+                        <FormItem
+                            {...layout}
+                            type="input"
+                            label="用户"
+                            name="userId"
+                            required
+                            noSpace
+                            maxLength={36}
+                        />        
+                    </Col>
+                    <Col span={12}>
+                        <FormItem
+                            {...layout}
+                            type="input"
+                            label="部门"
+                            name="departmentId"
+                        />        
+                    </Col>
+                    <Col span={12}>
+                        <FormItem
+                            {...layout}
+                            type="input"
+                            label="是否是领导"
+                            name="isLeader"
+                        />        
+                    </Col>
+                    <Col span={12}>
+                        <FormItem
+                            {...layout}
+                            type="number"
+                            label="排序"
+                            name="order"
+                        />        
+                    </Col>
+                </Row>
             </ModalContent>
         </Form>
     );

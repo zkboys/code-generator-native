@@ -46,6 +46,7 @@ export const DATA_TYPE_OPTIONS = [
 
 export const VALIDATE_OPTIONS = [
     { value: 'required', label: '必填' },
+    { value: 'noSpace', label: '无空格' },
     { value: 'mobile', label: '手机号' },
     { value: 'email', label: '邮箱' },
     { value: 'ip', label: 'IP地址' },

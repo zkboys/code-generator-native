@@ -1,38 +1,12 @@
-module.exports = {
-    // 模版名称
-    // name: '列表页',
-    // 文件级别选项
-    options: ['选中', '序号', '分页', '导入', '导出', '添加', '批量删除'],
-    // 字段级别选项
-    fieldOptions: ['条件', '列表'],
-    // 生成文件的默认目标路径
-    targetPath: '/front/src/pages/{module-name}/index.jsx',
-    // 获取文件内容
-    getContent: config => {
-        const { file, moduleNames: mn, fields } = config;
-
-        const { options = [] } = file;
-        let hasSelect = options.includes('选中');
-        const hasNumber = options.includes('序号');
-        const hasPage = options.includes('分页');
-        const hasImport = options.includes('导入');
-        const hasExport = options.includes('导出');
-        const hasAdd = options.includes('添加');
-        const hasBatchDelete = options.includes('批量删除');
-
-        // 批量删除必须要选中
-        if (hasBatchDelete) hasSelect = true;
-
-        return `
 import {useCallback, useState, useEffect} from 'react';
-import {Button, Form, Space} from 'antd';
+import {Button, Form, Space, Modal, Upload, notification} from 'antd';
 import {PageContent, QueryBar, FormItem, Table, Pagination, Operator} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
 import EditModal from './EditModal';
 
 export default config({
-    path: '/${mn.module_names}',
-})(function ${mn.ModuleName}List (props) {
+    path: '/department_users2',
+})(function DepartmentUserList(props) {
     const [loading, setLoading] = useState(false);
     const [pageNum, setPageNum] = useState(1);
     const [pageSize, setPageSize] = useState(20);
@@ -40,6 +14,8 @@ export default config({
     const [total, setTotal] = useState(0);
     const [record, setRecord] = useState(null);
     const [visible, setVisible] = useState(false);
+    const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+    const [uploading, setUploading] = useState(false);
     const [form] = Form.useForm();
 
     let columns = [
@@ -61,7 +37,7 @@ export default config({
                         label: '删除',
                         color: 'red',
                         confirm: {
-                            title: \`您确定删除「\${name}」吗？\`,
+                            title: `您确定删除「${name}」吗？`,
                             onConfirm: () => handleDelete(id),
                         },
                     },
@@ -79,16 +55,55 @@ export default config({
             pageNum: options.pageNum || pageNum,
             pageSize: options.pageSize || pageSize,
         };
-        const res = await props.ajax.get('/${mn.module_names}', params, { setLoading });
-        const dataSource = (res?.content || []).filter((item) => item.type === 3);
+        const res = await props.ajax.get('/department_users', params, { setLoading });
+        const dataSource = res?.content || [{ id: 1 }, { id: 2 }];
         const total = res?.totalElements || 0;
         setDataSource(dataSource);
         setTotal(total);
     }, [form, pageNum, pageSize, props.ajax]);
 
+    // 添加
+    const handleAdd = useCallback(() => {
+        setRecord(null);
+        setVisible(true);
+    }, []);
+
+    // 批量删除
+    const handleBatchDelete = useCallback(async () => {
+        if (!selectedRowKeys?.length) return Modal.info({ title: '温馨提示', content: '请选择要删除的数据！' });
+        await props.ajax.del('/department_users', { ids: selectedRowKeys }, { setLoading, successTip: '删除成功！' });
+        await handleSearch();
+    }, [handleSearch, props.ajax, selectedRowKeys]);
+
+    // 导入
+    const handleImport = useCallback(async (info) => {
+        if (info.file.status === 'uploading') setUploading(true);
+        if (info.file.status === 'done') {
+            setUploading(false);
+            notification.success({
+                message: '导入成功！',
+                duration: 2,
+            });
+            await handleSearch();
+        }
+        if (info.file.status === 'error') {
+            setUploading(false);
+            notification.error({
+                message: '导入失败！',
+                duration: 2,
+            });
+        }
+    }, [handleSearch]);
+
+    // 导出
+    const handleExport = useCallback(async () => {
+        const values = await form.validateFields();
+        await props.ajax.download('/department_users/export', values);
+    }, [form, props.ajax]);
+
     // 删除
     const handleDelete = useCallback(async (id) => {
-        await props.ajax.del(\`/${mn.module_names}/\${id}\`, null, { setLoading, successTip: '删除成功！' });
+        await props.ajax.del(`/department_users/${id}`, null, { setLoading, successTip: '删除成功！' });
         await handleSearch();
     }, [handleSearch, props.ajax]);
 
@@ -105,7 +120,7 @@ export default config({
     };
 
     return (
-        <PageContent loading={loading}>
+        <PageContent loading={loading || uploading}>
             <QueryBar>
                 <Form
                     layout="inline"
@@ -121,49 +136,47 @@ export default config({
                             <Button type="primary" htmlType="submit">
                                 查询
                             </Button>
-                            <Button htmlType="reset">重置</Button>
-                            <Button
-                                type="primary"
-                                onClick={() => {
-                                    setRecord(null);
-                                    setVisible(true);
-                                }}
-                            >
+                            <Button htmlType="reset">
+                                重置
+                            </Button>
+                            <Button type="primary" onClick={handleAdd}>
                                 添加
                             </Button>
-                            <Button
-                                type="primary"
-                                danger
-                                onClick={() => {
-                                    setRecord(null);
-                                    setVisible(true);
-                                }}
-                            >
+                            <Button type="primary" danger onClick={handleBatchDelete}>
                                 批量删除
                             </Button>
-                            <Button
-                                type="primary"
-                                ghost
-                                onClick={() => {
-                                    setRecord(null);
-                                    setVisible(true);
-                                }}
+                            <Upload
+                                name="file"
+                                accept=".xlsx,.xls"
+                                action="/api/department_users/import"
+                                showUploadList={false}
+                                headers={{}}
+                                onChange={handleImport}
                             >
-                                导入
-                            </Button>
-                            <Button
-                                onClick={() => {
-                                    setRecord(null);
-                                    setVisible(true);
-                                }}
-                            >
+                                <Button type="primary" ghost>
+                                    导入
+                                </Button>
+                            </Upload>
+                            <Button onClick={handleExport}>
                                 导出
                             </Button>
                         </Space>
                     </FormItem>
                 </Form>
             </QueryBar>
-            <Table fitHeight dataSource={dataSource} columns={columns} rowKey="id"/>
+            <Table
+                serialNumber
+                pageNum={pageNum}
+                pageSize={pageSize}
+                fitHeight
+                dataSource={dataSource}
+                columns={columns}
+                rowKey="id"
+                rowSelection={{
+                    selectedRowKeys,
+                    onChange: selectedRowKeys => setSelectedRowKeys(selectedRowKeys),
+                }}
+            />
             <Pagination
                 total={total}
                 pageNum={pageNum}
@@ -191,6 +204,3 @@ export default config({
         </PageContent>
     );
 });
-        `.trim();
-    },
-};

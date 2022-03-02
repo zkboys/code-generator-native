@@ -1,12 +1,12 @@
 import {useCallback, useState, useEffect} from 'react';
 import {Button, Form, Space} from 'antd';
-import {PageContent, QueryBar, FormItem, Table, Pagination, Operator, ToolBar} from '@ra-lib/admin';
+import {PageContent, QueryBar, FormItem, Table, Pagination, Operator} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
 import EditModal from './EditModal';
 
 export default config({
     path: '/department_users',
-})(function DepartmentUserList (props) {
+})(function DepartmentUserList(props) {
     const [loading, setLoading] = useState(false);
     const [pageNum, setPageNum] = useState(1);
     const [pageSize, setPageSize] = useState(20);
@@ -60,6 +60,11 @@ export default config({
         setTotal(total);
     }, [form, pageNum, pageSize, props.ajax]);
 
+    const handleAdd = useCallback(() => {
+        setRecord(null);
+        setVisible(true);
+    }, []);
+
     // 删除
     const handleDelete = useCallback(async (id) => {
         await props.ajax.del(`/department_users/${id}`, null, { setLoading, successTip: '删除成功！' });
@@ -96,21 +101,44 @@ export default config({
                                 查询
                             </Button>
                             <Button htmlType="reset">重置</Button>
+                            <Button
+                                type="primary"
+                                onClick={handleAdd}
+                            >
+                                添加
+                            </Button>
+                            <Button
+                                type="primary"
+                                danger
+                                onClick={() => {
+                                    setRecord(null);
+                                    setVisible(true);
+                                }}
+                            >
+                                批量删除
+                            </Button>
+                            <Button
+                                type="primary"
+                                ghost
+                                onClick={() => {
+                                    setRecord(null);
+                                    setVisible(true);
+                                }}
+                            >
+                                导入
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    setRecord(null);
+                                    setVisible(true);
+                                }}
+                            >
+                                导出
+                            </Button>
                         </Space>
                     </FormItem>
                 </Form>
             </QueryBar>
-            <ToolBar>
-                <Button
-                    type="primary"
-                    onClick={() => {
-                        setRecord(null);
-                        setVisible(true);
-                    }}
-                >
-                    添加
-                </Button>
-            </ToolBar>
             <Table fitHeight dataSource={dataSource} columns={columns} rowKey="id"/>
             <Pagination
                 total={total}
