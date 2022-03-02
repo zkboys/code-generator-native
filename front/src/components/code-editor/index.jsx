@@ -1,11 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
-import { Button } from 'antd';
-import {
-    DesktopOutlined,
-    FullscreenExitOutlined,
-    FullscreenOutlined,
-} from '@ant-design/icons';
 import MonacoEditor from '@monaco-editor/react';
 import prettier from 'prettier/standalone';
 import parserPostCss from 'prettier/parser-postcss';
@@ -72,7 +66,6 @@ function bindKeyWithAction(editor, monaco) {
 
 function CodeEditor(props) {
     const {
-        title,
         value,
         language,
         editorWidth,
@@ -81,7 +74,6 @@ function CodeEditor(props) {
         onSave,
         onClose,
         readOnly,
-        showHeader,
     } = props;
 
     const mainRef = useRef(null);
@@ -211,72 +203,24 @@ function CodeEditor(props) {
         tabSize: 2,
         readOnly,
         minimap: {
-            enabled: fullScreen,
+            enabled: true,
         },
     };
 
     return (
-        <div className={{ [s.fullScreen]: fullScreen }}>
-            {showHeader ? (
-                <div className={s.header}>
-                    <div className={s.title}>
-                        <DesktopOutlined style={{ marginRight: 4 }} /> {title}
-                    </div>
-                    <div className={s.tool}>
-                    <span onClick={handleFullScreen}>
-                        {fullScreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
-                    </span>
-                    </div>
-                </div>
-            ) : null}
-
-            <div className={s.root} ref={mainRef}>
-                <main>
-                    <MonacoEditor
-                        width={fullScreen ? '100%' : editorWidth}
-                        height={height}
-                        language={language}
-                        theme="vs-dark"
-                        value={code}
-                        options={options}
-                        onChange={handleChange}
-                        onMount={handleEditorDidMount}
-                    />
-                </main>
-                <footer>
-                    <Button
-                        style={{ marginRight: 8 }}
-                        onClick={handleFormat}
-                    >
-                        格式化({isMac ? '⌘' : 'ctrl'}+shift+f)
-                    </Button>
-                    {onSave ? (
-                        errors?.length ? (
-                            <Button
-                                style={{ marginRight: 8 }}
-                                type="danger"
-                            >
-                                有语法错误
-                            </Button>
-                        ) : (
-                            <Button
-                                style={{ marginRight: 8 }}
-                                className="codeEditorSave"
-                                type="primary"
-                                onClick={() => handleSave(code)}
-                            >
-                                保存({isMac ? '⌘' : 'ctrl'}+s)
-                            </Button>
-                        )
-                    ) : null}
-                    <Button
-                        className="codeEditorClose"
-                        onClick={handleClose}
-                    >
-                        {fullScreen ? '退出全屏' : '关闭'} (Esc)
-                    </Button>
-                </footer>
-            </div>
+        <div className={s.root} ref={mainRef}>
+            <main>
+                <MonacoEditor
+                    width={fullScreen ? '100%' : editorWidth}
+                    height={height}
+                    language={language}
+                    theme="vs-dark"
+                    value={code}
+                    options={options}
+                    onChange={handleChange}
+                    onMount={handleEditorDidMount}
+                />
+            </main>
         </div>
     );
 }
@@ -290,11 +234,9 @@ CodeEditor.propTypes = {
     onClose: PropTypes.func,
     editorWidth: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     readOnly: PropTypes.bool,
-    showHeader: PropTypes.bool,
 };
 
 CodeEditor.defaultProps = {
-    showHeader: true,
     language: 'javascript',
     editorWidth: '100%',
     onChange: () => undefined,
