@@ -1,5 +1,5 @@
 import {useCallback, useState, useEffect} from 'react';
-import {Button, Form, Space, } from 'antd';
+import {Button, Form, Space} from 'antd';
 import {PageContent, QueryBar, FormItem, Table, Pagination, Operator} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
 import EditModal from './EditModal';
@@ -17,8 +17,8 @@ export default config({
     const [form] = Form.useForm();
 
     let columns = [
-        { title: '用户', dataIndex: 'userId' },
         { title: '部门', dataIndex: 'departmentId' },
+        { title: '用户', dataIndex: 'userId' },
         { title: '是否是领导', dataIndex: 'isLeader' },
         { title: '排序', dataIndex: 'order' },
         {
@@ -32,7 +32,7 @@ export default config({
                         label: '编辑',
                         onClick: () => {
                             setRecord(record);
-                            setVisible(true);   
+                            setVisible(true);
                         },
                     },
                     {
@@ -70,9 +70,6 @@ export default config({
         setVisible(true);
     }, []);
 
-
-
-
     // 删除
     const handleDelete = useCallback(async (id) => {
         await props.ajax.del(`/department_users/${id}`, null, { setLoading, successTip: '删除成功！' });
@@ -102,8 +99,8 @@ export default config({
                         await handleSearch({ pageNum: 1 });
                     }}
                 >
-                    <FormItem {...layout} type="select" label="用户" name="userId"/>
                     <FormItem {...layout} type="select" label="部门" name="departmentId"/>
+                    <FormItem {...layout} type="select" label="用户" name="userId"/>
                     <FormItem>
                         <Space>
                             <Button type="primary" htmlType="submit">

@@ -55,17 +55,17 @@ export default config({
                         <FormItem
                             {...layout}
                             type="select"
-                            label="用户"
-                            name="userId"
-                            maxLength={36}
+                            label="部门"
+                            name="departmentId"
                         />        
                     </Col>
                     <Col span={12}>
                         <FormItem
                             {...layout}
                             type="select"
-                            label="部门"
-                            name="departmentId"
+                            label="用户"
+                            name="userId"
+                            maxLength={36}
                         />        
                     </Col>
                     <Col span={12}>
