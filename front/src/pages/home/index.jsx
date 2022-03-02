@@ -224,72 +224,73 @@ export default config({
                                                         </div>
                                                     );
                                                 }}
-                                                    </FormItem>
-                                                    <FormItem
+                                            </FormItem>
+                                            <FormItem
                                                 {...formItemProps}
                                                 {...restField}
-                                                    style={{width: 400}}
-                                                    label="目标位置"
-                                                    name={[name, 'targetPath']}
-                                                    required
-                                                    rules={[
-                                                {
-                                                    validator(_, value) {
-                                                    if (!value) return Promise.resolve();
-                                                    const files = form.getFieldValue('files');
-                                                    const index = files.findIndex(item => item.targetPath === value);
-                                                    const lastIndex = files.findLastIndex(item => item.targetPath === value);
-                                                    if (index !== lastIndex) return Promise.reject('不能使用相同的目标文件！请修改');
-                                                    return Promise.resolve();
-                                                },
-                                                },
-                                                    ]}
-                                                    />
-                                                    <FormItem noStyle shouldUpdate>
-                                                {({getFieldValue}) => {
+                                                style={{ width: 400 }}
+                                                label="目标位置"
+                                                name={[name, 'targetPath']}
+                                                placeholder="请输入目标文件位置"
+                                                rules={[
+                                                    { required: true, message: '请输入目标文件位置！' },
+                                                    {
+                                                        validator(_, value) {
+                                                            if (!value) return Promise.resolve();
+                                                            const files = form.getFieldValue('files');
+                                                            const index = files.findIndex(item => item.targetPath === value);
+                                                            const lastIndex = files.findLastIndex(item => item.targetPath === value);
+                                                            if (index !== lastIndex) return Promise.reject('不能使用相同的目标文件！请修改');
+                                                            return Promise.resolve();
+                                                        },
+                                                    },
+                                                ]}
+                                            />
+                                            <FormItem noStyle shouldUpdate>
+                                                {({ getFieldValue }) => {
                                                     const templateId = getFieldValue(['files', name, 'templateId']);
                                                     const record = templateOptions.find(item => item.value === templateId)?.record;
                                                     const options = record?.options || [];
                                                     return (
-                                                    <FormItem
-                                                {...formItemProps}
-                                                {...restField}
-                                                    name={[name, 'options']}
-                                                    >
-                                                    <OptionsTag options={options} />
-                                                    </FormItem>
+                                                        <FormItem
+                                                            {...formItemProps}
+                                                            {...restField}
+                                                            name={[name, 'options']}
+                                                        >
+                                                            <OptionsTag options={options} />
+                                                        </FormItem>
                                                     );
                                                 }}
-                                                    </FormItem>
-                                                    </div>
-                                                    );
-                                                })}
-                                    </>
-                                    )}
-                                    </Form.List>
-                                    </div>
+                                            </FormItem>
+                                        </div>
+                                    );
+                                })}
+                            </>
+                        )}
+                    </Form.List>
+                </div>
 
-                                    <FormItem
-                                    shouldUpdate={(prevValue, curValue) => {
-                                    const fields = ['dbUrl', 'tableName', 'moduleName', 'files'];
-                                    return fields.some(field => prevValue?.[field] !== curValue?.[field]);
-                                }}
-                                    noStyle
-                                    >
-                                {({getFieldsValue}) => {
-                                    const {dbUrl, tableName, files} = getFieldsValue();
-                                    return (
-                                    <FieldTable
-                                    form={form}
-                                    dbUrl={dbUrl}
-                                    tableName={tableName}
-                                    files={files}
-                                    templateOptions={templateOptions}
-                                    />
-                                    );
-                                }}
-                                    </FormItem>
-                                    </Form>
-                                    </PageContent>
-                                    );
-                                });
+                <FormItem
+                    shouldUpdate={(prevValue, curValue) => {
+                        const fields = ['dbUrl', 'tableName', 'moduleName', 'files'];
+                        return fields.some(field => prevValue?.[field] !== curValue?.[field]);
+                    }}
+                    noStyle
+                >
+                    {({ getFieldsValue }) => {
+                        const { dbUrl, tableName, files } = getFieldsValue();
+                        return (
+                            <FieldTable
+                                form={form}
+                                dbUrl={dbUrl}
+                                tableName={tableName}
+                                files={files}
+                                templateOptions={templateOptions}
+                            />
+                        );
+                    }}
+                </FormItem>
+            </Form>
+        </PageContent>
+    );
+});
