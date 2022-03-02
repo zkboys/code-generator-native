@@ -26,6 +26,7 @@ function getLocalTemplates() {
         const name = template.name || fileName;
         return {
             ...template,
+            filePath,
             id,
             name,
             shortName,

@@ -1,16 +1,16 @@
-import React, {useCallback, useMemo, useState, useRef, useEffect} from 'react';
-import {Tabs, Table, Button, Space, Modal} from 'antd';
-import {v4 as uuid} from 'uuid';
-import {CodeOutlined, FileDoneOutlined, PlusOutlined} from '@ant-design/icons';
-import {Content, Operator, useHeight, confirm, FormItem} from '@ra-lib/admin';
-import {OptionsTag} from 'src/components';
-import {DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS} from '../constant';
+import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react';
+import { Tabs, Table, Button, Space, Modal } from 'antd';
+import { v4 as uuid } from 'uuid';
+import { CodeOutlined, FileDoneOutlined, PlusOutlined, DownloadOutlined } from '@ant-design/icons';
+import { Content, Operator, useHeight, confirm, FormItem } from '@ra-lib/admin';
+import { OptionsTag } from 'src/components';
+import { DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS } from '../constant';
 import PreviewModal from '../PreviewModal';
 import config from 'src/commons/config-hoc';
 import c from 'classnames';
 import s from './style.less';
 import virtualTable from './virtual-table';
-import {getCursorPosition} from 'src/commons';
+import { getCursorPosition } from 'src/commons';
 
 const MyTable = virtualTable((Table));
 
@@ -310,7 +310,7 @@ export default config()(function FieldTable(props) {
                             },
                         },
                     ];
-                    return <Operator items={items}/>;
+                    return <Operator items={items} />;
                 },
             },
             { title: '字段', dataIndex: 'name', width: 150, formProps: { type: 'input', required: true } },
@@ -383,6 +383,11 @@ export default config()(function FieldTable(props) {
         }
     }, [form, dataSource, fetchCheckFilesExist, fetchGenerateFiles]);
 
+    // 更新本地模版
+    const handleUpdateLocalTemplates = useCallback(async () => {
+        await props.ajax.get('/templates/local/download');
+    }, [props.ajax]);
+
     useEffect(() => {
         (async () => {
             const dbTypeOptions = await fetchDbTypeOptions({ dbUrl });
@@ -447,7 +452,7 @@ export default config()(function FieldTable(props) {
                     left: (
                         <Space style={{ marginRight: 16 }}>
                             <Button
-                                icon={<PlusOutlined/>}
+                                icon={<PlusOutlined />}
                                 type="primary"
                                 ghost
                                 onClick={() => handleAdd()}
@@ -455,7 +460,7 @@ export default config()(function FieldTable(props) {
                                 添加一行
                             </Button>
                             <Button
-                                icon={<CodeOutlined/>}
+                                icon={<CodeOutlined />}
                                 onClick={() => handleGenerate(true)}
                             >
                                 代码预览
@@ -463,18 +468,26 @@ export default config()(function FieldTable(props) {
                             <Button
                                 type="primary"
                                 danger
-                                icon={<FileDoneOutlined/>}
+                                icon={<FileDoneOutlined />}
                                 onClick={() => handleGenerate()}
                             >
                                 生成文件
                             </Button>
                         </Space>
                     ),
+                    right: (
+                        <Button
+                            icon={<DownloadOutlined />}
+                            onClick={handleUpdateLocalTemplates}
+                        >
+                            更新本地模版
+                        </Button>
+                    ),
                 }}
                 activeKey={activeKey}
                 onChange={setActiveKey}
             >
-                {tabPotions.map(item => <TabPane key={item.key} tab={item.tab}/>)}
+                {tabPotions.map(item => <TabPane key={item.key} tab={item.tab} />)}
             </Tabs>
             <MyTable
                 onSortEnd={handleSortEnd}
