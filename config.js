@@ -21,6 +21,8 @@ module.exports = {
     port,
     // 本地项目根目录
     nativeRoot,
+    // 本地 localGeneratorPath
+    localGeneratorPath,
     // 本地模版文件夹
     localTemplatesPath,
     // 系统模板文件夹

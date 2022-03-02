@@ -1,13 +1,12 @@
-import React, {useCallback, useState} from 'react';
-import {FixedSizeList as List} from 'react-window';
+import React, { useCallback, useState } from 'react';
+import { FixedSizeList as List } from 'react-window';
 import ResizeObserver from 'rc-resize-observer';
-import {SortableContainer, SortableElement} from 'react-sortable-hoc';
+import { SortableContainer, SortableElement } from 'react-sortable-hoc';
 import classNames from 'classnames';
-import {getScrollBarWidth} from '@ra-lib/admin';
+import { getScrollBarWidth } from '@ra-lib/admin';
 import s from './virtual-table.less';
 
-const scrollBarWidth = getScrollBarWidth();
-
+const SCROLL_BAR_WIDTH = getScrollBarWidth();
 const ROW_HEIGHT = 50;
 
 const RowElement = SortableElement((props) => props.children);
@@ -63,7 +62,7 @@ export default Table => {
                                                 ? column.dataIndex.reduce((prev, key) => (prev[key] || {}), record)
                                                 : record[column.dataIndex];
                                             const render = column.render || ((value) => value);
-                                            const width = columnIndex === columns.length - 1 ? column.width - scrollBarWidth : column.width;
+                                            const width = columnIndex === columns.length - 1 ? column.width - SCROLL_BAR_WIDTH : column.width;
 
                                             const val = render(value, record, rowIndex);
 

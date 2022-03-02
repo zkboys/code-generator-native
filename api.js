@@ -7,6 +7,7 @@ const {
   checkFilesExist,
   writeFile,
   getFilesContent,
+  downloadTemplates,
 } = require('./util');
 const { DB_TYPES } = require('./db/MySql');
 
@@ -62,7 +63,7 @@ module.exports = apiRouter
     return template;
   })
   .get('/templates/local/download', async ctx => {
-
+    await downloadTemplates();
   })
   .get('/moduleNames/:name', async ctx => {
     const { name } = ctx.params;

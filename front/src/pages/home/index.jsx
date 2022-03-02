@@ -1,10 +1,10 @@
-import React, {useState, useEffect, useCallback} from 'react';
-import {Form, Space} from 'antd';
-import {MinusCircleOutlined, PlusCircleOutlined} from '@ant-design/icons';
-import {PageContent, FormItem, storage} from '@ra-lib/admin';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Form, Space } from 'antd';
+import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import { PageContent, FormItem, storage } from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
-import {OptionsTag} from 'src/components';
-import {stringFormat, triggerWindowResize} from 'src/commons';
+import { OptionsTag } from 'src/components';
+import { stringFormat, triggerWindowResize } from 'src/commons';
 import FieldTable from './field-table';
 import s from './style.less';
 
@@ -59,15 +59,6 @@ export default config({
         setModuleNames(moduleNames);
     }, [fetchModuleNames]);
 
-    const getFormTypeColumnVisible = useCallback(() => {
-        const files = form.getFieldValue('files');
-        const types = ['jsx', 'tsx', 'vue', 'vux', 'html'];
-        return files.some(item => {
-            const extname = item.targetPath.split('.').pop();
-            return types.includes(extname);
-        });
-    }, [form]);
-
     // 模版改变事件
     const handleTemplateChange = useCallback((name, templateId) => {
         const record = templateOptions.find(item => item.value === templateId).record;
@@ -99,15 +90,15 @@ export default config({
             setTemplateOptions(templateOptions);
 
             // 默认展示全部模板
-            const files = templates.map(item => ({
-                templateId: item.id,
-                targetPath: item.targetPath,
-                options: [...(item.options || [])],
-            }));
-            form.setFieldsValue({ files });
+            // const files = templates.map(item => ({
+            //     templateId: item.id,
+            //     targetPath: item.targetPath,
+            //     options: [...(item.options || [])],
+            // }));
+            // form.setFieldsValue({ files });
 
         })();
-    }, [fetchTemplates, form, getFormTypeColumnVisible]);
+    }, [fetchTemplates]);
 
     // 从本地同步数据库链接
     useEffect(() => {
@@ -225,7 +216,7 @@ export default config({
                                                                 style={{ width: 200 }}
                                                                 label={label}
                                                                 name={[name, 'templateId']}
-                                                                required
+                                                                rules={[{ required: true, message: '请选择模板文件！' }]}
                                                                 options={options}
                                                                 placeholder="请选择模板"
                                                                 onChange={(id) => handleTemplateChange(name, id)}
@@ -233,72 +224,72 @@ export default config({
                                                         </div>
                                                     );
                                                 }}
-                                            </FormItem>
-                                            <FormItem
+                                                    </FormItem>
+                                                    <FormItem
                                                 {...formItemProps}
                                                 {...restField}
-                                                style={{ width: 400 }}
-                                                label="目标位置"
-                                                name={[name, 'targetPath']}
-                                                required
-                                                rules={[
-                                                    {
-                                                        validator(_, value) {
-                                                            if (!value) return Promise.resolve();
-                                                            const files = form.getFieldValue('files');
-                                                            const index = files.findIndex(item => item.targetPath === value);
-                                                            const lastIndex = files.findLastIndex(item => item.targetPath === value);
-                                                            if (index !== lastIndex) return Promise.reject('不能使用相同的目标文件！请修改');
-                                                            return Promise.resolve();
-                                                        },
-                                                    },
-                                                ]}
-                                            />
-                                            <FormItem noStyle shouldUpdate>
-                                                {({ getFieldValue }) => {
+                                                    style={{width: 400}}
+                                                    label="目标位置"
+                                                    name={[name, 'targetPath']}
+                                                    required
+                                                    rules={[
+                                                {
+                                                    validator(_, value) {
+                                                    if (!value) return Promise.resolve();
+                                                    const files = form.getFieldValue('files');
+                                                    const index = files.findIndex(item => item.targetPath === value);
+                                                    const lastIndex = files.findLastIndex(item => item.targetPath === value);
+                                                    if (index !== lastIndex) return Promise.reject('不能使用相同的目标文件！请修改');
+                                                    return Promise.resolve();
+                                                },
+                                                },
+                                                    ]}
+                                                    />
+                                                    <FormItem noStyle shouldUpdate>
+                                                {({getFieldValue}) => {
                                                     const templateId = getFieldValue(['files', name, 'templateId']);
                                                     const record = templateOptions.find(item => item.value === templateId)?.record;
                                                     const options = record?.options || [];
                                                     return (
-                                                        <FormItem
-                                                            {...formItemProps}
-                                                            {...restField}
-                                                            name={[name, 'options']}
-                                                        >
-                                                            <OptionsTag options={options}/>
-                                                        </FormItem>
+                                                    <FormItem
+                                                {...formItemProps}
+                                                {...restField}
+                                                    name={[name, 'options']}
+                                                    >
+                                                    <OptionsTag options={options} />
+                                                    </FormItem>
                                                     );
                                                 }}
-                                            </FormItem>
-                                        </div>
-                                    );
-                                })}
-                            </>
-                        )}
-                    </Form.List>
-                </div>
+                                                    </FormItem>
+                                                    </div>
+                                                    );
+                                                })}
+                                    </>
+                                    )}
+                                    </Form.List>
+                                    </div>
 
-                <FormItem
-                    shouldUpdate={(prevValue, curValue) => {
-                        const fields = ['dbUrl', 'tableName', 'moduleName', 'files'];
-                        return fields.some(field => prevValue?.[field] !== curValue?.[field]);
-                    }}
-                    noStyle
-                >
-                    {({ getFieldsValue }) => {
-                        const { dbUrl, tableName, files } = getFieldsValue();
-                        return (
-                            <FieldTable
-                                form={form}
-                                dbUrl={dbUrl}
-                                tableName={tableName}
-                                files={files}
-                                templateOptions={templateOptions}
-                            />
-                        );
-                    }}
-                </FormItem>
-            </Form>
-        </PageContent>
-    );
-});
+                                    <FormItem
+                                    shouldUpdate={(prevValue, curValue) => {
+                                    const fields = ['dbUrl', 'tableName', 'moduleName', 'files'];
+                                    return fields.some(field => prevValue?.[field] !== curValue?.[field]);
+                                }}
+                                    noStyle
+                                    >
+                                {({getFieldsValue}) => {
+                                    const {dbUrl, tableName, files} = getFieldsValue();
+                                    return (
+                                    <FieldTable
+                                    form={form}
+                                    dbUrl={dbUrl}
+                                    tableName={tableName}
+                                    files={files}
+                                    templateOptions={templateOptions}
+                                    />
+                                    );
+                                }}
+                                    </FormItem>
+                                    </Form>
+                                    </PageContent>
+                                    );
+                                });

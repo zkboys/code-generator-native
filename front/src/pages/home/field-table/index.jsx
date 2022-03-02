@@ -1,16 +1,17 @@
 import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react';
 import { Tabs, Table, Button, Space, Modal } from 'antd';
-import { v4 as uuid } from 'uuid';
 import { CodeOutlined, FileDoneOutlined, PlusOutlined, DownloadOutlined } from '@ant-design/icons';
+import c from 'classnames';
+import { v4 as uuid } from 'uuid';
 import { Content, Operator, useHeight, confirm, FormItem } from '@ra-lib/admin';
 import { OptionsTag } from 'src/components';
-import { DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS } from '../constant';
-import PreviewModal from '../PreviewModal';
 import config from 'src/commons/config-hoc';
-import c from 'classnames';
-import s from './style.less';
-import virtualTable from './virtual-table';
 import { getCursorPosition } from 'src/commons';
+import { DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS } from '../constant';
+import virtualTable from './virtual-table';
+import PreviewModal from '../PreviewModal';
+import s from './style.less';
+
 
 const MyTable = virtualTable((Table));
 
@@ -385,7 +386,8 @@ export default config()(function FieldTable(props) {
 
     // 更新本地模版
     const handleUpdateLocalTemplates = useCallback(async () => {
-        await props.ajax.get('/templates/local/download');
+        await confirm('本地同名模版将被覆盖，是否继续？');
+        await props.ajax.get('/templates/local/download', null, { successTip: '更新成功！' });
     }, [props.ajax]);
 
     useEffect(() => {
