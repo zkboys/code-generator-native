@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useState, useEffect, useCallback, useRef} from 'react';
 import {Form, Space, Button} from 'antd';
 import {MinusCircleOutlined, PlusCircleOutlined} from '@ant-design/icons';
 import {PageContent, FormItem, storage} from '@ra-lib/admin';
@@ -31,7 +31,7 @@ export default config({
         return await props.ajax.get('/templates');
     }, [props.ajax]);
 
-    const { run: searchFields } = useDebounceFn(() => setRefreshTable({}), { wait: 500 });
+    const { run: searchFields } = useDebounceFn(() => setRefreshTable({}), { wait: 300 });
 
     // 数据库连接改变事件
     const { run: handleDbUrlChange } = useDebounceFn(async (e) => {
@@ -52,6 +52,7 @@ export default config({
         const moduleNames = await fetchModuleNames(tableName);
         setModuleNames(moduleNames);
         form.setFieldsValue({ moduleName: moduleNames['module-name'] });
+        searchFields();
     }, { wait: 300 });
 
     // 模块名改变事件
@@ -74,15 +75,18 @@ export default config({
         files[name] = file;
 
         form.setFieldsValue({ files: [...files] });
-
-    }, [templateOptions, form]);
+        searchFields();
+    }, [templateOptions, form, searchFields]);
 
     // 表单改变事件
-    const handleFormChange = useCallback((changedValues) => {
-        if ('dbUrl' in changedValues) storage.local.setItem('dbUrl', changedValues.dbUrl);
-
-        const files = form.getFieldValue('files');
-        storage.local.setItem('files', files);
+    const formChangeStRef = useRef(0);
+    const handleFormChange = useCallback(() => {
+        clearTimeout(formChangeStRef.current);
+        formChangeStRef.current = setTimeout(() => {
+            const { dbUrl, files } = form.getFieldsValue();
+            storage.local.setItem('files', files);
+            storage.local.setItem('dbUrl', dbUrl);
+        }, 500);
     }, [form]);
 
     // 初始化时，加载模板
@@ -192,6 +196,9 @@ export default config({
                                     let label = number;
                                     if (isFirst) label = `文件${number}`;
 
+                                    const templateId = form.getFieldValue(['files', name, 'templateId']);
+                                    const record = templateOptions.find(item => item.value === templateId)?.record;
+                                    const options = record?.options || [];
 
                                     return (
                                         <div key={key} className={s.fileRow}>
@@ -202,7 +209,10 @@ export default config({
                                                     icon={<MinusCircleOutlined/>}
                                                     type="link"
                                                     disabled={fields.length === 1}
-                                                    onClick={() => remove(name)}
+                                                    onClick={() => {
+                                                        remove(name);
+                                                        searchFields();
+                                                    }}
                                                 />
                                                 {isFirst && (fields.length < templateOptions.length) && (
                                                     <Button
@@ -214,14 +224,19 @@ export default config({
                                                             const record = templateOptions.find(item => !files.find(it => it.templateId === item.value))?.record;
                                                             const { id: templateId, targetPath, options } = record || {};
                                                             add({ templateId, targetPath, options: [...options] });
+                                                            searchFields();
                                                         }}
                                                     />
                                                 )}
                                             </Space>
-                                            <FormItem noStyle shouldUpdate>
+                                            <FormItem
+                                                noStyle
+                                                shouldUpdate={(prevValues, currValues) => {
+                                                    return prevValues?.files?.length !== currValues?.files?.length;
+                                                }}
+                                            >
                                                 {({ getFieldValue }) => {
                                                     const files = getFieldValue('files');
-                                                    const templateId = getFieldValue(['files', name, 'templateId']);
                                                     const options = templateOptions.filter(item => {
                                                         if (templateId === item.value) return true;
                                                         return !files.find(f => f.templateId === item.value);
@@ -268,20 +283,11 @@ export default config({
                                                     placeholder="请输入目标文件位置"
                                                 />
                                             </FormItem>
-                                            <FormItem noStyle shouldUpdate>
-                                                {({ getFieldValue }) => {
-                                                    const templateId = getFieldValue(['files', name, 'templateId']);
-                                                    const record = templateOptions.find(item => item.value === templateId)?.record;
-                                                    const options = record?.options || [];
-                                                    return (
-                                                        <FormItem
-                                                            {...restField}
-                                                            name={[name, 'options']}
-                                                        >
-                                                            <OptionsTag options={options}/>
-                                                        </FormItem>
-                                                    );
-                                                }}
+                                            <FormItem
+                                                {...restField}
+                                                name={[name, 'options']}
+                                            >
+                                                <OptionsTag options={options}/>
                                             </FormItem>
                                         </div>
                                     );

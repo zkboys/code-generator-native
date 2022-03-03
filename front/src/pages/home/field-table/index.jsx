@@ -7,7 +7,7 @@ import {v4 as uuid} from 'uuid';
 import {Content, Operator, useHeight, confirm, FormItem} from '@ra-lib/admin';
 import {OptionsTag} from 'src/components';
 import config from 'src/commons/config-hoc';
-import {getCursorPosition, triggerWindowResize} from 'src/commons';
+import {getCursorPosition} from 'src/commons';
 import {DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS} from '../constant';
 import virtualTable from './virtual-table';
 import PreviewModal from '../PreviewModal';
@@ -32,7 +32,7 @@ export default config()(function FieldTable(props) {
     const [dataSource, setDataSource] = useState([]);
     const [loading, setLoading] = useState(false);
     const rootRef = useRef(null);
-    const [height] = useHeight(rootRef, 125, [files]);
+    const [height] = useHeight(rootRef, 110, [files]);
     const [previewParams, setPreviewParams] = useState(null);
     const [activeKey, setActiveKey] = useState('type');
     const [dbTypeOptions, setDbTypeOptions] = useState([]);
@@ -445,11 +445,6 @@ export default config()(function FieldTable(props) {
 
     // dataSource改变，将数据同步到form中
     useEffect(() => form.setFieldsValue({ dataSource }), [form, dataSource]);
-
-    // 触发窗口事件，表格高度重新计算
-    useEffect(() => {
-        triggerWindowResize();
-    }, [files]);
 
     return (
         <Content loading={loading} ref={rootRef} className={s.root}>
