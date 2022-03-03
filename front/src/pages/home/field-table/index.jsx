@@ -13,19 +13,21 @@ import virtualTable from './virtual-table';
 import PreviewModal from '../PreviewModal';
 import s from './style.less';
 
-
 const MyTable = virtualTable((Table));
 
 const { TabPane } = Tabs;
 
 export default config()(function FieldTable(props) {
     const {
-        dbUrl,
-        tableName,
-        files,
         templateOptions,
         form,
     } = props;
+
+    const {
+        dbUrl,
+        tableName,
+        files,
+    } = form.getFieldsValue();
 
     const [dataSource, setDataSource] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -342,7 +344,6 @@ export default config()(function FieldTable(props) {
                     validation,
                 };
             });
-            console.log(config);
             const params = {
                 moduleName,
                 files,

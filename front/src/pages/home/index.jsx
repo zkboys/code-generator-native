@@ -16,6 +16,7 @@ export default config({
     const [tableOptions, setTableOptions] = useState([]);
     const [templateOptions, setTemplateOptions] = useState([]);
     const [moduleNames, setModuleNames] = useState({});
+    const [refreshTable, setRefreshTable] = useState({});
     const [form] = Form.useForm();
 
     const fetchDbTables = useCallback(async (dbUrl) => {
@@ -30,6 +31,8 @@ export default config({
         return await props.ajax.get('/templates');
     }, [props.ajax]);
 
+    const { run: searchFields } = useDebounceFn(() => setRefreshTable({}), { wait: 500 });
+
     // 数据库连接改变事件
     const { run: handleDbUrlChange } = useDebounceFn(async (e) => {
         let tableOptions;
@@ -42,22 +45,22 @@ export default config({
         }
 
         setTableOptions(tableOptions);
-    }, { wait: 500 });
+    }, { wait: 300 });
 
     // 数据库表改变事件
     const { run: handleTableNameChange } = useDebounceFn(async (tableName) => {
         const moduleNames = await fetchModuleNames(tableName);
         setModuleNames(moduleNames);
         form.setFieldsValue({ moduleName: moduleNames['module-name'] });
-    }, { wait: 500 });
+    }, { wait: 300 });
 
     // 模块名改变事件
-    const { run: handleModuleNameBlur } = useDebounceFn(async (e) => {
+    const { run: handleModuleNameChange } = useDebounceFn(async (e) => {
         const moduleName = e.target.value;
         if (!moduleName) return;
         const moduleNames = await fetchModuleNames(moduleName);
         setModuleNames(moduleNames);
-    }, { wait: 500 });
+    }, { wait: 300 });
 
     // 模版改变事件
     const handleTemplateChange = useCallback((name, templateId) => {
@@ -139,10 +142,6 @@ export default config({
         form.setFieldsValue({ files: nextFiles });
     }, [form, templateOptions]);
 
-    const formItemProps = {
-        // size: 'small',
-    };
-
     return (
         <PageContent className={s.root}>
             <Form
@@ -152,9 +151,9 @@ export default config({
                 layout="inline"
                 initialValues={{ files: [{}] }}
                 onValuesChange={handleFormChange}
+                onChange={searchFields}
             >
                 <FormItem
-                    {...formItemProps}
                     labelCol={{ flex: '100px' }}
                     style={{ width: 300 }}
                     align="right"
@@ -165,7 +164,6 @@ export default config({
                     tooltip="支持mysql、oracle"
                 />
                 <FormItem
-                    {...formItemProps}
                     labelCol={{ flex: '100px' }}
                     style={{ width: 308 }}
                     type="select"
@@ -176,13 +174,12 @@ export default config({
                     options={tableOptions}
                 />
                 <FormItem
-                    {...formItemProps}
                     labelCol={{ flex: '91px' }}
                     style={{ width: 200 }}
                     label="模块名"
                     name="moduleName"
                     placeholder="比如：user-center"
-                    onBlur={handleModuleNameBlur}
+                    onChange={handleModuleNameChange}
                     required
                 />
                 <div style={{ width: '100%', marginTop: 8 }}>
@@ -194,6 +191,7 @@ export default config({
                                     const number = index + 1;
                                     let label = number;
                                     if (isFirst) label = `文件${number}`;
+
 
                                     return (
                                         <div key={key} className={s.fileRow}>
@@ -231,7 +229,6 @@ export default config({
                                                     return (
                                                         <div style={{ width: 318 }}>
                                                             <FormItem
-                                                                {...formItemProps}
                                                                 {...restField}
                                                                 labelCol={{ flex: '100px', style: { userSelect: 'none' } }}
                                                                 style={{ width: 200 }}
@@ -247,7 +244,6 @@ export default config({
                                                 }}
                                             </FormItem>
                                             <FormItem
-                                                {...formItemProps}
                                                 {...restField}
                                                 label="目标位置"
                                                 name={[name, 'targetPath']}
@@ -267,6 +263,8 @@ export default config({
                                                 <TargetPathInput
                                                     style={{ width: 400 }}
                                                     moduleNames={moduleNames}
+                                                    templateId={form.getFieldValue(['files', name, 'templateId'])}
+                                                    templateOptions={templateOptions}
                                                     placeholder="请输入目标文件位置"
                                                 />
                                             </FormItem>
@@ -277,7 +275,6 @@ export default config({
                                                     const options = record?.options || [];
                                                     return (
                                                         <FormItem
-                                                            {...formItemProps}
                                                             {...restField}
                                                             name={[name, 'options']}
                                                         >
@@ -293,27 +290,11 @@ export default config({
                         )}
                     </Form.List>
                 </div>
-
-                <FormItem
-                    shouldUpdate={(prevValue, curValue) => {
-                        const fields = ['dbUrl', 'tableName', 'moduleName', 'files'];
-                        return fields.some(field => prevValue?.[field] !== curValue?.[field]);
-                    }}
-                    noStyle
-                >
-                    {({ getFieldsValue }) => {
-                        const { dbUrl, tableName, files } = getFieldsValue();
-                        return (
-                            <FieldTable
-                                form={form}
-                                dbUrl={dbUrl}
-                                tableName={tableName}
-                                files={files}
-                                templateOptions={templateOptions}
-                            />
-                        );
-                    }}
-                </FormItem>
+                <FieldTable
+                    refreshTable={refreshTable}
+                    form={form}
+                    templateOptions={templateOptions}
+                />
             </Form>
         </PageContent>
     );
