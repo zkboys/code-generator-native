@@ -18,7 +18,6 @@ const MyTable = virtualTable((Table));
 const { TabPane } = Tabs;
 
 export default config()(function FieldTable(props) {
-    console.log('FieldTable render');
     const {
         dbUrl,
         tableName,

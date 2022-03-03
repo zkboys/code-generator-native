@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Form, Space } from 'antd';
-import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
-import { PageContent, FormItem, storage } from '@ra-lib/admin';
+import React, {useState, useEffect, useCallback} from 'react';
+import {Form, Space} from 'antd';
+import {MinusCircleOutlined, PlusCircleOutlined} from '@ant-design/icons';
+import {PageContent, FormItem, storage} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
-import { OptionsTag } from 'src/components';
-import { stringFormat, triggerWindowResize } from 'src/commons';
+import {OptionsTag} from 'src/components';
+import {stringFormat, triggerWindowResize} from 'src/commons';
 import FieldTable from './field-table';
 import s from './style.less';
 
@@ -129,7 +129,6 @@ export default config({
         // size: 'small',
     };
 
-    console.log('index render');
     return (
         <PageContent className={s.root}>
             <Form
@@ -186,16 +185,16 @@ export default config({
                                     return (
                                         <div key={key} className={s.fileRow}>
                                             <Space className={s.fileOperator}>
-                                                {fields?.length > 1 && (
-                                                    <MinusCircleOutlined
-                                                        className={s.fileMinus}
-                                                        onClick={() => remove(name)}
-                                                    />
-                                                )}
                                                 {isLast && (fields.length < templateOptions.length) && (
                                                     <PlusCircleOutlined
                                                         className={s.filePlus}
                                                         onClick={() => add({})}
+                                                    />
+                                                )}
+                                                {fields?.length > 1 && (
+                                                    <MinusCircleOutlined
+                                                        className={s.fileMinus}
+                                                        onClick={() => remove(name)}
                                                     />
                                                 )}
                                             </Space>
@@ -238,9 +237,8 @@ export default config({
                                                         validator(_, value) {
                                                             if (!value) return Promise.resolve();
                                                             const files = form.getFieldValue('files');
-                                                            const index = files.findIndex(item => item.targetPath === value);
-                                                            const lastIndex = files.findLastIndex(item => item.targetPath === value);
-                                                            if (index !== lastIndex) return Promise.reject('不能使用相同的目标文件！请修改');
+                                                            const records = files.filter(item => item.targetPath === value);
+                                                            if (records.length > 1) return Promise.reject('不能使用相同的目标文件！请修改');
                                                             return Promise.resolve();
                                                         },
                                                     },
@@ -257,7 +255,7 @@ export default config({
                                                             {...restField}
                                                             name={[name, 'options']}
                                                         >
-                                                            <OptionsTag options={options} />
+                                                            <OptionsTag options={options}/>
                                                         </FormItem>
                                                     );
                                                 }}

@@ -11,10 +11,11 @@ import keyboardShortcuts from './keyboard-shortcuts.json';
 export const OTHER_HEIGHT = 0;
 export const isMac = /macintosh|mac os x/i.test(navigator.userAgent);
 
-const PUBLIC_URL = process.env.PUBLIC_URL || '';
-// you can change the source of the monaco files
-// 设置monaco相关资源使用本地
-loader.config({ paths: { vs: `${PUBLIC_URL}/monaco-editor@0.27.0/min/vs` } });
+// const PUBLIC_URL = process.env.PUBLIC_URL || '';
+// 设置monaco相关资源使用本地  https://registry.npmjs.org/monaco-editor/-/monaco-editor-0.32.1.tgz
+// loader.config({ paths: { vs: `${PUBLIC_URL}/monaco-editor@0.32.1/min/vs` } });
+// 使用cdn
+loader.config({ paths: { vs: `https://cdn.bootcdn.net/ajax/libs/monaco-editor/0.32.1/min/vs` } });
 
 function bindKeyWithAction(editor, monaco) {
     const keyMap = {

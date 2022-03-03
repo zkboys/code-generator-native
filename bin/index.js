@@ -21,7 +21,7 @@ program
 
 let options = program.opts();
 
-const HOST = options.host || '0.0.0.0';
+const HOST = options.host || 'localhost';
 const DEFAULT_PORT = parseInt(options.port, 10) || 3001;
 const ROOT_PATH = path.join(__dirname, '..');
 
@@ -30,9 +30,10 @@ const ROOT_PATH = path.join(__dirname, '..');
     initLocalTemplates();
 
     const port = await choosePort(HOST, DEFAULT_PORT, true);
-    const cwd = process.cwd();
+    const nativeRoot = process.cwd();
+    const command = path.join(ROOT_PATH, 'node_modules', '.bin', 'nodemon');
     // 监听本地目录改变之后，重启服务
-    spawn('nodemon', ['-w', config.localGeneratorPath, '--exec', `node index.js --port=${port} --nativeRoot=${cwd}`], { stdio: 'inherit', cwd: ROOT_PATH });
+    spawn(command, ['-w', config.localGeneratorPath, '--exec', `node index.js --port=${port} --nativeRoot=${nativeRoot}`], { stdio: 'inherit', cwd: ROOT_PATH });
     // spawn('node', ['index.js', `--port=${port}`], { stdio: 'inherit', cwd: ROOT_PATH });
 
     openBrowser(`http://${HOST}:${port}`);

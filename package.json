@@ -1,10 +1,10 @@
 {
   "name": "@ra-lib/gen",
-  "version": "1.1.6",
+  "version": "1.1.11",
   "description": "",
   "main": "bin/index.js",
   "bin": {
-    "ra-gen": "bin/index.js"
+    "gen": "bin/index.js"
   },
   "scripts": {
     "start": "nodemon --ignore front/ --ignore public/  --exec \"node index.js\""

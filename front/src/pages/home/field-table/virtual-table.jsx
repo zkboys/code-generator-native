@@ -1,9 +1,9 @@
-import React, { useCallback, useState } from 'react';
-import { FixedSizeList as List } from 'react-window';
+import React, {useCallback, useState} from 'react';
+import {FixedSizeList as List} from 'react-window';
 import ResizeObserver from 'rc-resize-observer';
-import { SortableContainer, SortableElement } from 'react-sortable-hoc';
+import {SortableContainer, SortableElement} from 'react-sortable-hoc';
 import classNames from 'classnames';
-import { getScrollBarWidth } from '@ra-lib/admin';
+import {getScrollBarWidth} from '@ra-lib/admin';
 import s from './virtual-table.less';
 
 const SCROLL_BAR_WIDTH = getScrollBarWidth();
@@ -44,6 +44,11 @@ export default Table => {
             return (
                 <BodyContainer
                     onSortEnd={handleSortEnd}
+                    shouldCancelStart={(e) => {
+                        const { tagName, classList } = e.target;
+                        if (['A', 'INPUT', 'SELECT', 'BUTTON', 'TEXTAREA', 'OPTION'].includes(tagName)) return true;
+                        return String(classList).includes('select-selection');
+                    }}
                     helperClass={s.row}
                 >
                     <List
