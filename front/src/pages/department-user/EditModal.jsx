@@ -5,7 +5,10 @@ import config from 'src/commons/config-hoc';
 
 export default config({
     modal: {
-        title: (props) => (props.isEdit ? '编辑' : '创建'),
+        title: (props) => {
+            if(props.isEdit) return '修改';
+            return '创建';
+        },
         width: '70%',
         top: 50,
     },
@@ -18,11 +21,10 @@ export default config({
         const params = {
             ...values,
         };
-
         if (isEdit) {
             await props.ajax.put('/department_users', params, { setLoading, successTip: '修改成功！' });
         } else {
-            await props.ajax.post('/department_users', params, { setLoading, successTip: '修改成功！' });
+            await props.ajax.post('/department_users', params, { setLoading, successTip: '创建成功！' });
         }
 
         onOk();
@@ -54,18 +56,18 @@ export default config({
                     <Col span={12}>
                         <FormItem
                             {...layout}
-                            type="select"
-                            label="部门"
-                            name="departmentId"
+                            type="input"
+                            label="用户"
+                            name="userId"
+                            maxLength={36}
                         />        
                     </Col>
                     <Col span={12}>
                         <FormItem
                             {...layout}
-                            type="select"
-                            label="用户"
-                            name="userId"
-                            maxLength={36}
+                            type="input"
+                            label="部门"
+                            name="departmentId"
                         />        
                     </Col>
                     <Col span={12}>

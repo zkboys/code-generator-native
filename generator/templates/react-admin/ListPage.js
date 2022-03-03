@@ -2,7 +2,7 @@ module.exports = {
     // 模版名称
     // name: '列表页',
     // 文件级别选项
-    options: ['选中', '序号', '分页', '导入', '导出', '添加', '编辑', '删除', '批量删除'],
+    options: ['选中', '序号', '分页', '导入', '导出', '添加', '编辑', '详情', '删除', '批量删除'],
     // 字段级别选项
     fieldOptions: ['条件', '列表'],
     // 生成文件的默认目标路径
@@ -23,6 +23,7 @@ module.exports = {
         const _export = options.includes('导出');
         const _add = options.includes('添加');
         const _edit = options.includes('编辑');
+        const _detail = options.includes('详情');
         const _delete = options.includes('删除');
         const _batchDelete = options.includes('批量删除');
 
@@ -39,6 +40,7 @@ import {Button, Form, Space, ${has(_batchDelete, 'Modal, ', false)}${has(_import
 import {PageContent, QueryBar, FormItem, Table, ${has(_page, 'Pagination, ', false)}${has(_edit || _delete, 'Operator', false)}} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
 ${has(_add || _edit, 'import EditModal from \'./EditModal\';')}
+${has(_detail || _edit, 'import DetailModal from \'./DetailModal\';')}
 
 export default config({
     path: '/${mn.module_names}',
@@ -48,8 +50,9 @@ export default config({
     ${has(_page, 'const [pageSize, setPageSize] = useState(20);')}
     const [dataSource, setDataSource] = useState([]);
     ${has(_page, 'const [total, setTotal] = useState(0);')}
-    ${has(_add || _edit, 'const [record, setRecord] = useState(null);')}
+    ${has(_add || _edit || _detail, 'const [record, setRecord] = useState(null);')}
     ${has(_add || _edit, 'const [visible, setVisible] = useState(false);')}
+    ${has(_detail, 'const [detailVisible, setDetailVisible] = useState(false);')}
     ${has(_select, 'const [selectedRowKeys, setSelectedRowKeys] = useState([]);')}
     ${has(_import, 'const [uploading, setUploading] = useState(false);')}
     const [form] = Form.useForm();
@@ -59,7 +62,7 @@ export default config({
         ${has(_edit || _delete, `{
             title: '操作',
             dataIndex: 'operator',
-            width: 100,
+            width: ${[_edit, _detail, _delete].filter(Boolean).length * 50},
             render: (value, record) => {
                 ${has(_delete, 'const { id, name } = record')};
                 const items = [
@@ -68,6 +71,13 @@ export default config({
                         onClick: () => {
                             setRecord(record);
                             setVisible(true);   
+                        },
+                    },`)}
+                    ${has(_detail, `{
+                        label: '详情',
+                        onClick: () => {
+                            setRecord(record);
+                            setDetailVisible(true);
                         },
                     },`)}
                     ${has(_delete, `{
@@ -237,6 +247,11 @@ export default config({
                     await handleSearch();
                 }}
                 onCancel={() => setVisible(false)}
+            />`)}
+            ${has(_detail, `<DetailModal
+                visible={detailVisible}
+                record={record}
+                onCancel={() => setDetailVisible(false)}
             />`)}
         </PageContent>
     );

@@ -1,12 +1,13 @@
 import React, {useState, useEffect, useCallback} from 'react';
-import {Form, Space} from 'antd';
+import {Form, Space, Button} from 'antd';
 import {MinusCircleOutlined, PlusCircleOutlined} from '@ant-design/icons';
 import {PageContent, FormItem, storage} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
 import {OptionsTag} from 'src/components';
-import {stringFormat, triggerWindowResize} from 'src/commons';
+import {stringFormat} from 'src/commons';
 import FieldTable from './field-table';
 import s from './style.less';
+import {useDebounceFn} from 'ahooks';
 
 export default config({
     path: '/',
@@ -18,23 +19,22 @@ export default config({
     const [form] = Form.useForm();
 
     const fetchDbTables = useCallback(async (dbUrl) => {
-        return await props.ajax.get('/db/tables', { dbUrl }, { errorTip: false });
+        return await props.ajax.get('/db/tables', { dbUrl });
     }, [props.ajax]);
 
     const fetchModuleNames = useCallback(async (name) => {
-        return await props.ajax.get(`/moduleNames/${name}`, null, { errorTip: false });
+        return await props.ajax.get(`/moduleNames/${name}`);
     }, [props.ajax]);
 
     const fetchTemplates = useCallback(async () => {
-        return await props.ajax.get('/templates', null, { errorTip: false });
+        return await props.ajax.get('/templates');
     }, [props.ajax]);
 
     // 数据库连接改变事件
-    const handleDbUrlChange = useCallback(async (e) => {
+    const { run: handleDbUrlChange } = useDebounceFn(async (e) => {
         let tableOptions;
         try {
             const dbUrl = e.target.value;
-            storage.local.setItem('dbUrl', dbUrl);
             const tables = await fetchDbTables(dbUrl);
             tableOptions = tables.map(item => ({ value: item.name, label: item.name }));
         } catch (e) {
@@ -42,22 +42,22 @@ export default config({
         }
 
         setTableOptions(tableOptions);
-    }, [fetchDbTables]);
+    }, { wait: 500 });
 
     // 数据库表改变事件
-    const handleTableNameChange = useCallback(async (tableName) => {
+    const { run: handleTableNameChange } = useDebounceFn(async (tableName) => {
         const moduleNames = await fetchModuleNames(tableName);
         setModuleNames(moduleNames);
         form.setFieldsValue({ moduleName: moduleNames['module-name'] });
-    }, [fetchModuleNames, form]);
+    }, { wait: 500 });
 
     // 模块名改变事件
-    const handleModuleNameBlur = useCallback(async (e) => {
+    const { run: handleModuleNameBlur } = useDebounceFn(async (e) => {
         const moduleName = e.target.value;
         if (!moduleName) return;
         const moduleNames = await fetchModuleNames(moduleName);
         setModuleNames(moduleNames);
-    }, [fetchModuleNames]);
+    }, { wait: 500 });
 
     // 模版改变事件
     const handleTemplateChange = useCallback((name, templateId) => {
@@ -72,15 +72,30 @@ export default config({
 
         form.setFieldsValue({ files: [...files] });
 
-        // 强制刷新 targetPath
-        setModuleNames({ ...moduleNames });
-    }, [form, templateOptions, moduleNames]);
+    }, [templateOptions, form]);
 
     // 表单改变事件
-    const handleFormChange = useCallback(() => {
-        //  触发窗口事件，表格高度重新计算
-        triggerWindowResize();
+    const handleFormChange = useCallback((changedValues) => {
+        if ('dbUrl' in changedValues) storage.local.setItem('dbUrl', changedValues.dbUrl);
+        if ('files' in changedValues) storage.local.setItem('files', changedValues.files);
     }, []);
+
+    // moduleNames 或 templateOptions 改变，处理targetPath
+    useEffect(() => {
+        if (!Object.keys(moduleNames).length || !templateOptions?.length) return;
+
+        const files = form.getFieldValue('files') || [];
+        if (!files?.length) return;
+
+        const nextFiles = files.map(item => {
+            const record = templateOptions.find(it => it.value === item.templateId)?.record || {};
+            return {
+                ...item,
+                targetPath: stringFormat(record.targetPath, moduleNames),
+            };
+        });
+        form.setFieldsValue({ files: nextFiles });
+    }, [form, templateOptions, moduleNames]);
 
     // 初始化时，加载模板
     useEffect(() => {
@@ -111,19 +126,33 @@ export default config({
         })();
     }, [form, handleDbUrlChange]);
 
-    // 处理模板的目标位置
+    // 从本地同步files
     useEffect(() => {
-        const files = form.getFieldValue('files') || [];
-        const nextFiles = files.map(item => {
-            if (item.targetPath) {
-                const record = templateOptions.find(it => it.value === item.templateId).record;
-                item.targetPath = stringFormat(record.targetPath, moduleNames);
-            }
+        if (!templateOptions?.length) return;
 
-            return { ...item };
-        });
+        let files = storage.local.getItem('files');
+        if (!files) {
+            const record = templateOptions[0].record;
+            files = [{
+                templateId: record.id,
+                targetPath: record.targetPath,
+                options: [...record.options],
+            }];
+        }
+
+        const nextFiles = files.map(item => {
+            const record = templateOptions.find(it => it.value === item.templateId)?.record;
+            if (!record) return null;
+
+            return {
+                ...item,
+                ...record,
+            };
+        }).filter(Boolean);
+        if (!nextFiles?.length) return;
+
         form.setFieldsValue({ files: nextFiles });
-    }, [form, moduleNames, templateOptions]);
+    }, [form, templateOptions]);
 
     const formItemProps = {
         // size: 'small',
@@ -176,7 +205,6 @@ export default config({
                         {(fields, { add, remove }) => (
                             <>
                                 {fields.map(({ key, name, isListField, ...restField }, index) => {
-                                    const isLast = index === fields.length - 1;
                                     const isFirst = index === 0;
                                     const number = index + 1;
                                     let label = number;
@@ -185,16 +213,25 @@ export default config({
                                     return (
                                         <div key={key} className={s.fileRow}>
                                             <Space className={s.fileOperator}>
-                                                {isLast && (fields.length < templateOptions.length) && (
-                                                    <PlusCircleOutlined
+                                                <Button
+                                                    className={s.fileMinus}
+                                                    danger
+                                                    icon={<MinusCircleOutlined/>}
+                                                    type="link"
+                                                    disabled={fields.length === 1}
+                                                    onClick={() => remove(name)}
+                                                />
+                                                {isFirst && (fields.length < templateOptions.length) && (
+                                                    <Button
                                                         className={s.filePlus}
-                                                        onClick={() => add({})}
-                                                    />
-                                                )}
-                                                {fields?.length > 1 && (
-                                                    <MinusCircleOutlined
-                                                        className={s.fileMinus}
-                                                        onClick={() => remove(name)}
+                                                        type="link"
+                                                        icon={<PlusCircleOutlined/>}
+                                                        onClick={() => {
+                                                            const files = form.getFieldValue('files');
+                                                            const record = templateOptions.find(item => !files.find(it => it.templateId === item.value))?.record;
+                                                            const { id: templateId, targetPath, options } = record || {};
+                                                            add({ templateId, targetPath: stringFormat(targetPath, moduleNames), options: [...options] });
+                                                        }}
                                                     />
                                                 )}
                                             </Space>

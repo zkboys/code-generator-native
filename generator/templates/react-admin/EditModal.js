@@ -1,27 +1,32 @@
 module.exports = {
     // name: '弹框编辑页',
-    options: ['添加', '修改', '详情'],
+    options: ['修改'],
     fieldOptions: ['表单'],
     targetPath: '/front/src/pages/{module-name}/EditModal.jsx',
     getContent: config => {
-        const { moduleNames: mn, fields, NULL_LINE } = config;
+        const { file, moduleNames: mn, fields, NULL_LINE } = config;
         const ignore = ['id', 'updatedAt', 'createdAt', 'isDeleted'];
         const formFields = fields.filter(item => item.fieldOptions.includes('表单') && !ignore.includes(item.__names.moduleName));
+        const { options = [] } = file;
+        const _edit = options.includes('修改');
 
         return `
-import {useCallback, useState, useEffect} from 'react';
+import {useCallback, useState${_edit ? ', useEffect' : ''}} from 'react';
 import {Form, Row, Col} from 'antd';
 import {ModalContent, FormItem} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
 
 export default config({
     modal: {
-        title: (props) => (props.isEdit ? '编辑' : '创建'),
+        ${_edit ? `title: (props) => {
+            if(props.isEdit) return '修改';
+            return '创建';
+        },`: `title: '创建',`}
         width: '70%',
         top: 50,
     },
 })(function ${mn.ModuleName}EditModal(props) {
-    const { record, isEdit, onOk } = props;
+    const {${_edit ? ' record, isEdit, ' : ''}onOk } = props;
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
 
@@ -29,23 +34,22 @@ export default config({
         const params = {
             ...values,
         };
-
-        if (isEdit) {
+        ${_edit ? `if (isEdit) {
             await props.ajax.put('/${mn.module_names}', params, { setLoading, successTip: '修改成功！' });
         } else {
-            await props.ajax.post('/${mn.module_names}', params, { setLoading, successTip: '修改成功！' });
-        }
+            await props.ajax.post('/${mn.module_names}', params, { setLoading, successTip: '创建成功！' });
+        }` : `await props.ajax.post('/${mn.module_names}', params, { setLoading, successTip: '创建成功！' });`}
 
         onOk();
-    }, [isEdit, onOk, props.ajax]);
+    }, [${_edit ? 'isEdit, ' : ''}onOk, props.ajax]);
 
-    // 初始化，查询详情数据
+    ${_edit ? `// 初始化，查询详情数据
     useEffect(() => {
         (async () => {
             const res = await props.ajax.get('/${mn.module_names}', { id: record?.id }, [], { setLoading });
             form.setFieldsValue(res || {});
         })();
-    }, [form, props.ajax, record?.id]);
+    }, [form, props.ajax, record?.id]);` : NULL_LINE}
 
     const layout = { labelCol: { flex: '100px' } };
     return (
@@ -60,7 +64,7 @@ export default config({
                 cancelText="重置"
                 onCancel={() => form.resetFields()}
             >
-                {isEdit ? <FormItem hidden name="id"/> : null}
+                ${_edit ? `{isEdit ? <FormItem hidden name="id"/> : null}` : NULL_LINE}
                 <Row>
                     ${formFields.map(item => `<Col span={12}>
                         <FormItem

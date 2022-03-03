@@ -1,13 +1,14 @@
-import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react';
-import { Tabs, Table, Button, Space, Modal } from 'antd';
-import { CodeOutlined, FileDoneOutlined, PlusOutlined, DownloadOutlined } from '@ant-design/icons';
+import React, {useCallback, useMemo, useState, useRef, useEffect} from 'react';
+import {Tabs, Table, Button, Space, Modal} from 'antd';
+import {CodeOutlined, FileDoneOutlined, PlusOutlined, DownloadOutlined} from '@ant-design/icons';
+import {useDebounceEffect} from 'ahooks';
 import c from 'classnames';
-import { v4 as uuid } from 'uuid';
-import { Content, Operator, useHeight, confirm, FormItem } from '@ra-lib/admin';
-import { OptionsTag } from 'src/components';
+import {v4 as uuid} from 'uuid';
+import {Content, Operator, useHeight, confirm, FormItem} from '@ra-lib/admin';
+import {OptionsTag} from 'src/components';
 import config from 'src/commons/config-hoc';
-import { getCursorPosition } from 'src/commons';
-import { DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS } from '../constant';
+import {getCursorPosition, triggerWindowResize} from 'src/commons';
+import {DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS} from '../constant';
 import virtualTable from './virtual-table';
 import PreviewModal from '../PreviewModal';
 import s from './style.less';
@@ -43,7 +44,7 @@ export default config()(function FieldTable(props) {
     }, [props.ajax]);
 
     const fetchDbTypeOptions = useCallback(async (params) => {
-        return await props.ajax.get('/db/types', params, { setLoading });
+        return await props.ajax.get('/db/types', params);
     }, [props.ajax]);
 
     // 拖拽排序结束
@@ -310,7 +311,7 @@ export default config()(function FieldTable(props) {
                             },
                         },
                     ];
-                    return <Operator items={items} />;
+                    return <Operator items={items}/>;
                 },
             },
             { title: '字段', dataIndex: 'name', width: 150, formProps: { type: 'input', required: true } },
@@ -389,24 +390,23 @@ export default config()(function FieldTable(props) {
         await props.ajax.get('/templates/local/download', null, { successTip: '更新成功！' });
     }, [props.ajax]);
 
-    useEffect(() => {
+    useDebounceEffect(() => {
         (async () => {
             const dbTypeOptions = await fetchDbTypeOptions({ dbUrl });
             setDbTypeOptions(dbTypeOptions);
         })();
-    }, [dbUrl, fetchDbTypeOptions]);
+    }, [dbUrl, fetchDbTypeOptions], { wait: 500 });
 
     // 查询表格数据
-    useEffect(() => {
+    useDebounceEffect(() => {
         (async () => {
             // 相关参数不存在，清空数据
             if (!dbUrl || !tableName) return setDataSource([]);
 
-            const dataSource = await props.ajax.get(`/db/tables/${tableName}`, { dbUrl }, { errorTip: false, setLoading });
+            const dataSource = await props.ajax.get(`/db/tables/${tableName}`, { dbUrl }, { setLoading });
             setDataSource(dataSource);
         })();
-    }, [dbUrl, tableName, props.ajax]);
-
+    }, [dbUrl, tableName, props.ajax], { wait: 500 });
 
     // 默认文件选项全选
     useEffect(() => {
@@ -433,6 +433,11 @@ export default config()(function FieldTable(props) {
     // dataSource改变，将数据同步到form中
     useEffect(() => form.setFieldsValue({ dataSource }), [form, dataSource]);
 
+    // 触发窗口事件，表格高度重新计算
+    useEffect(() => {
+        triggerWindowResize();
+    }, [files]);
+
     return (
         <Content loading={loading} ref={rootRef} className={s.root}>
             {/* 表单改变，将数据同步到dataSource中 */}
@@ -453,7 +458,7 @@ export default config()(function FieldTable(props) {
                     left: (
                         <Space style={{ marginRight: 16 }}>
                             <Button
-                                icon={<PlusOutlined />}
+                                icon={<PlusOutlined/>}
                                 type="primary"
                                 ghost
                                 onClick={() => handleAdd()}
@@ -461,7 +466,7 @@ export default config()(function FieldTable(props) {
                                 添加一行
                             </Button>
                             <Button
-                                icon={<CodeOutlined />}
+                                icon={<CodeOutlined/>}
                                 onClick={() => handleGenerate(true)}
                             >
                                 代码预览
@@ -469,7 +474,7 @@ export default config()(function FieldTable(props) {
                             <Button
                                 type="primary"
                                 danger
-                                icon={<FileDoneOutlined />}
+                                icon={<FileDoneOutlined/>}
                                 onClick={() => handleGenerate()}
                             >
                                 生成文件
@@ -478,7 +483,7 @@ export default config()(function FieldTable(props) {
                     ),
                     right: (
                         <Button
-                            icon={<DownloadOutlined />}
+                            icon={<DownloadOutlined/>}
                             onClick={handleUpdateLocalTemplates}
                         >
                             更新本地模版
@@ -488,7 +493,7 @@ export default config()(function FieldTable(props) {
                 activeKey={activeKey}
                 onChange={setActiveKey}
             >
-                {tabPotions.map(item => <TabPane key={item.key} tab={item.tab} />)}
+                {tabPotions.map(item => <TabPane key={item.key} tab={item.tab}/>)}
             </Tabs>
             <MyTable
                 onSortEnd={handleSortEnd}
