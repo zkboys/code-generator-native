@@ -29,10 +29,12 @@ export default config()(function FieldTable(props) {
         files,
     } = form.getFieldsValue();
 
+    const templateIds = (files || []).map(item => item.templateId);
+
     const [dataSource, setDataSource] = useState([]);
     const [loading, setLoading] = useState(false);
     const rootRef = useRef(null);
-    const [height] = useHeight(rootRef, 110, [files]);
+    const [height] = useHeight(rootRef, 110, [templateIds]);
     const [previewParams, setPreviewParams] = useState(null);
     const [activeKey, setActiveKey] = useState('type');
     const [dbTypeOptions, setDbTypeOptions] = useState([]);
@@ -161,8 +163,8 @@ export default config()(function FieldTable(props) {
 
     // 选项列
     const optionColumns = useMemo(() => {
-        return (files || []).filter(item => item.templateId)
-            .map(({ templateId }) => {
+        return templateIds.filter(Boolean)
+            .map((templateId) => {
                 const template = templateOptions.find(item => item.value === templateId)?.record;
                 const title = template?.shortName;
                 const dataIndex = ['options', template?.id];
@@ -176,7 +178,7 @@ export default config()(function FieldTable(props) {
                     },
                 };
             });
-    }, [files, templateOptions]);
+    }, [templateIds, templateOptions]);
 
 
     // 渲染表格中的表单项

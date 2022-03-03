@@ -156,7 +156,6 @@ export default config({
                 layout="inline"
                 initialValues={{ files: [{}] }}
                 onValuesChange={handleFormChange}
-                onChange={searchFields}
             >
                 <FormItem
                     labelCol={{ flex: '100px' }}
