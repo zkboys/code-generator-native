@@ -16,6 +16,7 @@ export default config({
     const [tableOptions, setTableOptions] = useState([]);
     const [templateOptions, setTemplateOptions] = useState([]);
     const [moduleNames, setModuleNames] = useState({});
+    // 控制表格更新，如果频繁更新，会比较卡
     const [refreshTable, setRefreshTable] = useState({});
     const [form] = Form.useForm();
 
