@@ -47,7 +47,13 @@ export const DATA_TYPE_OPTIONS = [
 export const VALIDATE_OPTIONS = [
     { value: 'required', label: '必填' },
     { value: 'noSpace', label: '无空格' },
-    { value: 'mobile', label: '手机号' },
-    { value: 'email', label: '邮箱' },
-    { value: 'ip', label: 'IP地址' },
+    { value: 'mobile', label: '手机号', pattern: /^1\d{10}$/ },
+    { value: 'landLine', label: '座机号', pattern: /^([0-9]{3,4}-)?[0-9]{7,8}$/ },
+    { value: 'email', label: '邮箱', pattern: /^(\w-*\.*)+@(\w-?)+(\.\w{2,})+$/ },
+    { value: 'cardNumber', label: '身份证号', pattern: /(^\d{15}$)|(^\d{17}([0-9]|X|x)$)/ },
+    { value: 'qq', label: 'qq号', pattern: /^[1-9][0-9]{4,9}$/ },
+    { value: 'ip', label: 'IP地址', pattern: /^(\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])$/ },
+    { value: 'port', label: '端口号', pattern: /^([0-9]|[1-9]\d{1,3}|[1-5]\d{4}|6[0-4]\d{4}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/ },
+    { value: 'positiveInteger', label: '正整数', pattern: /^[1-9]\d*$/ },
+    { value: 'numberWithTwoDecimal', label: '数字、保存两位小数', pattern: /^(0|[1-9]\d*)(\.\d{1,2})?$/ },
 ];

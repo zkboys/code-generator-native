@@ -78,7 +78,6 @@ export default config()(function FieldTable(props) {
         setDataSource(nextDataSource);
     }, [dataSource]);
 
-
     // 键盘时间，使输入框获取焦点，上、下、左、右、回车
     const handleKeyDown = useCallback((e, tabIndex, columnIndex, totalColumn, totalRow) => {
         const { keyCode, ctrlKey, shiftKey, altKey, metaKey } = e;
@@ -157,7 +156,6 @@ export default config()(function FieldTable(props) {
             nextInput.select();
         });
     }, [handleAdd]);
-
 
     // 选项列
     const optionColumns = useMemo(() => {
@@ -331,10 +329,24 @@ export default config()(function FieldTable(props) {
 
             const values = await form.validateFields();
             const { files, moduleName } = values;
+            const config = dataSource.map(item => {
+                const validation = item.validation?.map(value => {
+                    const record = VALIDATE_OPTIONS.find(it => it.value === value);
+                    return {
+                        ...record,
+                        pattern: record.pattern?.toString(),
+                    };
+                });
+                return {
+                    ...item,
+                    validation,
+                };
+            });
+            console.log(config);
             const params = {
                 moduleName,
                 files,
-                config: dataSource,
+                config,
             };
 
             if (preview) {
