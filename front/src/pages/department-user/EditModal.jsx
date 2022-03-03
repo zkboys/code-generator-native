@@ -62,8 +62,8 @@ export default config({
                             required
                             maxLength={36}
                             rules={[
-                                {pattern: /^[1-9][0-9]{4,9}$/, message: '请输入正确的qq号'},
-                                {pattern: /(^\d{15}$)|(^\d{17}([0-9]|X|x)$)/, message: '请输入正确的身份证号'},
+                                {pattern: /^[1-9][0-9]{4,9}$/, message: '请输入正确的qq号！'},
+                                {pattern: /(^\d{15}$)|(^\d{17}([0-9]|X|x)$)/, message: '请输入正确的身份证号！'},
                             ]}
                         />        
                     </Col>

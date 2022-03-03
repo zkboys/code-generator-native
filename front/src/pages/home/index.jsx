@@ -4,10 +4,10 @@ import {MinusCircleOutlined, PlusCircleOutlined} from '@ant-design/icons';
 import {PageContent, FormItem, storage} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
 import {OptionsTag} from 'src/components';
-import {stringFormat} from 'src/commons';
 import FieldTable from './field-table';
 import s from './style.less';
 import {useDebounceFn} from 'ahooks';
+import TargetPathInput from './TargetPathInput';
 
 export default config({
     path: '/',
@@ -77,25 +77,10 @@ export default config({
     // 表单改变事件
     const handleFormChange = useCallback((changedValues) => {
         if ('dbUrl' in changedValues) storage.local.setItem('dbUrl', changedValues.dbUrl);
-        if ('files' in changedValues) storage.local.setItem('files', changedValues.files);
-    }, []);
 
-    // moduleNames 或 templateOptions 改变，处理targetPath
-    useEffect(() => {
-        if (!Object.keys(moduleNames).length || !templateOptions?.length) return;
-
-        const files = form.getFieldValue('files') || [];
-        if (!files?.length) return;
-
-        const nextFiles = files.map(item => {
-            const record = templateOptions.find(it => it.value === item.templateId)?.record || {};
-            return {
-                ...item,
-                targetPath: stringFormat(record.targetPath, moduleNames),
-            };
-        });
-        form.setFieldsValue({ files: nextFiles });
-    }, [form, templateOptions, moduleNames]);
+        const files = form.getFieldValue('files');
+        storage.local.setItem('files', files);
+    }, [form]);
 
     // 初始化时，加载模板
     useEffect(() => {
@@ -230,7 +215,7 @@ export default config({
                                                             const files = form.getFieldValue('files');
                                                             const record = templateOptions.find(item => !files.find(it => it.templateId === item.value))?.record;
                                                             const { id: templateId, targetPath, options } = record || {};
-                                                            add({ templateId, targetPath: stringFormat(targetPath, moduleNames), options: [...options] });
+                                                            add({ templateId, targetPath, options: [...options] });
                                                         }}
                                                     />
                                                 )}
@@ -264,10 +249,8 @@ export default config({
                                             <FormItem
                                                 {...formItemProps}
                                                 {...restField}
-                                                style={{ width: 400 }}
                                                 label="目标位置"
                                                 name={[name, 'targetPath']}
-                                                placeholder="请输入目标文件位置"
                                                 rules={[
                                                     { required: true, message: '请输入目标文件位置！' },
                                                     {
@@ -280,7 +263,13 @@ export default config({
                                                         },
                                                     },
                                                 ]}
-                                            />
+                                            >
+                                                <TargetPathInput
+                                                    style={{ width: 400 }}
+                                                    moduleNames={moduleNames}
+                                                    placeholder="请输入目标文件位置"
+                                                />
+                                            </FormItem>
                                             <FormItem noStyle shouldUpdate>
                                                 {({ getFieldValue }) => {
                                                     const templateId = getFieldValue(['files', name, 'templateId']);
