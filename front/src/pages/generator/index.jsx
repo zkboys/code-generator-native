@@ -247,11 +247,11 @@ export default config({
                                                         return !files.find(f => f.templateId === item.value);
                                                     });
                                                     return (
-                                                        <div style={{ width: 318 }}>
+                                                        <div style={{ width: 329 }}>
                                                             <FormItem
                                                                 {...restField}
                                                                 labelCol={{ flex: '100px', style: { userSelect: 'none' } }}
-                                                                style={{ width: 200 }}
+                                                                style={{ width: 211 }}
                                                                 label={label}
                                                                 name={[name, 'templateId']}
                                                                 rules={[{ required: true, message: '请选择模板文件！' }]}
