@@ -1,6 +1,6 @@
 import React, {useCallback, useMemo, useState, useRef, useEffect} from 'react';
 import {Tabs, Table, Button, Space, Modal} from 'antd';
-import {CodeOutlined, FileDoneOutlined, PlusOutlined, DownloadOutlined} from '@ant-design/icons';
+import {CodeOutlined, FileDoneOutlined, PlusOutlined, DownloadOutlined, QuestionCircleOutlined} from '@ant-design/icons';
 import {useDebounceEffect} from 'ahooks';
 import c from 'classnames';
 import {v4 as uuid} from 'uuid';
@@ -11,6 +11,8 @@ import {getCursorPosition} from 'src/commons';
 import {DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS} from '../constant';
 import virtualTable from './virtual-table';
 import PreviewModal from '../PreviewModal';
+import HelpModal from '../HelpModal';
+
 import s from './style.less';
 
 const MyTable = virtualTable((Table));
@@ -38,6 +40,7 @@ export default config()(function FieldTable(props) {
     const [previewParams, setPreviewParams] = useState(null);
     const [activeKey, setActiveKey] = useState('type');
     const [dbTypeOptions, setDbTypeOptions] = useState([]);
+    const [helpVisible, setHelpVisible] = useState(true);
 
     const fetchGenerateFiles = useCallback(async (params) => {
         return await props.ajax.post('/generate/files', params, { setLoading });
@@ -65,7 +68,6 @@ export default config()(function FieldTable(props) {
         const newRecord = {
             id: uuid(),
             comment: `新增列${length + 1}`,
-            chinese: `新增列${length + 1}`,
             field: `field${length + 1}`,
             formType: 'input',
             dataType: 'String',
@@ -317,7 +319,8 @@ export default config()(function FieldTable(props) {
                 },
             },
             { title: '字段', dataIndex: 'name', width: 150, formProps: { type: 'input', required: true } },
-            { title: '备注', dataIndex: 'comment', width: 150, formProps: { type: 'input', required: true } },
+            { title: '注释', dataIndex: 'comment', width: 150 },
+            { title: '中文名', dataIndex: 'chinese', width: 150, formProps: { type: 'input', required: true } },
             !isOption && { title: '类型', dataIndex: 'type', width: 150, formProps: { type: 'select', required: true, options: dbTypeOptions } },
             !isOption && { title: '长度', dataIndex: 'length', width: 85, formProps: { type: 'number', min: 0, step: 1 } },
             !isOption && { title: '默认值', dataIndex: 'defaultValue', width: 150, formProps: { type: 'input' } },
@@ -492,12 +495,20 @@ export default config()(function FieldTable(props) {
                         </Space>
                     ),
                     right: (
-                        <Button
-                            icon={<DownloadOutlined/>}
-                            onClick={handleUpdateLocalTemplates}
-                        >
-                            更新本地模版
-                        </Button>
+                        <Space>
+                            <Button
+                                icon={<DownloadOutlined/>}
+                                onClick={handleUpdateLocalTemplates}
+                            >
+                                更新本地模版
+                            </Button>
+                            <Button
+                                icon={<QuestionCircleOutlined/>}
+                                onClick={() => setHelpVisible(true)}
+                            >
+                                帮助
+                            </Button>
+                        </Space>
                     ),
                 }}
                 activeKey={activeKey}
@@ -519,6 +530,10 @@ export default config()(function FieldTable(props) {
                 params={previewParams}
                 onOk={() => setPreviewParams(null)}
                 onCancel={() => setPreviewParams(null)}
+            />
+            <HelpModal
+                visible={helpVisible}
+                onCancel={() => setHelpVisible(false)}
             />
         </Content>
     );

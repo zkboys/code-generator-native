@@ -92,7 +92,7 @@ function getFilesContent(files, moduleName, fields) {
     const moduleNames = getModuleNames(moduleName);
 
     const fis = fields.map(item => {
-      const fieldOptions = item.options?.[templateId] || [];
+      const fieldOptions = item.options && item.options[templateId] || [];
       const __names = getModuleNames(item.name);
       return {
         ...item,

@@ -2,7 +2,7 @@ module.exports = {
     // 模版名称
     // name: '列表页',
     // 文件级别选项
-    options: ['选中', '序号', '分页', '导入', '导出', '添加', '编辑', '详情', '删除', '批量删除'],
+    options: ['选中', '序号', '分页', '添加', '批量删除', '导入', '导出', '编辑', '详情', '删除'],
     // 字段级别选项
     fieldOptions: ['条件', '列表'],
     // 生成文件的默认目标路径
@@ -37,7 +37,7 @@ module.exports = {
         return `
 import {useCallback, useState, useEffect} from 'react';
 import {Button, Form, Space, ${has(_batchDelete, 'Modal, ', false)}${has(_import, 'Upload, notification', false)}} from 'antd';
-import {PageContent, QueryBar, FormItem, Table, ${has(_page, 'Pagination, ', false)}${has(_edit || _delete, 'Operator', false)}} from '@ra-lib/admin';
+import {PageContent, QueryBar, FormItem, Table, ${has(_page, 'Pagination, ', false)}${has(_edit || _detail || _delete, 'Operator', false)}} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
 ${has(_add || _edit, 'import EditModal from \'./EditModal\';')}
 ${has(_detail || _edit, 'import DetailModal from \'./DetailModal\';')}
@@ -59,7 +59,7 @@ export default config({
 
     let columns = [
         ${tableFields.map(item => `{ title: '${item.chinese}', dataIndex: '${item.__names.moduleName}' },`).join('\n        ')}
-        ${has(_edit || _delete, `{
+        ${has(_edit || _detail || _delete, `{
             title: '操作',
             dataIndex: 'operator',
             width: ${[_edit, _detail, _delete].filter(Boolean).length * 50},
