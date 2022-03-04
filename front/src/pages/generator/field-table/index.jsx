@@ -147,7 +147,7 @@ export default config()(function FieldTable(props) {
         if (isDown) {
             if (tabIndex === columnEndTabIndex) {
                 isAdd = true;
-                nextTabIndex = tabIndex + columnIndex;
+                nextTabIndex = tabIndex + columnIndex + 1;
             } else {
                 nextTabIndex = tabIndex + 1;
             }

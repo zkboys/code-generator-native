@@ -1,14 +1,14 @@
 {
   "files": {
     "main.js": "/public/static/js/main.bce38f38.chunk.js",
-    "runtime-main.js": "/public/static/js/runtime-main.f5f08a4a.js",
+    "runtime-main.js": "/public/static/js/runtime-main.52b714ed.js",
     "static/css/2.1851a83d.chunk.css": "/public/static/css/2.1851a83d.chunk.css",
     "static/js/2.8338df17.chunk.js": "/public/static/js/2.8338df17.chunk.js",
     "static/css/3.cbd800c3.chunk.css": "/public/static/css/3.cbd800c3.chunk.css",
     "static/js/3.4bcc2dc3.chunk.js": "/public/static/js/3.4bcc2dc3.chunk.js",
     "static/css/4.c922de0e.chunk.css": "/public/static/css/4.c922de0e.chunk.css",
     "static/js/4.e018a863.chunk.js": "/public/static/js/4.e018a863.chunk.js",
-    "static/js/5.7c8b6222.chunk.js": "/public/static/js/5.7c8b6222.chunk.js",
+    "static/js/5.112248a5.chunk.js": "/public/static/js/5.112248a5.chunk.js",
     "static/js/6.167bb4db.chunk.js": "/public/static/js/6.167bb4db.chunk.js",
     "static/js/7.5af2d722.chunk.js": "/public/static/js/7.5af2d722.chunk.js",
     "index.html": "/public/index.html",
@@ -16,7 +16,7 @@
     "static/media/defaultErrorImage.d83d2d78.png": "/public/static/media/defaultErrorImage.d83d2d78.png"
   },
   "entrypoints": [
-    "static/js/runtime-main.f5f08a4a.js",
+    "static/js/runtime-main.52b714ed.js",
     "static/css/2.1851a83d.chunk.css",
     "static/js/2.8338df17.chunk.js",
     "static/js/main.bce38f38.chunk.js"
