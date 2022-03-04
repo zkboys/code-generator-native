@@ -24,8 +24,11 @@ export default config({
                     message="页面操作"
                     description={(
                         <ol>
-                            <li>{isMac ? '⌘' : 'ctrl'} + 鼠标左键，快速全选/取消标签；</li>
+                            <li>标签：{isMac ? '⌘' : 'ctrl'} + 鼠标左键，快速全选/取消标签；</li>
                             <li>「更新本地模版」：将工具中内置模版更新到本地，同名模版会被覆盖；</li>
+                            <li>字段表格：通过方向键快，可以在input框之间速移动光标；回车光标跳入下一行</li>
+                            <li>字段表格：最后一行input框内，回车或↓，会新增一行；</li>
+                            <li>字段表格：{isMac ? '⌘' : 'ctrl'} + shift + backspace 快速删除当前行；</li>
                         </ol>
                     )}
                 />

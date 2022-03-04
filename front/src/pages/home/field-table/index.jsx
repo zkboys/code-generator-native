@@ -85,10 +85,14 @@ export default config()(function FieldTable(props) {
     }, [dataSource]);
 
     // 键盘时间，使输入框获取焦点，上、下、左、右、回车
-    const handleKeyDown = useCallback((e, tabIndex, columnIndex, totalColumn, totalRow) => {
+    const handleKeyDown = useCallback((e, options) => {
+        const { tabIndex, columnIndex, totalColumn, totalRow, record, rowIndex } = options;
         const { keyCode, ctrlKey, shiftKey, altKey, metaKey } = e;
+        const enterKey = keyCode === 13;
 
-        if (ctrlKey || shiftKey || altKey || metaKey) return;
+        const isDelete = (ctrlKey || metaKey) && shiftKey && enterKey;
+
+        if ((ctrlKey || shiftKey || altKey || metaKey) && !isDelete) return;
 
         const isUp = keyCode === 38;
         const isRight = keyCode === 39;
@@ -100,8 +104,8 @@ export default config()(function FieldTable(props) {
         if (isLeft && !cursorPosition.start) return;
         if (isRight && !cursorPosition.end) return;
 
-        const columnStartTabIndex = columnIndex * totalRow + 1;
-        const columnEndTabIndex = (columnIndex + 1) * totalRow;
+        const columnStartTabIndex = columnIndex * totalRow;
+        const columnEndTabIndex = (columnIndex + 1) * totalRow - 1;
 
         let nextTabIndex;
         let isAdd;
@@ -119,10 +123,10 @@ export default config()(function FieldTable(props) {
                 // 右下角
                 if (tabIndex === columnEndTabIndex) {
                     isAdd = true;
-                    nextTabIndex = totalRow + 1;
+                    nextTabIndex = totalRow;
                 } else {
                     // 选中下一行第一个
-                    nextTabIndex = tabIndex - totalRow * columnIndex + 1;
+                    nextTabIndex = rowIndex + 1;
                 }
             } else {
                 // 选择右侧一个
@@ -133,7 +137,7 @@ export default config()(function FieldTable(props) {
         if (isDown) {
             if (tabIndex === columnEndTabIndex) {
                 isAdd = true;
-                nextTabIndex = tabIndex + columnIndex + 1;
+                nextTabIndex = tabIndex + columnIndex;
             } else {
                 nextTabIndex = tabIndex + 1;
             }
@@ -144,10 +148,21 @@ export default config()(function FieldTable(props) {
             if (tabIndex === columnStartTabIndex && columnIndex === 0) return;
 
             // 左侧第一列继续左移动，选中上一行最后一个
-            if (columnIndex === 0) nextTabIndex = (tabIndex - 1) + totalRow * (totalColumn - 1);
+            if (columnIndex === 0) nextTabIndex = totalRow * (totalColumn - 1) + (rowIndex - 1);
 
             // 选择前一个
             if (columnIndex !== 0) nextTabIndex = tabIndex - totalRow;
+        }
+
+        if (isDelete) {
+            handleDelete(record.id);
+            isAdd = false;
+
+            if (tabIndex === columnEndTabIndex) {
+                nextTabIndex = (totalRow - 1) * columnIndex + (rowIndex - 1);
+            } else {
+                nextTabIndex = (totalRow - 1) * columnIndex + (rowIndex + 1) - 1;
+            }
         }
 
         if (isAdd) {
@@ -161,7 +176,7 @@ export default config()(function FieldTable(props) {
             nextInput.focus();
             nextInput.select();
         });
-    }, [handleAdd]);
+    }, [handleAdd, handleDelete]);
 
     // 选项列
     const optionColumns = useMemo(() => {
@@ -184,12 +199,10 @@ export default config()(function FieldTable(props) {
 
 
     // 渲染表格中的表单项
-    // 标记当前未第几列
-    let columnIndex = 0;
     // 一共多少行
     const totalRow = dataSource.length;
 
-    const formColumn = useCallback((column) => {
+    const formColumn = useCallback((column, totalInputColumn) => {
         if (!column?.formProps?.type) return column;
 
         // 只有新增一行之后才可以编辑的列
@@ -214,12 +227,7 @@ export default config()(function FieldTable(props) {
         let elementWidth = required ? width - 18 : width - 8;
         if (type === 'switch') elementWidth = 'auto';
         if (!elementWidth) elementWidth = '100%';
-        const isInputLike = ['input'].includes(type);
-
-        let _columnIndex;
-        if (isInputLike) {
-            _columnIndex = columnIndex++;
-        }
+        const isInput = ['input'].includes(type);
 
         return {
             title,
@@ -253,9 +261,18 @@ export default config()(function FieldTable(props) {
                 }
 
                 const extraProps = {};
-                if (isInputLike) {
-                    extraProps.tabIndex = totalRow * _columnIndex + index + 1;
-                    extraProps.onKeyDown = e => handleKeyDown(e, extraProps.tabIndex, _columnIndex, columnIndex, totalRow);
+                if (isInput) {
+                    const { inputColumnIndex: columnIndex } = column;
+                    extraProps.tabIndex = totalRow * columnIndex + index;
+                    const options = {
+                        tabIndex: extraProps.tabIndex,
+                        columnIndex,
+                        totalColumn: totalInputColumn,
+                        totalRow,
+                        rowIndex: index,
+                        record,
+                    };
+                    extraProps.onKeyDown = e => handleKeyDown(e, options);
                 }
 
                 return (
@@ -272,7 +289,7 @@ export default config()(function FieldTable(props) {
                 );
             },
         };
-    }, [columnIndex, handleKeyDown, totalRow]);
+    }, [handleKeyDown, totalRow]);
 
     // Tab 页配置
     const tabPotions = useMemo(() => {
@@ -299,6 +316,7 @@ export default config()(function FieldTable(props) {
             .find(item => item.key === activeKey)
             .columns
             .map(item => ({ ...item, className: s.tabColumn }));
+        let totalInputColumn = 0;
         return [
             {
                 title: '操作', dataIndex: 'operator', width: 60,
@@ -326,7 +344,14 @@ export default config()(function FieldTable(props) {
             !isOption && { title: '默认值', dataIndex: 'defaultValue', width: 150, formProps: { type: 'input' } },
             !isOption && { title: '可为空', dataIndex: 'isNullable', width: 60, formProps: { type: 'switch', options: [{ value: true, label: '是' }, { value: false, label: '否' }] } },
             ...tabColumns,
-        ].filter(Boolean).map(column => formColumn(column));
+        ].filter(Boolean).map(column => {
+            const { type } = column.formProps || {};
+            if (type === 'input') {
+                column.inputColumnIndex = totalInputColumn;
+                totalInputColumn++;
+            }
+            return column;
+        }).map(column => formColumn(column, totalInputColumn));
     }, [activeKey, dbTypeOptions, handleDelete, formColumn, tabPotions]);
 
     // 生成代码、代码预览
