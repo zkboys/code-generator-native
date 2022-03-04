@@ -78,7 +78,9 @@ export default config()(function FieldTable(props) {
         const newRecord = {
             id: uuid(),
             comment: `新增列${length + 1}`,
-            field: `field${length + 1}`,
+            chinese: `新增列${length + 1}`,
+            name: `field${length + 1}`,
+            type: 'VARCHAR',
             formType: 'input',
             dataType: 'String',
             __isNew: true,
