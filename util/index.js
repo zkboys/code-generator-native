@@ -9,43 +9,43 @@ const assert = require('assert');
 
 
 async function downloadTemplates() {
-  const systemTemplatesDir = config.systemTemplatesPath;
-  const systemTemplates = getAllFiles(systemTemplatesDir);
+    const systemTemplatesDir = config.systemTemplatesPath;
+    const systemTemplates = getAllFiles(systemTemplatesDir);
 
-  for (let filePath of systemTemplates) {
-    const fileName = path.relative(systemTemplatesDir, filePath);
-    const localPath = path.join(config.localTemplatesPath, fileName);
-    const fileContent = await fs.readFile(filePath, 'UTF-8');
-    await fs.ensureFile(localPath);
-    await fs.writeFile(localPath, fileContent, 'UTF-8');
-  }
+    for (let filePath of systemTemplates) {
+        const fileName = path.relative(systemTemplatesDir, filePath);
+        const localPath = path.join(config.localTemplatesPath, fileName);
+        const fileContent = await fs.readFile(filePath, 'UTF-8');
+        await fs.ensureFile(localPath);
+        await fs.writeFile(localPath, fileContent, 'UTF-8');
+    }
 }
 
 /**
  * 获取本地项目模板
  */
 function getLocalTemplates() {
-  const templatesDir = config.localTemplatesPath;
+    const templatesDir = config.localTemplatesPath;
 
-  const files = getAllFiles(templatesDir);
+    const files = getAllFiles(templatesDir);
 
-  return files.map(filePath => {
-    const template = require(filePath);
-    const extname = path.extname(filePath);
-    const basename = path.basename(filePath);
+    return files.map(filePath => {
+        const template = require(filePath);
+        const extname = path.extname(filePath);
+        const basename = path.basename(filePath);
 
-    const fileName = path.relative(templatesDir, filePath).replace(extname, '');
-    const id = fileName.replace(/\W/g, '_');
-    const shortName = template.name || basename.replace(extname, '');
-    const name = template.name || fileName;
-    return {
-      ...template,
-      filePath,
-      id,
-      name,
-      shortName,
-    };
-  });
+        const fileName = path.relative(templatesDir, filePath).replace(extname, '');
+        const id = fileName.replace(/\W/g, '_');
+        const shortName = template.name || basename.replace(extname, '');
+        const name = template.name || fileName;
+        return {
+            ...template,
+            filePath,
+            id,
+            name,
+            shortName,
+        };
+    });
 }
 
 /**
@@ -55,22 +55,22 @@ function getLocalTemplates() {
  * @returns {*[]}
  */
 function getAllFiles(dir, fileList = []) {
-  const exist = fs.existsSync(dir);
+    const exist = fs.existsSync(dir);
 
-  if (!exist) return fileList;
+    if (!exist) return fileList;
 
-  const files = fs.readdirSync(dir);
-  files.forEach(file => {
-    const fullPath = path.join(dir, file);
-    const stat = fs.statSync(fullPath);
-    if (stat.isDirectory()) {
-      getAllFiles(fullPath, fileList);
-    } else {
-      fileList.push(fullPath);
-    }
-  });
+    const files = fs.readdirSync(dir);
+    files.forEach(file => {
+        const fullPath = path.join(dir, file);
+        const stat = fs.statSync(fullPath);
+        if (stat.isDirectory()) {
+            getAllFiles(fullPath, fileList);
+        } else {
+            fileList.push(fullPath);
+        }
+    });
 
-  return fileList;
+    return fileList;
 }
 
 /**
@@ -81,40 +81,40 @@ function getAllFiles(dir, fileList = []) {
  * @returns {Promise<*>}
  */
 function getFilesContent(files, moduleName, fields) {
-  const templates = getLocalTemplates();
+    const templates = getLocalTemplates();
 
-  return files.map(file => {
-    const { templateId, name } = file;
-    const template = templates.find(item => item.id === templateId);
+    return files.map(file => {
+        const { templateId, name } = file;
+        const template = templates.find(item => item.id === templateId);
 
-    assert(template, `${name} 模版不存在!`);
+        assert(template, `${name} 模版不存在!`);
 
-    const moduleNames = getModuleNames(moduleName);
+        const moduleNames = getModuleNames(moduleName);
 
-    const fis = fields.map(item => {
-      const fieldOptions = item.options && item.options[templateId] || [];
-      const __names = getModuleNames(item.name);
-      return {
-        ...item,
-        validation: item.validation || [],
-        __names,
-        fieldOptions,
-      };
+        const fis = fields.map(item => {
+            const fieldOptions = item.options && item.options[templateId] || [];
+            const __names = getModuleNames(item.name);
+            return {
+                ...item,
+                validation: item.validation || [],
+                __names,
+                fieldOptions,
+            };
+        });
+        const NULL_LINE = '_____NULL_LINE_____';
+        const cfg = { NULL_LINE, file, files, moduleNames, fields: fis };
+        const content = template.getContent(cfg)
+            .trim()
+            .split('\n')
+            .filter(item => !item.includes(NULL_LINE))
+            .join('\n');
+
+        return {
+            ...template,
+            ...file,
+            content,
+        };
     });
-    const NULL_LINE = '_____NULL_LINE_____';
-    const cfg = { NULL_LINE, file, files, moduleNames, fields: fis };
-    const content = template.getContent(cfg)
-      .trim()
-      .split('\n')
-      .filter(item => !item.includes(NULL_LINE))
-      .join('\n');
-
-    return {
-      ...template,
-      ...file,
-      content,
-    };
-  });
 }
 
 /**
@@ -123,16 +123,16 @@ function getFilesContent(files, moduleName, fields) {
  * @returns {Promise<*[]>}
  */
 async function checkFilesExist(filePaths) {
-  let result;
-  for (let fp of filePaths) {
-    const filePath = path.join(config.nativeRoot, fp);
-    const exist = await fs.exists(filePath);
-    if (exist) {
-      if (!result) result = [];
-      result.push(fp);
+    let result;
+    for (let fp of filePaths) {
+        const filePath = path.join(config.nativeRoot, fp);
+        const exist = await fs.exists(filePath);
+        if (exist) {
+            if (!result) result = [];
+            result.push(fp);
+        }
     }
-  }
-  return result;
+    return result;
 }
 
 /**
@@ -143,15 +143,23 @@ async function checkFilesExist(filePaths) {
  * @returns {Promise<void>}
  */
 async function writeFile(files, moduleName, fields) {
-  const filesContents = getFilesContent(files, moduleName, fields);
-  for (let file of filesContents) {
-    const { targetPath, content } = file;
+    const filesContents = getFilesContent(files, moduleName, fields);
+    const result = [];
+    for (let file of filesContents) {
+        const { targetPath, content } = file;
 
-    const filePath = path.join(config.nativeRoot, targetPath);
+        const filePath = path.join(config.nativeRoot, targetPath);
 
-    await fs.ensureFile(filePath);
-    await fs.writeFile(filePath, content, 'UTF-8');
-  }
+        await fs.ensureFile(filePath);
+        await fs.writeFile(filePath, content, 'UTF-8');
+
+        console.log('generate file');
+        console.log(`    at (${filePath}:1:1)`);
+
+        result.push(targetPath);
+    }
+
+    return result;
 }
 
 
@@ -159,13 +167,13 @@ async function writeFile(files, moduleName, fields) {
  * 基于系统模板，初始化本地项目模板
  */
 function initLocalTemplates() {
-  const templatesDir = config.localTemplatesPath;
-  if (fs.existsSync(templatesDir)) return;
+    const templatesDir = config.localTemplatesPath;
+    if (fs.existsSync(templatesDir)) return;
 
-  // 目标项目的本地模版不存在，初始化默认模板
-  const defaultTemplatesDir = config.systemTemplatesPath;
+    // 目标项目的本地模版不存在，初始化默认模板
+    const defaultTemplatesDir = config.systemTemplatesPath;
 
-  fs.copySync(defaultTemplatesDir, templatesDir);
+    fs.copySync(defaultTemplatesDir, templatesDir);
 }
 
 /**
@@ -176,12 +184,12 @@ function initLocalTemplates() {
  * @returns {(function(*, *): Promise<*|number|undefined>)|*}
  */
 function serveStatic(prefix, filePath, options = {}) {
-  return staticCache(filePath, {
-    prefix: prefix,
-    gzip: true,
-    dynamic: true,
-    ...options,
-  });
+    return staticCache(filePath, {
+        prefix: prefix,
+        gzip: true,
+        dynamic: true,
+        ...options,
+    });
 }
 
 /**
@@ -189,48 +197,48 @@ function serveStatic(prefix, filePath, options = {}) {
  * @param name
  */
 function getModuleNames(name) {
-  const {
-    pluralize,
-    singularize,
-    camelize,
-    underscore,
-    capitalize,
-    dasherize,
-    titleize,
-  } = inflection;
-  name = name.replace(/-/g, '_');
+    const {
+        pluralize,
+        singularize,
+        camelize,
+        underscore,
+        capitalize,
+        dasherize,
+        titleize,
+    } = inflection;
+    name = name.replace(/-/g, '_');
 
-  const moduleName = singularize(camelize(name, true));
-  const ModuleName = singularize(camelize(name));
-  const moduleNames = pluralize(moduleName);
-  const ModuleNames = pluralize(ModuleName);
-  const module_name = underscore(moduleName);
-  const module_names = underscore(moduleNames);
-  const Module_name = capitalize(module_name);
-  const Module_names = capitalize(module_names);
-  const Module_Name = titleize(module_name).replace(/\s/g, '_');
-  const Module_Names = titleize(module_names).replace(/\s/g, '_');
+    const moduleName = singularize(camelize(name, true));
+    const ModuleName = singularize(camelize(name));
+    const moduleNames = pluralize(moduleName);
+    const ModuleNames = pluralize(ModuleName);
+    const module_name = underscore(moduleName);
+    const module_names = underscore(moduleNames);
+    const Module_name = capitalize(module_name);
+    const Module_names = capitalize(module_names);
+    const Module_Name = titleize(module_name).replace(/\s/g, '_');
+    const Module_Names = titleize(module_names).replace(/\s/g, '_');
 
-  return {
-    moduleName,
-    ModuleName,
-    moduleNames,
-    ModuleNames,
+    return {
+        moduleName,
+        ModuleName,
+        moduleNames,
+        ModuleNames,
 
-    module_name,
-    module_names,
-    Module_name,
-    Module_names,
-    Module_Name,
-    Module_Names,
+        module_name,
+        module_names,
+        Module_name,
+        Module_names,
+        Module_Name,
+        Module_Names,
 
-    'module-name': dasherize(module_name),
-    'module-names': dasherize(module_names),
-    'Module-name': dasherize(Module_name),
-    'Module-names': dasherize(Module_names),
-    'Module-Name': dasherize(Module_Name),
-    'Module-Names': dasherize(Module_Names),
-  };
+        'module-name': dasherize(module_name),
+        'module-names': dasherize(module_names),
+        'Module-name': dasherize(Module_name),
+        'Module-names': dasherize(Module_names),
+        'Module-Name': dasherize(Module_Name),
+        'Module-Names': dasherize(Module_Names),
+    };
 }
 
 /**
@@ -240,26 +248,26 @@ function getModuleNames(name) {
  * @returns {string}  eg: /front/pages/user-center/index.jsx
  */
 function stringFormat(str, data) {
-  if (!str || typeof str !== 'string' || !data) return str;
+    if (!str || typeof str !== 'string' || !data) return str;
 
-  return Object.entries(data)
-    .reduce((prev, curr) => {
-      const [key, value] = curr;
-      const reg = new RegExp('({)?\\{' + key + '\\}(?!})', 'gm');
-      return prev.replace(reg, value);
-    }, str);
+    return Object.entries(data)
+        .reduce((prev, curr) => {
+            const [key, value] = curr;
+            const reg = new RegExp('({)?\\{' + key + '\\}(?!})', 'gm');
+            return prev.replace(reg, value);
+        }, str);
 }
 
 module.exports = {
-  downloadTemplates,
-  getLocalTemplates,
-  initLocalTemplates,
-  choosePort,
-  openBrowser,
-  serveStatic,
-  getModuleNames,
-  stringFormat,
-  getFilesContent,
-  checkFilesExist,
-  writeFile,
+    downloadTemplates,
+    getLocalTemplates,
+    initLocalTemplates,
+    choosePort,
+    openBrowser,
+    serveStatic,
+    getModuleNames,
+    stringFormat,
+    getFilesContent,
+    checkFilesExist,
+    writeFile,
 };

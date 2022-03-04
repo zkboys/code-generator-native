@@ -103,7 +103,7 @@ export default config({
             ${has(_page, 'pageSize: options.pageSize || pageSize,')}
         };
         const res = await props.ajax.get('/${mn.module_names}', params, { setLoading });
-        const dataSource = res?.content || [{ id: 1 }, { id: 2 }];
+        const dataSource = res?.content || [];
         ${has(_page, 'const total = res?.totalElements || 0;')}
         setDataSource(dataSource);
         ${has(_page, 'setTotal(total);')}

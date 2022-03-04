@@ -8,6 +8,7 @@ export default config({
     modal: {
         title: '帮助文档',
         width: 1000,
+        maskClosable: true,
     },
 })(function(props) {
     const { onCancel } = props;

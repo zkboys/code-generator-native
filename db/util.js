@@ -1,14 +1,13 @@
-function getInfoByComment(comment = '') {
-    const cs = comment.split(' ');
+function getInfoByComment(name, comment = '') {
+    const cs = comment.trim().split(' ');
     let chinese = '';
     if (cs && cs.length) {
         chinese = cs[0];
     }
 
     // TODO 其他信息，比如枚举 等
-
     return {
-        chinese,
+        chinese: chinese || name,
         // options
     };
 }

@@ -1,21 +1,44 @@
-@import 'src/theme';
+@import "src/theme.less";
 
 .root {
-    padding: 0 16px;
+    height: 100vh;
+    overflow: hidden;
     margin: 0;
+}
 
+.query {
     :global {
-        .@{ant-prefix}-tabs-nav {
-            margin-bottom: 24px !important;
+        .@{ant-prefix}-form-item {
+            margin-bottom: 6px;
         }
 
-        *:focus {
-            outline: none;
+        .@{ant-prefix}-form-item-explain {
+            position: absolute;
+            margin-top: -3px;
+            z-index: 10;
         }
     }
 }
 
-.tag {
-    cursor: pointer;
-    user-select: none;
+.fileRow {
+    display: flex;
+    align-items: center;
+    padding-top: 7px;
+    background: #eee;
+    position: relative;
+}
+
+.fileMinus, .filePlus {
+    width: 14px;
+    height: 14px;
+}
+
+.fileOperator {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    left: 5px;
+    top: -2px;
+    height: 100%;
+    z-index: 10;
 }

@@ -38,7 +38,7 @@ export default config({
             loading={loading}
             footer={<Button onClick={onCancel}>关闭</Button>}
         >
-            <Descriptions bordered size="small">
+            <Descriptions bordered size="small" labelStyle={{ width: 150 }}>
                 ${detailFields.map(item => `<Descriptions.Item label="${item.chinese}">{data.${item.__names.moduleName} ?? '-'}</Descriptions.Item>`).join('\n                ')}
             </Descriptions>
         </ModalContent>

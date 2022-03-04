@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect } from 'react';
+import React, {useCallback, useEffect} from 'react';
 import PropTypes from 'prop-types';
-import { Tag } from 'antd';
+import {Tag} from 'antd';
 import stringToColor from 'string-to-color';
 import s from './style.less';
 
@@ -29,7 +29,7 @@ function OptionsTag(props) {
         const nextValue = value.filter(item => options.includes(item));
 
         // 防止死循环
-        if (nextValue.sort().join() === value.sort().join()) return;
+        if ([...nextValue].sort().join() === [...value].sort().join()) return;
 
         onChange && onChange(nextValue);
     }, [onChange, options, value]);

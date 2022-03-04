@@ -8,6 +8,7 @@ const {
     writeFile,
     getFilesContent,
     downloadTemplates,
+    stringFormat,
 } = require('./util');
 const { DB_TYPES } = require('./db/MySql');
 
@@ -85,8 +86,46 @@ module.exports = apiRouter
         const { files, moduleName, config } = ctx.request.body;
         const nextFiles = files.filter(item => item.rewrite !== false);
 
-        await writeFile(nextFiles, moduleName, config);
-        return nextFiles.map(item => item.targetPath);
+        return await writeFile(nextFiles, moduleName, config);
+    })
+    .post('/generate/files/batch', async ctx => {
+        const { files, tables, dbUrl } = ctx.request.body;
+        const result = [];
+        for (let tableName of tables) {
+            const moduleNames = getModuleNames(tableName);
+            const moduleName = moduleNames['module-name'];
+
+            const nextFiles = files.map(item => {
+                const templates = getLocalTemplates();
+                const template = templates.find(it => it.id === item.templateId);
+                if (!template) return null;
+
+                const targetPath = template.targetPath;
+                return {
+                    ...template,
+                    ...item,
+                    targetPath: stringFormat(targetPath, moduleNames),
+                };
+            }).filter(Boolean);
+
+            const tableFields = await db(dbUrl).getColumns(tableName);
+            const fields = tableFields.map(item => {
+                const options = nextFiles.reduce((prev, curr) => {
+                    const { templateId, fieldOptions } = curr;
+                    return {
+                        ...prev,
+                        [templateId]: [...fieldOptions],
+                    };
+                }, {});
+                return {
+                    ...item,
+                    options,
+                };
+            });
+            const res = await writeFile(nextFiles, moduleName, fields);
+            result.push(res);
+        }
+        return result.flat();
     })
     .post('/generate/preview', async ctx => {
         const { files, moduleName, config } = ctx.request.body;

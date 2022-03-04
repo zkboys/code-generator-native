@@ -195,7 +195,7 @@ class MySql extends DbInterface {
                     const isNullable = item.IS_NULLABLE === 'YES';
                     const length = item.CHARACTER_MAXIMUM_LENGTH; // CHARACTER_OCTET_LENGTH
 
-                    const commentInfo = getInfoByComment(comment);
+                    const commentInfo = getInfoByComment(name, comment);
                     const { chinese, options } = commentInfo;
 
                     const types = getTypes(type, chinese);

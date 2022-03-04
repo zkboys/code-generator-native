@@ -1,44 +1,58 @@
-import React, {Component} from 'react';
-import {Tabs, Button} from 'antd';
+import React, { useCallback, useState, useEffect } from 'react';
+import { Tabs, Button } from 'antd';
+import { ModalContent } from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
-import {ModalContent} from '@ra-lib/admin';
-import SourceCode from './SourceCode';
+import { CodeEditor } from 'src/components';
 
-const {TabPane} = Tabs;
+const { TabPane } = Tabs;
 
-@config({
+export default config({
     modal: {
-        title: '代码预览',
-        width: '70%',
+        title: null,
+        width: '80%',
         top: 50,
+        maskClosable: true,
     },
-})
-export default class index extends Component {
-    state = {};
+})(function PreviewModal(props) {
+    const { params, onCancel } = props;
+    const [loading, setLoading] = useState(false);
+    const [files, setFiles] = useState([]);
 
-    render() {
-        const {previewCode, onCancel} = this.props;
-        return (
-            <ModalContent
-                surplusSpace
-                footer={<Button onClick={onCancel}>关闭</Button>}
-                bodyStyle={{padding: 0}}
-            >
-                <Tabs tabBarStyle={{margin: '0 16px'}}>
-                    {previewCode.map(item => {
-                        const {config: {fileTypeName}, code} = item;
-                        return (
-                            <TabPane tab={fileTypeName} key={fileTypeName}>
-                                <SourceCode
-                                    language="jsx"
-                                    plugins={['line-numbers']}
-                                    code={code}
-                                />
-                            </TabPane>
-                        );
-                    })}
-                </Tabs>
-            </ModalContent>
-        );
-    }
-}
+    const fetchGeneratePreview = useCallback(async (params) => {
+        return await props.ajax.post('/generate/preview', params, { setLoading });
+    }, [props.ajax]);
+
+    useEffect(() => {
+        (async () => {
+            const res = await fetchGeneratePreview(params);
+            setFiles(res);
+        })();
+    }, [fetchGeneratePreview, params]);
+
+    return (
+        <ModalContent
+            bodyStyle={{ padding: 0 }}
+            loading={loading}
+            footer={<Button onClick={onCancel}>关闭</Button>}
+        >
+            <Tabs type="card" tabBarStyle={{ marginBottom: 0, marginTop: 13, marginLeft: 4 }}>
+                {files.map(file => {
+                    const { id, name, content, targetPath } = file;
+                    let language = targetPath.split('.').pop();
+                    if (['jsx', 'js', 'vue', 'vux'].includes(language)) language = 'javascript';
+                    if (['tsx', 'ts'].includes(language)) language = 'typescript';
+                    return (
+                        <TabPane key={id} tab={name}>
+                            <CodeEditor
+                                otherHeight={80}
+                                language={language}
+                                value={content}
+                                readOnly
+                            />
+                        </TabPane>
+                    );
+                })}
+            </Tabs>
+        </ModalContent>
+    );
+});

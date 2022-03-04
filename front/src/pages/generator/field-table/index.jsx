@@ -1,6 +1,13 @@
 import React, {useCallback, useMemo, useState, useRef, useEffect} from 'react';
 import {Tabs, Table, Button, Space, Modal} from 'antd';
-import {CodeOutlined, FileDoneOutlined, PlusOutlined, DownloadOutlined, QuestionCircleOutlined} from '@ant-design/icons';
+import {
+    CodeOutlined,
+    FileDoneOutlined,
+    PlusOutlined,
+    DownloadOutlined,
+    QuestionCircleOutlined,
+    CopyOutlined,
+} from '@ant-design/icons';
 import {useDebounceEffect} from 'ahooks';
 import c from 'classnames';
 import {v4 as uuid} from 'uuid';
@@ -12,6 +19,7 @@ import {DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS} from '../cons
 import virtualTable from './virtual-table';
 import PreviewModal from '../PreviewModal';
 import HelpModal from '../HelpModal';
+import BatchModal from '../BatchModal';
 
 import s from './style.less';
 
@@ -22,6 +30,7 @@ const { TabPane } = Tabs;
 export default config()(function FieldTable(props) {
     const {
         templateOptions,
+        tableOptions,
         form,
     } = props;
 
@@ -40,7 +49,8 @@ export default config()(function FieldTable(props) {
     const [previewParams, setPreviewParams] = useState(null);
     const [activeKey, setActiveKey] = useState('type');
     const [dbTypeOptions, setDbTypeOptions] = useState([]);
-    const [helpVisible, setHelpVisible] = useState(true);
+    const [helpVisible, setHelpVisible] = useState(false);
+    const [batchVisible, setBatchVisible] = useState(false);
 
     const fetchGenerateFiles = useCallback(async (params) => {
         return await props.ajax.post('/generate/files', params, { setLoading });
@@ -413,7 +423,7 @@ export default config()(function FieldTable(props) {
                     width: 600,
                     title: '生成文件如下',
                     content: (
-                        <div>
+                        <div style={{ maxHeight: 200, overflow: 'auto' }}>
                             {paths.map(p => <div key={p}>{p}</div>)}
                         </div>
                     ),
@@ -522,6 +532,15 @@ export default config()(function FieldTable(props) {
                     right: (
                         <Space>
                             <Button
+                                type={'primary'}
+                                ghost
+                                icon={<CopyOutlined/>}
+                                disabled={!tableOptions?.length}
+                                onClick={() => setBatchVisible(true)}
+                            >
+                                批量生成
+                            </Button>
+                            <Button
                                 icon={<DownloadOutlined/>}
                                 onClick={handleUpdateLocalTemplates}
                             >
@@ -559,6 +578,13 @@ export default config()(function FieldTable(props) {
             <HelpModal
                 visible={helpVisible}
                 onCancel={() => setHelpVisible(false)}
+            />
+            <BatchModal
+                visible={batchVisible}
+                onCancel={() => setBatchVisible(false)}
+                dbUrl={dbUrl}
+                files={files}
+                tableOptions={tableOptions}
             />
         </Content>
     );
