@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react';
-import { Tabs, Table, Button, Space, Modal, Input, Form, Switch, Select } from 'antd';
+import { Tabs, Table, Button, Space, Modal, Input, Form, Switch, Select, InputNumber } from 'antd';
 import {
   CodeOutlined,
   FileDoneOutlined,
@@ -73,13 +73,13 @@ export default ajax()(function FieldTable(props) {
 
   // 表格新增一行事件
   const handleAdd = useCallback((append = false) => {
-    const length = dataSource.length;
+    // const length = dataSource.length;
 
     const newRecord = {
       id: uuid(),
-      comment: `新增列${length + 1}`,
-      chinese: `新增列${length + 1}`,
-      name: `field${length + 1}`,
+      // comment: `新增列${length + 1}`,
+      // chinese: `新增列${length + 1}`,
+      // name: `field${length + 1}`,
       type: 'VARCHAR',
       formType: 'input',
       dataType: 'String',
@@ -261,7 +261,7 @@ export default ajax()(function FieldTable(props) {
               {...formProps}
               name={name}
               rules={[{ required, message: `${placeholder}!` }]}
-
+              valuePropName={type === 'switch' ? 'checked' : 'value'}
             >
               {(() => {
                 if (type === 'input') {
@@ -282,6 +282,7 @@ export default ajax()(function FieldTable(props) {
                       placeholder={placeholder}
                       tabIndex={tabIndex}
                       onKeyDown={e => handleKeyDown(e, options)}
+                      autoComplete="off"
                       {...otherFormProps}
                     />
                   );
@@ -289,14 +290,27 @@ export default ajax()(function FieldTable(props) {
                 if (type === 'select') {
                   return (
                     <Select
+                      style={{ width: elementWidth }}
+                      placeholder={placeholder}
                       options={options}
+                      {...otherFormProps}
+                    />
+                  );
+                }
+                if (type === 'number') {
+                  return (
+                    <InputNumber
+                      style={{ width: elementWidth }}
+                      placeholder={placeholder}
                       {...otherFormProps}
                     />
                   );
                 }
                 if (type === 'switch') {
                   return (
-                    <Switch />
+                    <Switch
+                      {...otherFormProps}
+                    />
                   );
                 }
 
@@ -304,6 +318,7 @@ export default ajax()(function FieldTable(props) {
                   return (
                     <OptionsTag
                       options={options}
+                      {...otherFormProps}
                       onClick={(e, ctrlKeyOrMetaKey, values) => {
                         if (!ctrlKeyOrMetaKey) return;
                         const isSelectAll = !!values?.length;
@@ -326,6 +341,7 @@ export default ajax()(function FieldTable(props) {
                     />
                   );
                 }
+                throw Error(`no such form type ${type}`);
               })()}
             </Form.Item>
           </div>
