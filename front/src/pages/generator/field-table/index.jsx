@@ -302,7 +302,28 @@ export default ajax()(function FieldTable(props) {
 
                 if (type === 'tags') {
                   return (
-                    <OptionsTag options={options} />
+                    <OptionsTag
+                      options={options}
+                      onClick={(e, ctrlKeyOrMetaKey, values) => {
+                        if (!ctrlKeyOrMetaKey) return;
+                        const isSelectAll = !!values?.length;
+                        const options = optionColumns.map(item => {
+                          return item.dataIndex[1];
+                        }).reduce((prev, templateId) => {
+                          const fieldOptions = templateOptions.find(it => it.value === templateId)?.record?.fieldOptions;
+                          return {
+                            ...prev,
+                            [templateId]: isSelectAll ? [...fieldOptions] : [],
+                          };
+                        }, {});
+                        record.options = options;
+                        form.setFields([{
+                          name: ['dataSource', index, 'options'],
+                          value: options,
+                        }]);
+                        setDataSource([...dataSource]);
+                      }}
+                    />
                   );
                 }
               })()}
@@ -311,7 +332,7 @@ export default ajax()(function FieldTable(props) {
         );
       },
     };
-  }, [handleKeyDown, totalRow]);
+  }, [handleKeyDown, totalRow, form, optionColumns, templateOptions, dataSource]);
 
   // Tab 页配置
   const tabPotions = useMemo(() => {
