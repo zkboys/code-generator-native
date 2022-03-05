@@ -43,7 +43,6 @@ export function getScrollBarWidth() {
 }
 
 
-
 /**
  * 格式化字符串
  * @param str  eg: /front/pages/{module-name}/index.jsx
@@ -108,4 +107,90 @@ export function triggerWindowResize() {
   } else if (document.createEventObject) {
     window.fireEvent('onresize');
   }
+}
+
+export function getNextTabIndex(e, options) {
+  const { tabIndex, columnIndex, totalColumn, totalRow, rowIndex } = options;
+  const { keyCode, ctrlKey, shiftKey, altKey, metaKey } = e;
+  const enterKey = keyCode === 13;
+
+  const isDelete = (ctrlKey || metaKey) && shiftKey && enterKey;
+
+  if ((ctrlKey || shiftKey || altKey || metaKey) && !isDelete) return;
+
+  const isUp = keyCode === 38;
+  const isRight = keyCode === 39;
+  const isDown = keyCode === 40 || keyCode === 13;
+  const isLeft = keyCode === 37;
+
+  // 移动光标
+  const cursorPosition = getCursorPosition(e.target);
+  if (isLeft && !cursorPosition.start) return;
+  if (isRight && !cursorPosition.end) return;
+
+  const columnStartTabIndex = columnIndex * totalRow;
+  const columnEndTabIndex = (columnIndex + 1) * totalRow - 1;
+
+  let nextTabIndex;
+  let isAdd;
+
+  if (isUp) {
+    // 到顶了
+    if (tabIndex === columnStartTabIndex) return;
+
+    nextTabIndex = tabIndex - 1;
+  }
+
+  if (isRight) {
+    // 右侧
+    if (columnIndex === totalColumn - 1) {
+      // 右下角
+      if (tabIndex === columnEndTabIndex) {
+        isAdd = true;
+        nextTabIndex = totalRow;
+      } else {
+        // 选中下一行第一个
+        nextTabIndex = rowIndex + 1;
+      }
+    } else {
+      // 选择右侧一个
+      nextTabIndex = tabIndex + totalRow;
+    }
+  }
+
+  if (isDown) {
+    if (tabIndex === columnEndTabIndex) {
+      isAdd = true;
+      nextTabIndex = tabIndex + columnIndex + 1;
+    } else {
+      nextTabIndex = tabIndex + 1;
+    }
+  }
+
+  if (isLeft) {
+    // 左上角
+    if (tabIndex === columnStartTabIndex && columnIndex === 0) return;
+
+    // 左侧第一列继续左移动，选中上一行最后一个
+    if (columnIndex === 0) nextTabIndex = totalRow * (totalColumn - 1) + (rowIndex - 1);
+
+    // 选择前一个
+    if (columnIndex !== 0) nextTabIndex = tabIndex - totalRow;
+  }
+
+  if (isDelete) {
+    isAdd = false;
+
+    if (tabIndex === columnEndTabIndex) {
+      nextTabIndex = (totalRow - 1) * columnIndex + (rowIndex - 1);
+    } else {
+      nextTabIndex = (totalRow - 1) * columnIndex + (rowIndex + 1) - 1;
+    }
+  }
+
+  return {
+    isAdd,
+    isDelete,
+    nextTabIndex,
+  };
 }

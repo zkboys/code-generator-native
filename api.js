@@ -1,5 +1,7 @@
 const Router = require('koa-router');
 const assert = require('assert');
+const axios = require('axios');
+const cheerio = require('cheerio');
 const db = require('./db');
 const {
     getLocalTemplates,
@@ -145,5 +147,16 @@ module.exports = apiRouter
     })
     .put('/update', async ctx => {
         return await updateVersion();
+    })
+    .post('/autoNames', async ctx => {
+        const { names } = ctx.request.body;
+        const values = names.filter(item => {
+            const { name, chinese } = item;
+            if (!name && chinese) return true;
+            return name && !chinese;
+        });
+        if (!values?.length) return [];
+        // TODO
+        console.log(values);
     })
 ;
