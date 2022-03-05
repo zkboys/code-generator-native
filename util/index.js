@@ -6,6 +6,8 @@ const openBrowser = require('./openBrowser');
 const choosePort = require('./choosePort');
 const config = require('../config');
 const assert = require('assert');
+const { exec } = require('child_process');
+const packageJson = require('../package.json');
 
 
 async function downloadTemplates() {
@@ -258,6 +260,24 @@ function stringFormat(str, data) {
         }, str);
 }
 
+async function getLastVersion() {
+    return await new Promise((resolve, reject) => {
+        exec(`npm view ${packageJson.name} version`, (error, stdout, stderr) => {
+            if (stdout) return resolve(stdout.trim());
+            reject(Error('获取版本失败'));
+        });
+    });
+}
+
+async function updateVersion() {
+    return await new Promise((resolve, reject) => {
+        exec(`npm i ${packageJson.name} -g --registry=https://registry.npmmirror.com`, (error, stdout, stderr) => {
+            if (stdout) return resolve(stdout.trim());
+            reject(Error('更新版本失败'));
+        });
+    });
+}
+
 module.exports = {
     downloadTemplates,
     getLocalTemplates,
@@ -270,4 +290,6 @@ module.exports = {
     getFilesContent,
     checkFilesExist,
     writeFile,
+    getLastVersion,
+    updateVersion,
 };

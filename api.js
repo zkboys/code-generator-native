@@ -9,8 +9,11 @@ const {
     getFilesContent,
     downloadTemplates,
     stringFormat,
+    getLastVersion,
+    updateVersion,
 } = require('./util');
 const { DB_TYPES } = require('./db/MySql');
+const packageJson = require('./package.json');
 
 const apiRouter = new Router({ prefix: '/api' });
 module.exports = apiRouter
@@ -130,5 +133,17 @@ module.exports = apiRouter
     .post('/generate/preview', async ctx => {
         const { files, moduleName, config } = ctx.request.body;
         return await getFilesContent(files, moduleName, config);
+    })
+    .get('/version', async ctx => {
+        const lastVersion = await getLastVersion();
+
+        const currentVersion = packageJson.version;
+        return {
+            lastVersion,
+            currentVersion,
+        };
+    })
+    .put('/update', async ctx => {
+        return await updateVersion();
     })
 ;

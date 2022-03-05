@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useCallback, useRef} from 'react';
-import {Form, Space, Button} from 'antd';
+import {Form, Space, Button, notification, Modal} from 'antd';
 import {MinusCircleOutlined, PlusCircleOutlined} from '@ant-design/icons';
 import {PageContent, FormItem, storage} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
@@ -30,6 +30,14 @@ export default config({
 
     const fetchTemplates = useCallback(async () => {
         return await props.ajax.get('/templates');
+    }, [props.ajax]);
+
+    const fetchVersion = useCallback(async () => {
+        return await props.ajax.get('/version', null, { errorTip: false });
+    }, [props.ajax]);
+
+    const fetchUpdate = useCallback(async () => {
+        return await props.ajax.put('/update', null, { errorTip: false });
     }, [props.ajax]);
 
     const { run: searchFields } = useDebounceFn(() => setRefreshTable({}), { wait: 300 });
@@ -95,6 +103,15 @@ export default config({
         }, 500);
     }, [form]);
 
+    // 更新软件版本
+    const handleUpdate = useCallback(async () => {
+        await fetchUpdate();
+        Modal.info({
+            title: '温馨提示',
+            content: '更新成功！请重启服务，使用最新版本！',
+        });
+    }, [fetchUpdate]);
+
     // 初始化时，加载模板
     useEffect(() => {
         (async () => {
@@ -151,6 +168,36 @@ export default config({
 
         form.setFieldsValue({ files: nextFiles });
     }, [form, templateOptions]);
+
+    useEffect(() => {
+        (async () => {
+            const res = await fetchVersion();
+            const { lastVersion, currentVersion } = res;
+            if (currentVersion !== lastVersion) {
+                notification.success({
+                    message: '有新版本！',
+                    description: (
+                        <div>
+                            <span style={{ color: 'red' }}>{currentVersion}</span>
+                            <span style={{ margin: '0 8px' }}>-></span>
+                            <span style={{ color: 'green' }}>{lastVersion}</span>
+                        </div>
+                    ),
+                    btn: (
+                        <Button
+                            type="primary"
+                            onClick={async () => {
+                                notification.destroy();
+                                await handleUpdate();
+                            }}
+                        >
+                            更新
+                        </Button>),
+                    duration: 10,
+                });
+            }
+        })();
+    }, [fetchVersion, handleUpdate]);
 
     return (
         <PageContent className={s.root}>
