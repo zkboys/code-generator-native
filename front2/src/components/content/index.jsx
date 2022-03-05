@@ -1,4 +1,5 @@
-import React, { useRef, useState, useEffect, forwardRef, useCallback } from 'react';
+import { useRef, useState, useEffect, forwardRef, useCallback } from 'react';
+import PropTypes from 'prop-types';
 import { Spin } from 'antd';
 import classNames from 'classnames';
 import { useHeight } from 'src/hooks';
@@ -109,5 +110,27 @@ const Content = forwardRef((props, ref) => {
     </>
   );
 });
+
+Content.propTypes = {
+  // 样式类名
+  className: PropTypes.string,
+  // 适应窗口高度，内容过长，Content会产生滚动条 默认 false
+  fitHeight: PropTypes.bool,
+  // 计算高度时，额外的高度，默认0，content会撑满全屏
+  otherHeight: PropTypes.number,
+  // 计算之后，再做偏移的高度
+  offsetHeight: PropTypes.number,
+  // 样式对象
+  style: PropTypes.object,
+  // 显示loading 默认 false
+  loading: PropTypes.bool,
+  // loading的提示文字 默认 context.loadingTip
+  loadingTip: PropTypes.node,
+  // 样式前缀 默认 context.prefixCls
+  prefixCls: PropTypes.string,
+  // 是否是页面容器
+  isRoot: PropTypes.bool,
+  children: PropTypes.node,
+};
 
 export default Content;

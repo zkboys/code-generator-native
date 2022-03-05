@@ -1,3 +1,6 @@
+export function toLogin() {
+  // TODO
+}
 
 /**
  * 获取一个元素距离浏览器顶部高度

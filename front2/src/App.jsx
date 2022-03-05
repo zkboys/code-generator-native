@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Error404 } from 'src/components';
-import Dashboard from 'src/pages/Hello';
+import Dashboard from 'src/pages/Dashboard';
 import s from './App.module.less';
 
 function App() {
