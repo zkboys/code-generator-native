@@ -3,9 +3,9 @@ import PropTypes from 'prop-types';
 import MonacoEditor from '@monaco-editor/react';
 import prettier from 'prettier/standalone';
 import parserPostCss from 'prettier/parser-postcss';
-import { useHeight } from '@ra-lib/admin';
+import {useHeight} from 'src/hooks';
 import loader from '@monaco-editor/loader';
-import s from './style.less';
+import s from './style.module.less';
 import keyboardShortcuts from './keyboard-shortcuts.json';
 
 export const OTHER_HEIGHT = 0;

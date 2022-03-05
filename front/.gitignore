@@ -10,7 +10,6 @@
 
 # production
 /build
-/deploy/rancher/build
 
 # misc
 .DS_Store
@@ -19,15 +18,6 @@
 .env.test.local
 .env.production.local
 
-# log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# ide
-.idea
-
-# ra-lib
-/src/ra-lib
-/src/pages/local
-/server

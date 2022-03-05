@@ -2,7 +2,7 @@ import React, {useCallback, useEffect} from 'react';
 import PropTypes from 'prop-types';
 import {Tag} from 'antd';
 import stringToColor from 'string-to-color';
-import s from './style.less';
+import s from './style.module.less';
 
 function OptionsTag(props) {
     const { options = [], value = [], onChange } = props;

@@ -1,0 +1,45 @@
+.root {
+  margin: 0;
+}
+
+.query {
+  :global {
+    .ant-form-item {
+      margin-bottom: 6px;
+    }
+
+    .ant-form-item-label {
+      user-select: none;
+    }
+
+    .ant-form-item-explain {
+      position: absolute;
+      margin-top: -3px;
+      z-index: 10;
+    }
+  }
+}
+
+.fileRow {
+  display: flex;
+  align-items: center;
+  padding-top: 7px;
+  padding-left: 50px;
+  background: #eee;
+  position: relative;
+}
+
+.fileMinus, .filePlus {
+  width: 16px;
+  height: 16px;
+}
+
+.fileOperator {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  left: 5px;
+  top: 0;
+  height: 100%;
+  z-index: 10;
+}

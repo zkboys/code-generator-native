@@ -7,7 +7,7 @@ function getInfoByComment(name, comment = '') {
 
     // TODO 其他信息，比如枚举 等
     return {
-        chinese: chinese || name,
+        chinese: chinese,
         // options
     };
 }
