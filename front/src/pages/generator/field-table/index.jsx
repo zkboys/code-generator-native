@@ -193,9 +193,9 @@ export default ajax()(function FieldTable(props) {
             ...others
         } = column;
 
-        const { type = 'input', required = false, options = [], ...otherFormProps } = formProps;
+        const { type = 'input', required = false, options = [], placeholder: ph, ...otherFormProps } = formProps;
 
-        const placeholder = type === 'select' ? `请选择${title}` : `请输入${title}`;
+        const placeholder = ph || (type === 'select' ? `请选择${title}` : `请输入${title}`);
         let elementWidth = required ? width - 18 : width - 8;
         if (type === 'switch') elementWidth = 'auto';
         if (!elementWidth) elementWidth = '100%';
@@ -363,7 +363,6 @@ export default ajax()(function FieldTable(props) {
                         <Button
                             type="link"
                             size="small"
-                            ghost
                             onClick={() => setFastVisible(true)}
                         >
                             快速添加
