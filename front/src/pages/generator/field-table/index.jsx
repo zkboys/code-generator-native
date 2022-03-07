@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react';
-import { Tabs, Table, Button, Space, Modal, Input, Form, Switch, Select, InputNumber } from 'antd';
+import React, {useCallback, useMemo, useState, useRef, useEffect} from 'react';
+import {Tabs, Table, Button, Space, Modal, Input, Form, Switch, Select, InputNumber} from 'antd';
 import {
     CodeOutlined,
     FileDoneOutlined,
@@ -8,14 +8,14 @@ import {
     QuestionCircleOutlined,
     CopyOutlined,
 } from '@ant-design/icons';
-import { useDebounceEffect } from 'ahooks';
+import {useDebounceEffect} from 'ahooks';
 import c from 'classnames';
-import { v4 as uuid } from 'uuid';
-import { OptionsTag, Content, confirm, Operator } from 'src/components';
-import { useHeight } from 'src/hooks';
-import { ajax } from 'src/hocs';
-import { getNextTabIndex } from 'src/commons';
-import { DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS } from '../constant';
+import {v4 as uuid} from 'uuid';
+import {OptionsTag, Content, confirm, Operator} from 'src/components';
+import {useHeight} from 'src/hooks';
+import {ajax} from 'src/hocs';
+import {getNextTabIndex} from 'src/commons';
+import {DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS} from '../constant';
 import virtualTable from './virtual-table';
 import PreviewModal from '../PreviewModal';
 import HelpModal from '../HelpModal';
@@ -102,13 +102,21 @@ export default ajax()(function FieldTable(props) {
             const { id, name, chinese } = item;
             return {
                 id,
-                name,
-                chinese,
+                name: name?.trim(),
+                chinese: chinese?.trim(),
             };
         });
         const res = await props.ajax.post('/autoNames', { names });
-        console.log(res);
-    }, [dataSource, props.ajax]);
+        if (!res?.length) return;
+        const nextDataSource = dataSource.map(item => {
+            const record = res.find(it => it.id === item.id);
+            return {
+                ...item,
+                ...record,
+            };
+        });
+        form.setFieldsValue({ dataSource: nextDataSource });
+    }, [dataSource, form, props.ajax]);
 
     // 键盘时间，使输入框获取焦点，上、下、左、右、回车
     const handleKeyDown = useCallback((e, options) => {
@@ -340,7 +348,7 @@ export default ajax()(function FieldTable(props) {
                             },
                         },
                     ];
-                    return <Operator items={items} />;
+                    return <Operator items={items}/>;
                 },
             },
             { title: '字段', dataIndex: 'name', width: 150, formProps: { type: 'input', required: true } },
@@ -503,7 +511,7 @@ export default ajax()(function FieldTable(props) {
                     left: (
                         <Space style={{ marginRight: 16 }}>
                             <Button
-                                icon={<PlusOutlined />}
+                                icon={<PlusOutlined/>}
                                 type="primary"
                                 ghost
                                 onClick={() => handleAdd()}
@@ -511,7 +519,7 @@ export default ajax()(function FieldTable(props) {
                                 添加一行
                             </Button>
                             <Button
-                                icon={<CodeOutlined />}
+                                icon={<CodeOutlined/>}
                                 onClick={() => handleGenerate(true)}
                             >
                                 代码预览
@@ -519,7 +527,7 @@ export default ajax()(function FieldTable(props) {
                             <Button
                                 type="primary"
                                 danger
-                                icon={<FileDoneOutlined />}
+                                icon={<FileDoneOutlined/>}
                                 onClick={() => handleGenerate()}
                             >
                                 生成文件
@@ -531,20 +539,20 @@ export default ajax()(function FieldTable(props) {
                             <Button
                                 type={'primary'}
                                 ghost
-                                icon={<CopyOutlined />}
+                                icon={<CopyOutlined/>}
                                 disabled={!tableOptions?.length}
                                 onClick={() => setBatchVisible(true)}
                             >
                                 批量生成
                             </Button>
                             <Button
-                                icon={<DownloadOutlined />}
+                                icon={<DownloadOutlined/>}
                                 onClick={handleUpdateLocalTemplates}
                             >
                                 更新本地模版
                             </Button>
                             <Button
-                                icon={<QuestionCircleOutlined />}
+                                icon={<QuestionCircleOutlined/>}
                                 onClick={() => setHelpVisible(true)}
                             >
                                 帮助
@@ -555,7 +563,7 @@ export default ajax()(function FieldTable(props) {
                 activeKey={activeKey}
                 onChange={setActiveKey}
             >
-                {tabPotions.map(item => <TabPane key={item.key} tab={item.tab} />)}
+                {tabPotions.map(item => <TabPane key={item.key} tab={item.tab}/>)}
             </Tabs>
             <MyTable
                 onSortEnd={handleSortEnd}

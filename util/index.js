@@ -8,6 +8,7 @@ const config = require('../config');
 const assert = require('assert');
 const { exec } = require('child_process');
 const packageJson = require('../package.json');
+const mysql = require('mysql');
 
 
 async function downloadTemplates() {
@@ -83,6 +84,10 @@ function getAllFiles(dir, fileList = []) {
  * @returns {Promise<*>}
  */
 function getFilesContent(files, moduleName, fields) {
+    // 保存用户字段配置 name chinese
+    // 不是用await，防止阻塞
+    saveNames(fields);
+
     const templates = getLocalTemplates();
 
     return files.map(file => {
@@ -278,6 +283,103 @@ async function updateVersion() {
     });
 }
 
+async function getConnection() {
+    return new Promise((resolve, reject) => {
+        const connection = mysql.createConnection('mysql://root:123456@172.16.60.247:3306/code-generator');
+
+        connection.connect(function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(connection);
+            }
+        });
+    });
+}
+
+async function getNames(names, field) {
+    const connection = await getConnection();
+    const values = names.map(item => item[field]);
+    if (!values.length) return [];
+    return new Promise((resolve, reject) => {
+        const sql = `select name, chinese, weight
+                     from names
+                     where ${field} in (?)
+                     order by weight desc`;
+        connection.query(sql, [values], (error, results) => {
+            if (error) return reject(error);
+
+            const res = values.map(value => {
+                const record = results.find(item => item[field] === value);
+                if (record) return record;
+
+                // 未查到结果 调用翻译接口？？？
+                // return {
+                //     name: 'aaa',
+                //     chinese: '',
+                //     [field]: value,
+                //     weight: 0,
+                // };
+            }).filter(Boolean);
+            resolve(res);
+        });
+    }).finally(() => connection.end());
+}
+
+async function saveNames(names) {
+    names = names.filter(item => item.name && item.chinese);
+
+    const connection = await getConnection();
+    const insert = (name, chinese, weight) => new Promise((resolve, reject) => {
+        if (!weight) weight = 0;
+        const sql = `insert into names (name, chinese, weight)
+                     values (?, ?, ?)`;
+        connection.query(sql, [name, chinese, weight], (error, results) => {
+            if (error) return reject(error);
+
+            resolve(results);
+        });
+    });
+
+    const query = (name, chinese) => new Promise((resolve, reject) => {
+        const sql = `select id, name, chinese, weight
+                     from names
+                     where name = ?
+                       and chinese = ?
+        `;
+        connection.query(sql, [name, chinese], (error, results) => {
+            if (error) return reject(error);
+
+            resolve(results);
+        });
+    });
+    const modifyWeight = (id, newWeight) => new Promise((resolve, reject) => {
+        const sql = `update names
+                     set weight=?
+                     where id = ?`;
+
+        connection.query(sql, [newWeight, id], (error, results) => {
+            if (error) return reject(error);
+
+            resolve(results);
+        });
+    });
+
+    try {
+        for (let item of names) {
+            const { name, chinese } = item;
+            const result = await query(name, chinese);
+            if (result && result.length) {
+                await modifyWeight(result[0].id, result[0].weight + 1);
+            } else {
+                await insert(name, chinese);
+            }
+        }
+    } finally {
+        connection.end();
+    }
+}
+
 module.exports = {
     downloadTemplates,
     getLocalTemplates,
@@ -292,4 +394,6 @@ module.exports = {
     writeFile,
     getLastVersion,
     updateVersion,
+    getNames,
+    saveNames,
 };

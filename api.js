@@ -1,7 +1,5 @@
 const Router = require('koa-router');
 const assert = require('assert');
-const axios = require('axios');
-const cheerio = require('cheerio');
 const db = require('./db');
 const {
     getLocalTemplates,
@@ -13,6 +11,8 @@ const {
     stringFormat,
     getLastVersion,
     updateVersion,
+    getNames,
+    saveNames,
 } = require('./util');
 const { DB_TYPES } = require('./db/MySql');
 const packageJson = require('./package.json');
@@ -150,13 +150,36 @@ module.exports = apiRouter
     })
     .post('/autoNames', async ctx => {
         const { names } = ctx.request.body;
-        const values = names.filter(item => {
+        const _chinese = [];
+        const _names = [];
+        names.forEach(item => {
             const { name, chinese } = item;
-            if (!name && chinese) return true;
-            return name && !chinese;
+            if (!name && chinese) {
+                _chinese.push(item);
+            }
+            if (name && !chinese) {
+                _names.push(item);
+            }
         });
-        if (!values?.length) return [];
-        // TODO
-        console.log(values);
+
+        const chineseRes = await getNames(_chinese, 'chinese');
+        const nameRes = await getNames(_names, 'name');
+        const result = [...chineseRes, ...nameRes];
+
+        return names.map(item => {
+            const { name, chinese } = item;
+            if (!name && chinese) {
+                const record = result.find(it => it.chinese === chinese);
+                item.name = record?.name;
+                if (item.name) item.name = getModuleNames(item.name).moduleName;
+                return item;
+            }
+            if (name && !chinese) {
+                const record = result.find(it => it.name === name);
+                item.chinese = record?.chinese;
+                return item;
+            }
+            return item;
+        });
     })
 ;
