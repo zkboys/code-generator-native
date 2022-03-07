@@ -375,9 +375,9 @@ export default ajax()(function FieldTable(props) {
         try {
             if (!dataSource?.length) return Modal.info({ title: '温馨提示', content: '表格的字段配置不能为空！' });
 
-            if (dataSource.some(item => !item.name || !item.chinese)) return Modal.info({ title: '温馨提示', content: '表格的字段配置有必填项未填写！' });
-
             const values = await form.validateFields();
+
+            if (dataSource.some(item => !item.name || !item.chinese)) return Modal.info({ title: '温馨提示', content: '表格的字段配置有必填项未填写！' });
             const { files, moduleName } = values;
             const config = dataSource.map(item => {
                 const validation = item.validation?.map(value => {
