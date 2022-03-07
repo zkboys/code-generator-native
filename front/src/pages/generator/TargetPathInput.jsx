@@ -1,4 +1,4 @@
-import {useEffect, useCallback, useState} from 'react';
+import {useEffect, useState} from 'react';
 import {ExclamationCircleOutlined, CheckCircleOutlined} from '@ant-design/icons';
 import ajax from 'src/commons/ajax';
 import {Input} from 'antd';
