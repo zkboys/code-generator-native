@@ -43,7 +43,16 @@ module.exports = apiRouter
         assert(tableName, '数据库表不能为空');
         assert(dbUrl, '数据库地址不能为空！');
 
-        return db(dbUrl).getColumns(tableName);
+        const res = await db(dbUrl).getColumns(tableName);
+        return res.map(item => {
+            const { name } = item;
+
+            return {
+                ...item,
+                dbName: name,
+                name: getModuleNames(name).moduleName,
+            };
+        });
     })
     /** 获取数据库类型 options */
     .get('/db/types', async ctx => {

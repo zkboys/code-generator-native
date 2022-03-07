@@ -8,5 +8,5 @@ module.exports = sequelize.define('Name', {
     weight: { type: INTEGER, comment: '权重' },
 }, {
     // don't add the timestamp attributes (updatedAt, createdAt)
-    timestamps: false,
+    // timestamps: false,
 });

@@ -116,7 +116,7 @@ export default ajax()(function FieldTable(props) {
             }
         });
         form.setFieldsValue({ dataSource });
-        // setDataSource([...dataSource]);
+        setDataSource([...dataSource]);
     }, [dataSource, form, props.ajax]);
 
     // 键盘时间，使输入框获取焦点，上、下、左、右、回车
@@ -374,6 +374,8 @@ export default ajax()(function FieldTable(props) {
     const handleGenerate = useCallback(async (preview = false) => {
         try {
             if (!dataSource?.length) return Modal.info({ title: '温馨提示', content: '表格的字段配置不能为空！' });
+
+            if (dataSource.some(item => !item.name || !item.chinese)) return Modal.info({ title: '温馨提示', content: '表格的字段配置有必填项未填写！' });
 
             const values = await form.validateFields();
             const { files, moduleName } = values;

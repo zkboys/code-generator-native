@@ -214,6 +214,9 @@ function getModuleNames(name) {
     } = inflection;
     name = name.replace(/-/g, '_');
 
+    // 全大写 + 下划线，转为全小写 + 下划线
+    if (/^[A-Z_0-9]+$/.test(name)) name = name.toLowerCase();
+
     const moduleName = singularize(camelize(name, true));
     const ModuleName = singularize(camelize(name));
     const moduleNames = pluralize(moduleName);
@@ -292,6 +295,7 @@ async function getNames(names, field) {
         },
         order: [
             ['weight', 'desc'],
+            ['updatedAt', 'desc'],
         ],
     });
 
