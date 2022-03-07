@@ -115,8 +115,8 @@ export default ajax()(function FieldTable(props) {
                 ...record,
             };
         });
-        form.setFieldsValue({ dataSource: nextDataSource });
-    }, [dataSource, form, props.ajax]);
+        setDataSource(nextDataSource);
+    }, [dataSource, props.ajax]);
 
     // 键盘时间，使输入框获取焦点，上、下、左、右、回车
     const handleKeyDown = useCallback((e, options) => {
