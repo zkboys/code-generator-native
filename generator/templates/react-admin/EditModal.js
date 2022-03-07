@@ -2,7 +2,7 @@ module.exports = {
     // name: '弹框编辑页',
     options: ['修改'],
     fieldOptions: ['表单'],
-    targetPath: '/front/src/pages/{module-name}/EditModal.jsx',
+    targetPath: '/src/pages/{module-name}/EditModal.jsx',
     getContent: config => {
         const { file, moduleNames: mn, fields, NULL_LINE } = config;
         const ignore = ['id', 'updatedAt', 'createdAt', 'isDeleted'];
