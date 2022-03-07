@@ -1,4 +1,5 @@
 function getInfoByComment(name, comment = '') {
+    if (!comment) comment = '';
     const cs = comment.trim().split(' ');
     let chinese = '';
     if (cs && cs.length) {

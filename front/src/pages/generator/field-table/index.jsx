@@ -116,7 +116,7 @@ export default ajax()(function FieldTable(props) {
             }
         });
         form.setFieldsValue({ dataSource });
-        setDataSource([...dataSource]);
+        // setDataSource([...dataSource]);
     }, [dataSource, form, props.ajax]);
 
     // 键盘时间，使输入框获取焦点，上、下、左、右、回车
