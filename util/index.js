@@ -289,7 +289,8 @@ async function getConnection() {
 
         connection.connect(function(err) {
             if (err) {
-                reject(err);
+                // reject(err);
+                resolve(null);
             } else {
                 resolve(connection);
             }
@@ -299,6 +300,7 @@ async function getConnection() {
 
 async function getNames(names, field) {
     const connection = await getConnection();
+    if (!connection) return [];
     const values = names.map(item => item[field]);
     if (!values.length) return [];
     return new Promise((resolve, reject) => {
@@ -330,6 +332,7 @@ async function saveNames(names) {
     names = names.filter(item => item.name && item.chinese);
 
     const connection = await getConnection();
+    if (!connection) return;
     const insert = (name, chinese, weight) => new Promise((resolve, reject) => {
         if (!weight) weight = 0;
         const sql = `insert into names (name, chinese, weight)
