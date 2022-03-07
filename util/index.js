@@ -269,7 +269,7 @@ function stringFormat(str, data) {
 
 async function getLastVersion() {
     return await new Promise((resolve, reject) => {
-        exec(`npm view ${packageJson.name} version`, (error, stdout, stderr) => {
+        exec(`npm view ${packageJson.name} version --registry=https://registry.npmmirror.com`, (error, stdout, stderr) => {
             if (stdout) return resolve(stdout.trim());
             reject(Error('获取版本失败'));
         });
