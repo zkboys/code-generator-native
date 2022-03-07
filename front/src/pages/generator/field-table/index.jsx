@@ -1,5 +1,5 @@
-import React, {useCallback, useMemo, useState, useRef, useEffect} from 'react';
-import {Tabs, Table, Button, Space, Modal, Input, Form, Switch, Select, InputNumber} from 'antd';
+import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react';
+import { Tabs, Table, Button, Space, Modal, Input, Form, Switch, Select, InputNumber } from 'antd';
 import {
     CodeOutlined,
     FileDoneOutlined,
@@ -8,18 +8,19 @@ import {
     QuestionCircleOutlined,
     CopyOutlined,
 } from '@ant-design/icons';
-import {useDebounceEffect} from 'ahooks';
+import { useDebounceEffect } from 'ahooks';
 import c from 'classnames';
-import {v4 as uuid} from 'uuid';
-import {OptionsTag, Content, confirm, Operator} from 'src/components';
-import {useHeight} from 'src/hooks';
-import {ajax} from 'src/hocs';
-import {getNextTabIndex} from 'src/commons';
-import {DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS} from '../constant';
+import { v4 as uuid } from 'uuid';
+import { OptionsTag, Content, confirm, Operator } from 'src/components';
+import { useHeight } from 'src/hooks';
+import { ajax } from 'src/hocs';
+import { getNextTabIndex } from 'src/commons';
+import { DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS } from '../constant';
 import virtualTable from './virtual-table';
 import PreviewModal from '../PreviewModal';
 import HelpModal from '../HelpModal';
 import BatchModal from '../BatchModal';
+import FastChineseModal from '../FastChineseModal';
 
 import s from './style.module.less';
 
@@ -51,6 +52,7 @@ export default ajax()(function FieldTable(props) {
     const [dbTypeOptions, setDbTypeOptions] = useState([]);
     const [helpVisible, setHelpVisible] = useState(false);
     const [batchVisible, setBatchVisible] = useState(false);
+    const [fastVisible, setFastVisible] = useState(false);
 
     const fetchGenerateFiles = useCallback(async (params) => {
         return await props.ajax.post('/generate/files', params, { setLoading });
@@ -349,12 +351,27 @@ export default ajax()(function FieldTable(props) {
                             },
                         },
                     ];
-                    return <Operator items={items}/>;
+                    return <Operator items={items} />;
                 },
             },
             { title: '字段', dataIndex: 'name', width: 150, formProps: { type: 'input', required: true } },
             { title: '注释', dataIndex: 'comment', width: 150 },
-            { title: '中文名', dataIndex: 'chinese', width: 150, formProps: { type: 'input', required: true } },
+            {
+                title: (
+                    <Space>
+                        <span>中文名</span>
+                        <Button
+                            type="link"
+                            size="small"
+                            ghost
+                            onClick={() => setFastVisible(true)}
+                        >
+                            快速添加
+                        </Button>
+                    </Space>
+                ),
+                dataIndex: 'chinese', width: 150, formProps: { type: 'input', required: true, placeholder: '请输入中文名' },
+            },
             !isOption && { title: '类型', dataIndex: 'type', width: 150, formProps: { type: 'select', required: true, options: dbTypeOptions } },
             !isOption && { title: '长度', dataIndex: 'length', width: 85, formProps: { type: 'number', min: 0, step: 1 } },
             !isOption && { title: '默认值', dataIndex: 'defaultValue', width: 150, formProps: { type: 'input' } },
@@ -514,7 +531,7 @@ export default ajax()(function FieldTable(props) {
                     left: (
                         <Space style={{ marginRight: 16 }}>
                             <Button
-                                icon={<PlusOutlined/>}
+                                icon={<PlusOutlined />}
                                 type="primary"
                                 ghost
                                 onClick={() => handleAdd()}
@@ -522,7 +539,7 @@ export default ajax()(function FieldTable(props) {
                                 添加一行
                             </Button>
                             <Button
-                                icon={<CodeOutlined/>}
+                                icon={<CodeOutlined />}
                                 onClick={() => handleGenerate(true)}
                             >
                                 代码预览
@@ -530,7 +547,7 @@ export default ajax()(function FieldTable(props) {
                             <Button
                                 type="primary"
                                 danger
-                                icon={<FileDoneOutlined/>}
+                                icon={<FileDoneOutlined />}
                                 onClick={() => handleGenerate()}
                             >
                                 生成文件
@@ -542,20 +559,20 @@ export default ajax()(function FieldTable(props) {
                             <Button
                                 type={'primary'}
                                 ghost
-                                icon={<CopyOutlined/>}
+                                icon={<CopyOutlined />}
                                 disabled={!tableOptions?.length}
                                 onClick={() => setBatchVisible(true)}
                             >
                                 批量生成
                             </Button>
                             <Button
-                                icon={<DownloadOutlined/>}
+                                icon={<DownloadOutlined />}
                                 onClick={handleUpdateLocalTemplates}
                             >
                                 更新本地模版
                             </Button>
                             <Button
-                                icon={<QuestionCircleOutlined/>}
+                                icon={<QuestionCircleOutlined />}
                                 onClick={() => setHelpVisible(true)}
                             >
                                 帮助
@@ -566,7 +583,7 @@ export default ajax()(function FieldTable(props) {
                 activeKey={activeKey}
                 onChange={setActiveKey}
             >
-                {tabPotions.map(item => <TabPane key={item.key} tab={item.tab}/>)}
+                {tabPotions.map(item => <TabPane key={item.key} tab={item.tab} />)}
             </Tabs>
             <MyTable
                 onSortEnd={handleSortEnd}
@@ -593,6 +610,28 @@ export default ajax()(function FieldTable(props) {
                 dbUrl={dbUrl}
                 files={files}
                 tableOptions={tableOptions}
+            />
+            <FastChineseModal
+                dataSource={dataSource}
+                visible={fastVisible}
+                onCancel={() => setFastVisible(false)}
+                onOk={(values, replace) => {
+                    const records = values.map(chinese => ({
+                        id: uuid(),
+                        chinese,
+                        type: 'VARCHAR',
+                        formType: 'input',
+                        dataType: 'String',
+                        isNullable: true,
+                        __isNew: true,
+                    }));
+                    const nextDataSource = replace ? records : [...dataSource, ...records];
+
+                    setDataSource(nextDataSource);
+
+                    form.setFieldsValue({ dataSource: nextDataSource });
+                    setFastVisible(false);
+                }}
             />
         </Content>
     );
