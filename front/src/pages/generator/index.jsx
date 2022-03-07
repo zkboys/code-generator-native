@@ -13,6 +13,8 @@ export default ajax()(function Generator(props) {
     const [tableOptions, setTableOptions] = useState([]);
     const [templateOptions, setTemplateOptions] = useState([]);
     const [moduleNames, setModuleNames] = useState({});
+    const [loading, setLoading] = useState();
+    const [loadingTip, setLoadingTip] = useState(undefined);
     // 控制表格更新，如果频繁更新，会比较卡
     const [refreshTable, setRefreshTable] = useState({});
     const [form] = Form.useForm();
@@ -34,7 +36,7 @@ export default ajax()(function Generator(props) {
     }, [props.ajax]);
 
     const fetchUpdate = useCallback(async () => {
-        return await props.ajax.put('/update', null, { errorTip: false });
+        return await props.ajax.put('/update', null, { errorTip: false, setLoading });
     }, [props.ajax]);
 
     const { run: searchFields } = useDebounceFn(() => setRefreshTable({}), { wait: 300 });
@@ -102,11 +104,21 @@ export default ajax()(function Generator(props) {
 
     // 更新软件版本
     const handleUpdate = useCallback(async () => {
-        await fetchUpdate();
-        Modal.info({
-            title: '温馨提示',
-            content: '更新成功！请重启服务，使用最新版本！',
-        });
+        try {
+            setLoadingTip('更新中，请稍成功后请重启服务！');
+            await fetchUpdate();
+            Modal.info({
+                title: '温馨提示',
+                content: '更新成功！请重启服务，使用最新版本！',
+            });
+        } catch (e) {
+            Modal.error({
+                title: '温馨提示',
+                content: '更新失败，请手动更新：npm i @ra-lib/gen -g',
+            });
+        } finally {
+            setLoadingTip(undefined);
+        }
     }, [fetchUpdate]);
 
     // 初始化时，加载模板
@@ -197,7 +209,7 @@ export default ajax()(function Generator(props) {
     }, [fetchVersion, handleUpdate]);
 
     return (
-        <PageContent className={s.root}>
+        <PageContent className={s.root} loading={loading} loadingTip={loadingTip}>
             <Form
                 className={s.query}
                 form={form}

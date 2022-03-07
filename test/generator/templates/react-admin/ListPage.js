@@ -6,7 +6,7 @@ module.exports = {
     // 字段级别选项
     fieldOptions: ['条件', '列表'],
     // 生成文件的默认目标路径
-    targetPath: '/front/src/pages/{module-name}/index.jsx',
+    targetPath: '/src/pages/{module-name}/index.jsx',
     // 获取文件内容
     getContent: config => {
         const { NULL_LINE, file, moduleNames: mn, fields } = config;
