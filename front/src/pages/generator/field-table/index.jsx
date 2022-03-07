@@ -108,15 +108,16 @@ export default ajax()(function FieldTable(props) {
         });
         const res = await props.ajax.post('/autoNames', { names });
         if (!res?.length) return;
-        const nextDataSource = dataSource.map(item => {
+        dataSource.forEach(item => {
             const record = res.find(it => it.id === item.id);
-            return {
-                ...item,
-                ...record,
-            };
+            if (record) {
+                item.name = record.name;
+                item.chinese = record.chinese;
+            }
         });
-        setDataSource(nextDataSource);
-    }, [dataSource, props.ajax]);
+        form.setFieldsValue({ dataSource });
+        setDataSource([...dataSource]);
+    }, [dataSource, form, props.ajax]);
 
     // 键盘时间，使输入框获取焦点，上、下、左、右、回车
     const handleKeyDown = useCallback((e, options) => {
