@@ -1,5 +1,17 @@
-import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react';
-import { Tabs, Table, Button, Space, Modal, Input, Form, Switch, Select, InputNumber } from 'antd';
+import React, {useCallback, useMemo, useState, useRef, useEffect} from 'react';
+import {
+    Checkbox,
+    Tabs,
+    Table,
+    Button,
+    Space,
+    Modal,
+    Input,
+    Form,
+    Switch,
+    Select,
+    InputNumber,
+} from 'antd';
 import {
     CodeOutlined,
     FileDoneOutlined,
@@ -8,14 +20,14 @@ import {
     QuestionCircleOutlined,
     CopyOutlined,
 } from '@ant-design/icons';
-import { useDebounceEffect } from 'ahooks';
+import {useDebounceEffect} from 'ahooks';
 import c from 'classnames';
-import { v4 as uuid } from 'uuid';
-import { OptionsTag, Content, confirm, Operator } from 'src/components';
-import { useHeight } from 'src/hooks';
-import { ajax } from 'src/hocs';
-import { getNextTabIndex } from 'src/commons';
-import { DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS } from '../constant';
+import {v4 as uuid} from 'uuid';
+import {OptionsTag, Content, confirm, Operator} from 'src/components';
+import {useHeight} from 'src/hooks';
+import {ajax} from 'src/hocs';
+import {getNextTabIndex} from 'src/commons';
+import {DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS} from '../constant';
 import virtualTable from './virtual-table';
 import PreviewModal from '../PreviewModal';
 import HelpModal from '../HelpModal';
@@ -53,6 +65,7 @@ export default ajax()(function FieldTable(props) {
     const [helpVisible, setHelpVisible] = useState(false);
     const [batchVisible, setBatchVisible] = useState(false);
     const [fastVisible, setFastVisible] = useState(false);
+    const [dbInfoVisible, setDbInfoVisible] = useState(false);
 
     const fetchGenerateFiles = useCallback(async (params) => {
         return await props.ajax.post('/generate/files', params, { setLoading });
@@ -329,7 +342,6 @@ export default ajax()(function FieldTable(props) {
 
     // 表格列
     const columns = useMemo(() => {
-        const isOption = activeKey === 'options';
         const tabColumns = tabPotions
             .find(item => item.key === activeKey)
             .columns
@@ -351,11 +363,11 @@ export default ajax()(function FieldTable(props) {
                             },
                         },
                     ];
-                    return <Operator items={items} />;
+                    return <Operator items={items}/>;
                 },
             },
             { title: '字段', dataIndex: 'name', width: 150, formProps: { type: 'input', required: true } },
-            { title: '注释', dataIndex: 'comment', width: 150 },
+            dbInfoVisible && { title: '注释', dataIndex: 'comment', width: 150 },
             {
                 title: (
                     <Space>
@@ -371,10 +383,10 @@ export default ajax()(function FieldTable(props) {
                 ),
                 dataIndex: 'chinese', width: 150, formProps: { type: 'input', required: true, placeholder: '请输入中文名' },
             },
-            !isOption && { title: '类型', dataIndex: 'type', width: 150, formProps: { type: 'select', required: true, options: dbTypeOptions } },
-            !isOption && { title: '长度', dataIndex: 'length', width: 85, formProps: { type: 'number', min: 0, step: 1 } },
-            !isOption && { title: '默认值', dataIndex: 'defaultValue', width: 150, formProps: { type: 'input' } },
-            !isOption && { title: '可为空', dataIndex: 'isNullable', width: 60, formProps: { type: 'switch', options: [{ value: true, label: '是' }, { value: false, label: '否' }] } },
+            dbInfoVisible && { title: '类型', dataIndex: 'type', width: 150, formProps: { type: 'select', required: true, options: dbTypeOptions } },
+            dbInfoVisible && { title: '长度', dataIndex: 'length', width: 85, formProps: { type: 'number', min: 0, step: 1 } },
+            dbInfoVisible && { title: '默认值', dataIndex: 'defaultValue', width: 150, formProps: { type: 'input' } },
+            dbInfoVisible && { title: '可为空', dataIndex: 'isNullable', width: 60, formProps: { type: 'switch', options: [{ value: true, label: '是' }, { value: false, label: '否' }] } },
             ...tabColumns,
         ].filter(Boolean).map(column => {
             const { type } = column.formProps || {};
@@ -384,7 +396,7 @@ export default ajax()(function FieldTable(props) {
             }
             return column;
         }).map(column => formColumn(column, totalInputColumn));
-    }, [activeKey, dbTypeOptions, handleDelete, formColumn, tabPotions]);
+    }, [activeKey, tabPotions, dbInfoVisible, dbTypeOptions, handleDelete, formColumn]);
 
     // 生成代码、代码预览
     const handleGenerate = useCallback(async (preview = false) => {
@@ -530,7 +542,7 @@ export default ajax()(function FieldTable(props) {
                     left: (
                         <Space style={{ marginRight: 16 }}>
                             <Button
-                                icon={<PlusOutlined />}
+                                icon={<PlusOutlined/>}
                                 type="primary"
                                 ghost
                                 onClick={() => handleAdd()}
@@ -538,7 +550,7 @@ export default ajax()(function FieldTable(props) {
                                 添加一行
                             </Button>
                             <Button
-                                icon={<CodeOutlined />}
+                                icon={<CodeOutlined/>}
                                 onClick={() => handleGenerate(true)}
                             >
                                 代码预览
@@ -546,11 +558,12 @@ export default ajax()(function FieldTable(props) {
                             <Button
                                 type="primary"
                                 danger
-                                icon={<FileDoneOutlined />}
+                                icon={<FileDoneOutlined/>}
                                 onClick={() => handleGenerate()}
                             >
                                 生成文件
                             </Button>
+                            <Checkbox checked={dbInfoVisible} onChange={e => setDbInfoVisible(e.target.checked)}>显示数据库信息</Checkbox>
                         </Space>
                     ),
                     right: (
@@ -558,20 +571,20 @@ export default ajax()(function FieldTable(props) {
                             <Button
                                 type={'primary'}
                                 ghost
-                                icon={<CopyOutlined />}
+                                icon={<CopyOutlined/>}
                                 disabled={!tableOptions?.length}
                                 onClick={() => setBatchVisible(true)}
                             >
                                 批量生成
                             </Button>
                             <Button
-                                icon={<DownloadOutlined />}
+                                icon={<DownloadOutlined/>}
                                 onClick={handleUpdateLocalTemplates}
                             >
                                 更新本地模版
                             </Button>
                             <Button
-                                icon={<QuestionCircleOutlined />}
+                                icon={<QuestionCircleOutlined/>}
                                 onClick={() => setHelpVisible(true)}
                             >
                                 帮助
@@ -582,7 +595,7 @@ export default ajax()(function FieldTable(props) {
                 activeKey={activeKey}
                 onChange={setActiveKey}
             >
-                {tabPotions.map(item => <TabPane key={item.key} tab={item.tab} />)}
+                {tabPotions.map(item => <TabPane key={item.key} tab={item.tab}/>)}
             </Tabs>
             <MyTable
                 onSortEnd={handleSortEnd}
