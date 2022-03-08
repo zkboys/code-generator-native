@@ -112,7 +112,7 @@ export default ajax()(function FieldTable(props) {
         setDataSource(nextDataSource);
     }, [dataSource]);
 
-    const handleAutoName = useCallback(async () => {
+    const handleAutoName = useCallback(async (e) => {
         const names = dataSource.map(item => {
             const { id, name, chinese } = item;
             return {
@@ -130,8 +130,21 @@ export default ajax()(function FieldTable(props) {
                 item.chinese = record.chinese;
             }
         });
+        // 获取鼠标焦点所在input，数据更新后会失去焦点，要再次选中
+        const currentTabIndex = e?.target?.getAttribute('tabindex');
+
+        // 更新数据
         form.setFieldsValue({ dataSource });
         setDataSource([...dataSource]);
+
+        // 等待页面刷新之后，重新使输入框获取焦点
+        if (currentTabIndex !== undefined) {
+            setTimeout(() => {
+                const input = document.querySelector(`input[tabindex='${currentTabIndex}']`);
+                if (input) input.focus();
+            });
+        }
+
     }, [dataSource, form, props.ajax]);
 
     // 键盘时间，使输入框获取焦点，上、下、左、右、回车
@@ -140,7 +153,7 @@ export default ajax()(function FieldTable(props) {
         const { keyCode, ctrlKey, metaKey, shiftKey } = e;
         const enterKey = keyCode === 13;
 
-        if ((ctrlKey || metaKey) && enterKey && !shiftKey) return handleAutoName();
+        if ((ctrlKey || metaKey) && enterKey && !shiftKey) return handleAutoName(e);
 
         const result = getNextTabIndex(e, options);
         if (!result) return;

@@ -13,6 +13,7 @@ const {
     updateVersion,
     getNames,
     saveNames,
+    getValidation,
 } = require('./util');
 const { DB_TYPES } = require('./db/MySql');
 const packageJson = require('./package.json');
@@ -51,6 +52,7 @@ module.exports = apiRouter
                 ...item,
                 dbName: name,
                 name: getModuleNames(name).moduleName,
+                validation: getValidation(item),
             };
         });
     })

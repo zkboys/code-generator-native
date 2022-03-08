@@ -326,6 +326,12 @@ async function saveNames(names) {
     }
 }
 
+function getValidation(item) {
+    const { isNullable } = item;
+    // TODO 扩展其他校验规则
+    return [!isNullable && 'required'].filter(Boolean);
+}
+
 module.exports = {
     downloadTemplates,
     getLocalTemplates,
@@ -342,4 +348,5 @@ module.exports = {
     updateVersion,
     getNames,
     saveNames,
+    getValidation,
 };
