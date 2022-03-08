@@ -17,6 +17,7 @@ export default ajax()(function Generator(props) {
     const [loadingTip, setLoadingTip] = useState(undefined);
     // 控制表格更新，如果频繁更新，会比较卡
     const [refreshTable, setRefreshTable] = useState({});
+    const [checkExist, setCheckExist] = useState({});
     const [form] = Form.useForm();
 
     const fetchDbTables = useCallback(async (dbUrl) => {
@@ -40,6 +41,11 @@ export default ajax()(function Generator(props) {
     }, [props.ajax]);
 
     const { run: searchFields } = useDebounceFn(() => setRefreshTable({}), { wait: 300 });
+
+    // 生成文件事件
+    const handleGenerate = useCallback(() => {
+        setCheckExist({});
+    }, []);
 
     // 数据库连接改变事件
     const { run: handleDbUrlChange } = useDebounceFn(async (e) => {
@@ -349,6 +355,7 @@ export default ajax()(function Generator(props) {
                                                     placeholder="请输入目标文件位置"
                                                     name={['files', name, 'targetPath']}
                                                     form={form}
+                                                    checkExist={checkExist}
                                                 />
                                             </Form.Item>
                                             <Form.Item
@@ -369,6 +376,7 @@ export default ajax()(function Generator(props) {
                     form={form}
                     templateOptions={templateOptions}
                     tableOptions={tableOptions}
+                    onGenerate={handleGenerate}
                 />
             </Form>
         </PageContent>

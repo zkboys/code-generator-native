@@ -45,6 +45,7 @@ export default ajax()(function FieldTable(props) {
         templateOptions,
         tableOptions,
         form,
+        onGenerate,
     } = props;
 
     const {
@@ -477,6 +478,7 @@ export default ajax()(function FieldTable(props) {
                         </div>
                     ),
                 });
+                onGenerate && onGenerate();
             }
         } catch (e) {
             if (e?.errorFields?.length) {
@@ -484,7 +486,7 @@ export default ajax()(function FieldTable(props) {
             }
             console.error(e);
         }
-    }, [form, dataSource, fetchCheckFilesExist, fetchGenerateFiles]);
+    }, [form, dataSource, fetchCheckFilesExist, fetchGenerateFiles, onGenerate]);
 
     // 更新本地模版
     const handleUpdateLocalTemplates = useCallback(async () => {

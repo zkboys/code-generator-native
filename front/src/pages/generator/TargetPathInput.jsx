@@ -5,7 +5,7 @@ import {Input} from 'antd';
 import {stringFormat} from 'src/commons';
 
 export default function TargetPathInput(props) {
-    const { value, form, name, moduleNames, templateOptions, templateId, ...others } = props;
+    const { value, form, name, moduleNames, checkExist, templateOptions, templateId, ...others } = props;
     const [exist, setExist] = useState(false);
 
     // 根据模块名，处理地址
@@ -23,7 +23,7 @@ export default function TargetPathInput(props) {
             setExist(exist);
         }, 300);
         return () => clearTimeout(st);
-    }, [value]);
+    }, [value, checkExist]);
 
     return (
         <div>
