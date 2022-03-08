@@ -373,7 +373,6 @@ export default ajax()(function FieldTable(props) {
                             confirm: {
                                 title: `您确定删除"${name}"?`,
                                 onConfirm: () => handleDelete(id),
-                                // placement: 'right',
                             },
                         },
                     ];
@@ -381,7 +380,6 @@ export default ajax()(function FieldTable(props) {
                 },
             },
             { title: '字段', dataIndex: 'name', width: 150, formProps: { type: 'input', required: true } },
-            dbInfoVisible && { title: '注释', dataIndex: 'comment', width: 150 },
             {
                 title: (
                     <Space>
@@ -397,6 +395,7 @@ export default ajax()(function FieldTable(props) {
                 ),
                 dataIndex: 'chinese', width: 150, formProps: { type: 'input', required: true, placeholder: '请输入中文名' },
             },
+            dbInfoVisible && { title: '注释', dataIndex: 'comment', width: 150 },
             dbInfoVisible && { title: '类型', dataIndex: 'type', width: 150, formProps: { type: 'select', required: true, options: dbTypeOptions } },
             dbInfoVisible && { title: '长度', dataIndex: 'length', width: 85, formProps: { type: 'number', min: 0, step: 1 } },
             dbInfoVisible && { title: '默认值', dataIndex: 'defaultValue', width: 150, formProps: { type: 'input' } },
