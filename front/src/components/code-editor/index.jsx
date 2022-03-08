@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, {useRef, useEffect, useState, useCallback} from 'react';
 import PropTypes from 'prop-types';
 import MonacoEditor from '@monaco-editor/react';
 import prettier from 'prettier/standalone';
@@ -11,11 +11,11 @@ import keyboardShortcuts from './keyboard-shortcuts.json';
 export const OTHER_HEIGHT = 0;
 export const isMac = /macintosh|mac os x/i.test(navigator.userAgent);
 
-// const PUBLIC_URL = process.env.PUBLIC_URL || '';
 // 设置monaco相关资源使用本地  https://registry.npmjs.org/monaco-editor/-/monaco-editor-0.32.1.tgz
-// loader.config({ paths: { vs: `${PUBLIC_URL}/monaco-editor@0.32.1/min/vs` } });
-// 使用cdn
-loader.config({ paths: { vs: `https://cdn.bootcdn.net/ajax/libs/monaco-editor/0.32.1/min/vs` } });
+// 本地太大
+// loader.config({ paths: { vs: `${process.env.PUBLIC_URL || ''}/monaco-editor@0.32.1/min/vs` } });
+// 使用cdn 太慢
+loader.config({ paths: { vs: `https://cdn.staticfile.org/monaco-editor/0.32.1/min/vs` } });
 
 function bindKeyWithAction(editor, monaco) {
     const keyMap = {
