@@ -206,7 +206,6 @@ export default ajax()(function FieldTable(props) {
 
         // 只有新增一行之后才可以编辑的列
         const isNewEditFields = [
-            'name',
             'type',
             'length',
             'defaultValue',
@@ -396,9 +395,9 @@ export default ajax()(function FieldTable(props) {
                 dataIndex: 'chinese', width: 150, formProps: { type: 'input', required: true, placeholder: '请输入中文名' },
             },
             dbInfoVisible && { title: '注释', dataIndex: 'comment', width: 150 },
-            dbInfoVisible && { title: '类型', dataIndex: 'type', width: 150, formProps: { type: 'select', required: true, options: dbTypeOptions } },
+            dbInfoVisible && { title: '类型', dataIndex: 'type', width: 100, formProps: { type: 'select', required: true, options: dbTypeOptions } },
             dbInfoVisible && { title: '长度', dataIndex: 'length', width: 85, formProps: { type: 'number', min: 0, step: 1 } },
-            dbInfoVisible && { title: '默认值', dataIndex: 'defaultValue', width: 150, formProps: { type: 'input' } },
+            dbInfoVisible && { title: '默认值', dataIndex: 'defaultValue', width: 100, formProps: { type: 'input' } },
             dbInfoVisible && { title: '可为空', dataIndex: 'isNullable', width: 60, formProps: { type: 'switch', options: [{ value: true, label: '是' }, { value: false, label: '否' }] } },
             ...tabColumns,
         ].filter(Boolean).map(column => {
