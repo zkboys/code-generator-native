@@ -9,6 +9,7 @@ const assert = require('assert');
 const { exec } = require('child_process');
 const packageJson = require('../package.json');
 const { Name: NameModel } = require('../database');
+const translate = require('./translate');
 
 async function downloadTemplates() {
     const systemTemplatesDir = config.systemTemplatesPath;
@@ -211,8 +212,11 @@ function getModuleNames(name) {
         capitalize,
         dasherize,
         titleize,
+        humanize,
     } = inflection;
-    name = name.replace(/-/g, '_');
+
+    // 非字符 比如 连字符、空格等 转下划线
+    name = name.replace(/\W/g, '_');
 
     // 全大写 + 下划线，转为全小写 + 下划线
     if (/^[A-Z_0-9]+$/.test(name)) name = name.toLowerCase();
@@ -247,6 +251,8 @@ function getModuleNames(name) {
         'Module-names': dasherize(Module_names),
         'Module-Name': dasherize(Module_Name),
         'Module-Names': dasherize(Module_Names),
+        'Module name': humanize(module_name),
+        'module name': humanize(module_name, true),
     };
 }
 
@@ -285,35 +291,59 @@ async function updateVersion() {
     });
 }
 
-async function getNames(names, field) {
-    const values = names.map(item => item[field]);
+/**
+ * 从词库、或翻译获取对应的中英文
+ * @param names
+ * @param fromField
+ * @returns {Promise<unknown[]|*[]>}
+ */
+async function getNames(names, fromField) {
+    const values = names.map(item => item[fromField]);
     if (!values.length) return [];
 
-    const results = await NameModel.findAll({
-        where: {
-            [field]: values,
-        },
-        order: [
-            ['weight', 'desc'],
-            ['updatedAt', 'desc'],
-        ],
-    });
+    const { authenticated } = require('../database');
 
-    return values.map(value => {
-        const record = results.find(item => item[field] === value);
+    const results = authenticated ? await NameModel.findAll({
+        where: { [fromField]: values },
+        order: [['weight', 'desc'], ['updatedAt', 'desc']],
+    }) : [];
+
+    const result = await Promise.all(values.map(async value => {
+        const record = results.find(item => item[fromField] === value);
         if (record) return record;
 
-        // 未查到结果 调用翻译接口？？？
-        // return {
-        //     name: 'aaa',
-        //     chinese: '',
-        //     [field]: value,
-        //     weight: 0,
-        // };
-    }).filter(Boolean);
+        // 未查到结果 调用翻译接口
+        const isFromName = fromField === 'name';
+        // 英文驼峰式命名，转空格（自然语言方式），翻译接口才可以理解
+        const val = isFromName ? getModuleNames(value)['module name'] : value;
+
+        const params = {
+            q: val,
+            from: isFromName ? 'en' : 'zh',
+            to: isFromName ? 'zh' : 'en',
+        };
+        const res = await translate(params);
+
+        if (!res) return;
+
+        return {
+            name: isFromName ? value : res,
+            chinese: isFromName ? res : value,
+        };
+    }));
+
+    return result.filter(Boolean);
 }
 
+/**
+ * 将中英文配置保存到词库中
+ * @param names
+ * @returns {Promise<void>}
+ */
 async function saveNames(names) {
+    const { authenticated } = require('../database');
+    if (!authenticated) return;
+
     names = names.filter(item => item.name && item.chinese);
     for (let item of names) {
         const { name, chinese } = item;
@@ -326,8 +356,13 @@ async function saveNames(names) {
     }
 }
 
-function getValidation(item) {
-    const { isNullable } = item;
+/**
+ * 根据数据库信息，获取校验规则
+ * @param info
+ * @returns {(boolean|string)[]}
+ */
+function getValidation(info) {
+    const { isNullable } = info;
     // TODO 扩展其他校验规则
     return [!isNullable && 'required'].filter(Boolean);
 }
