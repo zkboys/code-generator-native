@@ -29,6 +29,7 @@ export default modal({
               <li>字段表格：通过方向键快，可以在input框之间速移动光标；回车光标跳入下一行</li>
               <li>字段表格：最后一行input框内，回车或↓，会新增一行；</li>
               <li>字段表格：{isMac ? '⌘' : 'ctrl'} + shift + backspace 快速删除当前行；</li>
+              <li>字段表格：{isMac ? '⌘' : 'ctrl'} + Enter 快速补全「字段」或 「中文名」；</li>
             </ol>
           )}
         />

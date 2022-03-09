@@ -12,7 +12,6 @@ const {
     getLastVersion,
     updateVersion,
     getNames,
-    saveNames,
     getValidation,
 } = require('./util');
 const { DB_TYPES } = require('./db/MySql');
