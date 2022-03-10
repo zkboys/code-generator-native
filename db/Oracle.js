@@ -1,33 +1,19 @@
 const DbInterface = require('./DbInterface');
 const oracledb = require('oracledb');
 oracledb.autoCommit = true;
+
 // 数据库类型与后端数据类型对应关系
 const TYPES = {
-    VARCHAR: 'String',
     CHAR: 'String',
-    BLOB: 'String',
-    TEXT: 'String',
-    INTEGER: 'long',
-    TINYINT: 'int',
-    SMALLINT: 'int',
-    MEDIUMINT: 'int',
-    BIT: 'boolean',
-    BIGINT: 'BigInteger',
-    FLOAT: 'float',
-    DOUBLE: 'double',
-    DECIMAL: 'BigDecimal',
-    BOOLEAN: 'boolean',
+    VARCHAR2: 'String',
+    LONG: 'String',
+    NUMBER: 'int',
+    RAW: 'byte[]',
+    LONGRAW: 'byte[]',
     DATE: 'Date',
-    TIME: 'Time',
-    DATETIME: 'Timestamp',
     TIMESTAMP: 'Timestamp',
-    YEAR: 'Date',
-    TINYBLOB: 'String',
-    TINYTEXT: 'String',
-    MEDIUMBLOB: 'String',
-    MEDIUMTEXT: 'String',
-    LONGBLOB: 'String',
-    LONGTEXT: 'String',
+    BLOB: 'Blob',
+    CLOB: 'Clob',
 };
 const DB_TYPES = Object.keys(TYPES).map(value => ({ value, label: value }));
 
