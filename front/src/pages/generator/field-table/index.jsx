@@ -46,6 +46,7 @@ export default ajax()(function FieldTable(props) {
         tableOptions,
         form,
         onGenerate,
+        fetchTemplates,
     } = props;
 
     const {
@@ -514,7 +515,13 @@ export default ajax()(function FieldTable(props) {
     const handleUpdateLocalTemplates = useCallback(async () => {
         await confirm('本地同名模版将被覆盖，是否继续？');
         await props.ajax.get('/templates/local/download', null, { successTip: '更新成功！' });
-    }, [props.ajax]);
+
+        // 等待本地服务器重启
+        const si = setInterval(async () => {
+            await fetchTemplates({ errorTip: false });
+            clearInterval(si);
+        }, 1000);
+    }, [props.ajax, fetchTemplates]);
 
     useDebounceEffect(() => {
         (async () => {

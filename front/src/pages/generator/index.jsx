@@ -28,8 +28,12 @@ export default ajax()(function Generator(props) {
         return await props.ajax.get(`/moduleNames/${name}`);
     }, [props.ajax]);
 
-    const fetchTemplates = useCallback(async () => {
-        return await props.ajax.get('/templates');
+    const fetchTemplates = useCallback(async (options = {}) => {
+        const templates = await props.ajax.get('/templates', null, { ...options });
+
+        const templateOptions = templates.map(item => ({ record: item, value: item.id, label: item.name }));
+        setTemplateOptions(templateOptions);
+        return templateOptions;
     }, [props.ajax]);
 
     const fetchVersion = useCallback(async () => {
@@ -130,18 +134,15 @@ export default ajax()(function Generator(props) {
     // 初始化时，加载模板
     useEffect(() => {
         (async () => {
-            const templates = await fetchTemplates();
-            const templateOptions = templates.map(item => ({ record: item, value: item.id, label: item.name }));
-            setTemplateOptions(templateOptions);
+            await fetchTemplates();
 
             // 默认展示全部模板
-            // const files = templates.map(item => ({
-            //     templateId: item.id,
-            //     targetPath: item.targetPath,
-            //     options: [...(item.options || [])],
+            // const files = templateOptions.map(item => ({
+            //     templateId: item.record?.id,
+            //     targetPath: item.record?.targetPath,
+            //     options: [...(item.record?.options || [])],
             // }));
             // form.setFieldsValue({ files });
-
         })();
     }, [fetchTemplates]);
 
@@ -377,6 +378,7 @@ export default ajax()(function Generator(props) {
                     templateOptions={templateOptions}
                     tableOptions={tableOptions}
                     onGenerate={handleGenerate}
+                    fetchTemplates={fetchTemplates}
                 />
             </Form>
             <Tooltip
