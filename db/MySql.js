@@ -78,15 +78,17 @@ class MySql extends DbInterface {
             const comment = item.COLUMN_COMMENT;
             const isNullable = item.IS_NULLABLE === 'YES';
             const length = item.CHARACTER_MAXIMUM_LENGTH; // CHARACTER_OCTET_LENGTH
+            const defaultValue = item.COLUMN_DEFAULT;
 
             return {
                 id: `${tableName}_${name}`,
-                type,
-                dataType: TYPES[type],
                 name,
-                isNullable,
                 comment,
+                type,
+                dataType: TYPES[type] || 'String',
+                isNullable,
                 length,
+                defaultValue,
             };
         });
     }

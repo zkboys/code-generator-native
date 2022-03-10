@@ -99,23 +99,37 @@ class Oracle extends DbInterface {
                 from user_col_comments a
                 where a.table_name = '${tableName}'
             `);
-            const { rows } = res;
-            return rows.map(item => {
+
+            const info = res.rows.map(item => {
                 const [tableName, name, comment] = item;
-                // TODO 类型
-                const type = 'VARCHAR';
-                const isNullable = true;
-                const length = undefined;
 
                 return {
                     id: `${tableName}_${name}`,
-                    type,
-                    dataType: TYPES[type],
                     name,
-                    isNullable,
                     comment,
-                    length,
                 };
+            });
+
+            const res2 = await connection.execute(`
+                SELECT column_name, data_type, data_length, nullable, data_default
+                FROM user_tab_cols
+                WHERE table_name = '${tableName}'
+            `);
+            return res2.rows.map(item => {
+                const [name, type, length, nullable, defaultValue] = item;
+                const record = info.find(it => it.name === name);
+                const isNullable = nullable === 'Y';
+                return {
+                    id: record.id,
+                    name: record.name,
+                    comment: record.comment,
+                    type,
+                    dataType: TYPES[type] || 'String',
+                    isNullable,
+                    length,
+                    defaultValue,
+                };
+
             });
         } catch (err) {
             console.log('Error in processing:\n', err);

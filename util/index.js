@@ -394,16 +394,26 @@ function getFormType(info) {
 }
 
 /**
+ * 基于非_、-、中文、英文、数字，进行拆分
+ * @param comment
+ * @returns {*[]|*}
+ */
+function splitComment(comment) {
+    if (!comment) return [];
+    const str = comment.trim();
+    return str
+        .split(/[^_\-0-9a-zA-Z\u4e00-\u9fa5]/)
+        .filter(Boolean);
+}
+
+/**
  * 根据数据库信息，获取中文名
  * @param info
  */
 function getChinese(info) {
     let { comment } = info;
-    if (!comment) comment = '';
-    const cs = comment.trim().split(' ');
-    if (cs && cs.length) return cs[0];
-
-    return '';
+    const items = splitComment(comment);
+    return items[0];
 }
 
 /**
@@ -416,13 +426,23 @@ function getOptions(info) {
     const { comment } = info;
     if (!comment) return;
 
-    const items = (comment.replace(/\s/g, ' ')).split(' ');
+    const items = splitComment(comment);
 
     return items.map((item, index) => {
         const nextItem = items[index + 1];
-        if (Number(item) && nextItem) {
+        if (!nextItem) return;
+
+        // 是数字形式 01：启用 02：禁用
+        if (Number(item) === Number(item)) {
             return {
                 value: item,
+                label: nextItem,
+            };
+        }
+        // 是true/false形式 true：启用 false：禁用
+        if (['true', 'false'].includes(item)) {
+            return {
+                value: item === 'true',
                 label: nextItem,
             };
         }

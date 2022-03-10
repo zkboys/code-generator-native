@@ -35,7 +35,6 @@ export default Table => {
         });
 
         const handleSortEnd = useCallback((sortProps) => {
-            console.log(listRef._outerRef);
             let { oldIndex, newIndex } = sortProps;
 
             if (oldIndex === newIndex) return;
