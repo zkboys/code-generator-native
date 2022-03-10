@@ -43,6 +43,8 @@ function getLocalTemplates() {
         const name = template.name || fileName;
         return {
             ...template,
+            options: template.options || [],
+            fieldOptions: template.fieldOptions || [],
             filePath,
             id,
             name,
@@ -86,7 +88,7 @@ function getAllFiles(dir, fileList = []) {
 function getFilesContent(files, moduleName, fields) {
     // 保存用户字段配置 name chinese
     // 不是用await，防止阻塞
-    saveNames(fields);
+    saveNames((fields || []).filter(item => !item.__isItems));
 
     const templates = getLocalTemplates();
 
@@ -99,7 +101,7 @@ function getFilesContent(files, moduleName, fields) {
         const moduleNames = getModuleNames(moduleName);
 
         const fis = fields.map(item => {
-            const fieldOptions = item.options && item.options[templateId] || [];
+            const fieldOptions = item.fileOptions && item.fileOptions[templateId] || [];
             const __names = getModuleNames(item.name);
             return {
                 ...item,
@@ -367,7 +369,6 @@ function getValidation(info) {
     return [!isNullable && 'required'].filter(Boolean);
 }
 
-
 const typeMap = {
     String: 'input',
     long: 'number',
@@ -387,6 +388,8 @@ const typeMap = {
  * @param info
  */
 function getFormType(info) {
+    if (info.options && info.options.length) return 'select';
+
     return typeMap[info.dataType] || 'input';
 }
 
@@ -405,10 +408,25 @@ function getChinese(info) {
 
 /**
  * 根据数据库信息获取码表数据
+ * 数据库注释规则：数字 + 空格 + 文本
+ *      比如：状态，用户的状态 01 启用 02 禁用
  * @param info
  */
 function getOptions(info) {
+    const { comment } = info;
+    if (!comment) return;
 
+    const items = (comment.replace(/\s/g, ' ')).split(' ');
+
+    return items.map((item, index) => {
+        const nextItem = items[index + 1];
+        if (Number(item) && nextItem) {
+            return {
+                value: item,
+                label: nextItem,
+            };
+        }
+    }).filter(Boolean);
 }
 
 module.exports = {

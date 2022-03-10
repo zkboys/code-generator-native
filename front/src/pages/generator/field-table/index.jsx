@@ -90,22 +90,29 @@ export default ajax()(function FieldTable(props) {
     // 表格新增一行事件
     const handleAdd = useCallback((append = false) => {
         // const length = dataSource.length;
-
+        const isItems = activeKey === 'items';
+        let name;
+        if (isItems) {
+            name = dataSource.length + 1;
+            name = name < 10 ? `0${name}` : `name`;
+        }
         const newRecord = {
             id: uuid(),
             // comment: `新增列${length + 1}`,
             // chinese: `新增列${length + 1}`,
             // name: `field${length + 1}`,
+            name,
             type: 'VARCHAR',
             formType: 'input',
             dataType: 'String',
             isNullable: true,
             __isNew: true,
+            __isItems: isItems,
         };
 
         append ? dataSource.push(newRecord) : dataSource.unshift(newRecord);
         setDataSource([...dataSource]);
-    }, [dataSource]);
+    }, [activeKey, dataSource]);
 
     // 删除行
     const handleDelete = useCallback((id) => {
@@ -183,7 +190,7 @@ export default ajax()(function FieldTable(props) {
             .map((templateId) => {
                 const template = templateOptions.find(item => item.value === templateId)?.record;
                 const title = template?.shortName;
-                const dataIndex = ['options', template?.id];
+                const dataIndex = ['fileOptions', template?.id];
                 const options = template?.fieldOptions || [];
                 return {
                     title,
@@ -316,9 +323,9 @@ export default ajax()(function FieldTable(props) {
                                                         [templateId]: isSelectAll ? [...fieldOptions] : [],
                                                     };
                                                 }, {});
-                                                record.options = options;
+                                                record.fileOptions = options;
                                                 form.setFields([{
-                                                    name: ['dataSource', index, 'options'],
+                                                    name: ['dataSource', index, 'fileOptions'],
                                                     value: options,
                                                 }]);
                                                 setDataSource([...dataSource]);
@@ -355,27 +362,34 @@ export default ajax()(function FieldTable(props) {
                 key: 'options', tab: '模板选项',
                 columns: [...optionColumns],
             },
+            {
+                key: 'items', tab: '选项编辑',
+                columns: [
+                    { title: '描述', dataIndex: 'description', formProps: { type: 'input', placeholder: '请输入描述' } },
+                ],
+            },
         ];
     }, [files, optionColumns]);
 
     // 表格列
     const columns = useMemo(() => {
         const tabColumns = tabPotions
-            .find(item => item.key === activeKey)
-            .columns
-            .map(item => ({ ...item, className: s.tabColumn }));
+            ?.find(item => item.key === activeKey)
+            ?.columns
+            ?.map(item => ({ ...item, className: s.tabColumn })) || [];
         let totalInputColumn = 0;
+        const isItems = activeKey === 'items';
         return [
             {
                 title: '操作', dataIndex: 'operator', width: 60,
                 render: (value, record) => {
-                    const { id, name } = record;
+                    const { id } = record;
                     const items = [
                         {
                             label: '删除',
                             color: 'red',
                             confirm: {
-                                title: `您确定删除"${name}"?`,
+                                title: '您确定删除吗？',
                                 onConfirm: () => handleDelete(id),
                             },
                         },
@@ -383,11 +397,11 @@ export default ajax()(function FieldTable(props) {
                     return <Operator items={items}/>;
                 },
             },
-            { title: '字段', dataIndex: 'name', width: 150, formProps: { type: 'input', required: true } },
+            { title: isItems ? '码值（value）' : '字段', dataIndex: 'name', width: isItems ? 300 : 150, formProps: { type: 'input', required: true } },
             {
                 title: (
                     <Space>
-                        <span>中文名</span>
+                        <span>{isItems ? '展示（label）' : '中文名'}</span>
                         <Button
                             type="link"
                             size="small"
@@ -397,7 +411,7 @@ export default ajax()(function FieldTable(props) {
                         </Button>
                     </Space>
                 ),
-                dataIndex: 'chinese', width: 150, formProps: { type: 'input', required: true, placeholder: '请输入中文名' },
+                dataIndex: 'chinese', width: isItems ? 300 : 150, formProps: { type: 'input', required: true, placeholder: '请输入中文名' },
             },
             dbInfoVisible && { title: '注释', dataIndex: 'comment', width: 150 },
             dbInfoVisible && { title: '类型', dataIndex: 'type', width: 100, formProps: { type: 'select', required: true, options: dbTypeOptions } },
@@ -413,7 +427,7 @@ export default ajax()(function FieldTable(props) {
             }
             return column;
         }).map(column => formColumn(column, totalInputColumn));
-    }, [activeKey, tabPotions, dbInfoVisible, dbTypeOptions, handleDelete, formColumn]);
+    }, [tabPotions, activeKey, dbInfoVisible, dbTypeOptions, handleDelete, formColumn]);
 
     // 生成代码、代码预览
     const handleGenerate = useCallback(async (preview = false) => {
@@ -524,10 +538,10 @@ export default ajax()(function FieldTable(props) {
                 const options = [...col.formProps.options];
 
                 dataSource.forEach(item => {
-                    if (!item.options) item.options = {};
+                    if (!item.fileOptions) item.fileOptions = {};
 
-                    if (!item.options[templateId]) {
-                        item.options[templateId] = [...options];
+                    if (!item.fileOptions[templateId]) {
+                        item.fileOptions[templateId] = [...options];
                         changed = true;
                     }
                 });
@@ -581,7 +595,13 @@ export default ajax()(function FieldTable(props) {
                             >
                                 生成文件
                             </Button>
-                            <Checkbox checked={dbInfoVisible} onChange={e => setDbInfoVisible(e.target.checked)}>显示数据库信息</Checkbox>
+                            <Checkbox
+                                disabled={!tableName}
+                                checked={dbInfoVisible}
+                                onChange={e => setDbInfoVisible(e.target.checked)}
+                            >
+                                显示数据库信息
+                            </Checkbox>
                         </Space>
                     ),
                     right: (

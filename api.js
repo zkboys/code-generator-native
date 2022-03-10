@@ -56,12 +56,13 @@ module.exports = apiRouter
                 name: getModuleNames(name).moduleName,
             };
 
+            info.options = getOptions(info);
+
             return {
                 ...info,
                 chinese: getChinese(info),
                 formType: getFormType(info),
                 validation: getValidation(info),
-                options: getOptions(info),
             };
         });
     })

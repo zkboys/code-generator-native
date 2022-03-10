@@ -75,6 +75,9 @@ export default config({
                             ${item.validation.some(it => it.value === 'required') ? 'required' : NULL_LINE}
                             ${item.validation.some(it => it.value === 'noSpace') ? 'noSpace' : NULL_LINE}
                             ${item.length ? `maxLength={${item.length}}` : NULL_LINE}
+                            ${item.options && item.options.length ? `options={[
+                                ${item.options.map(it => `{value: '${it.value}', label: '${it.label}'},`).join('\n                                ')}
+                            ]}`: NULL_LINE}
                             ${item.validation.filter(it => it.pattern).length ? `rules={[
                                 ${item.validation.filter(it => it.pattern).map(item => {
             return `{pattern: ${item.pattern}, message: '请输入正确的${item.label}！'},`;

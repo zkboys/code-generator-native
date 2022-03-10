@@ -177,7 +177,15 @@ export default config({
                         await handleSearch(${has(_page, '{ pageNum: 1 }', false)});
                     }}
                 >
-                    ${queryFields.map(item => `<FormItem {...layout} type="${item.formType}" label="${item.chinese}" name="${item.__names.moduleName}"/>`).join('\n                    ')}
+                    ${queryFields.map(item => `<FormItem 
+                        {...layout} 
+                        type="${item.formType}" 
+                        label="${item.chinese}" 
+                        name="${item.__names.moduleName}"
+                        ${item.options && item.options.length ? `options={[
+                            ${item.options.map(it => `{value: '${it.value}', label: '${it.label}'},`).join('\n                            ')}
+                        ]}`: NULL_LINE}
+                    />`).join('\n                    ')}
                     <FormItem>
                         <Space>
                             <Button type="primary" htmlType="submit">
