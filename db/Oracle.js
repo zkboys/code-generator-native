@@ -1,125 +1,35 @@
 const DbInterface = require('./DbInterface');
-const { getInfoByComment, getFormTypeByChinese } = require('./util');
 const oracledb = require('oracledb');
 oracledb.autoCommit = true;
-
+// 数据库类型与后端数据类型对应关系
 const TYPES = {
-    VARCHAR: {
-        form: 'input',
-        data: 'String',
-    },
-    CHAR: {
-        form: 'input',
-        data: 'String',
-    },
-    BLOB: {
-        form: 'input',
-        data: 'String',
-    },
-    TEXT: {
-        form: 'textarea',
-        data: 'String',
-    },
-    INTEGER: {
-        form: 'number',
-        data: 'long',
-    },
-    TINYINT: {
-        form: 'number',
-        data: 'int',
-    },
-    SMALLINT: {
-        form: 'number',
-        data: 'int',
-    },
-    MEDIUMINT: {
-        form: 'number',
-        data: 'int',
-    },
-    BIT: {
-        form: 'switch',
-        data: 'boolean',
-    },
-    BIGINT: {
-        form: 'number',
-        data: 'BigInteger',
-    },
-    FLOAT: {
-        form: 'number',
-        data: 'float',
-    },
-    DOUBLE: {
-        form: 'number',
-        data: 'double',
-    },
-    DECIMAL: {
-        form: 'number',
-        data: 'BigDecimal',
-    },
-    BOOLEAN: {
-        form: 'switch',
-        data: 'boolean',
-    },
-    DATE: {
-        form: 'date',
-        data: 'Date',
-    },
-    TIME: {
-        form: 'time',
-        data: 'Time',
-    },
-    DATETIME: {
-        form: 'date-time',
-        data: 'Timestamp',
-    },
-    TIMESTAMP: {
-        form: 'date-time',
-        data: 'Timestamp',
-    },
-    YEAR: {
-        form: 'date',
-        data: 'Date',
-    },
-    TINYBLOB: {
-        form: 'input',
-        data: 'String',
-    },
-    TINYTEXT: {
-        form: 'input',
-        data: 'String',
-    },
-    MEDIUMBLOB: {
-        form: 'input',
-        data: 'String',
-    },
-    MEDIUMTEXT: {
-        form: 'input',
-        data: 'String',
-    },
-    LONGBLOB: {
-        form: 'input',
-        data: 'String',
-    },
-    LONGTEXT: {
-        form: 'input',
-        data: 'String',
-    },
+    VARCHAR: 'String',
+    CHAR: 'String',
+    BLOB: 'String',
+    TEXT: 'String',
+    INTEGER: 'long',
+    TINYINT: 'int',
+    SMALLINT: 'int',
+    MEDIUMINT: 'int',
+    BIT: 'boolean',
+    BIGINT: 'BigInteger',
+    FLOAT: 'float',
+    DOUBLE: 'double',
+    DECIMAL: 'BigDecimal',
+    BOOLEAN: 'boolean',
+    DATE: 'Date',
+    TIME: 'Time',
+    DATETIME: 'Timestamp',
+    TIMESTAMP: 'Timestamp',
+    YEAR: 'Date',
+    TINYBLOB: 'String',
+    TINYTEXT: 'String',
+    MEDIUMBLOB: 'String',
+    MEDIUMTEXT: 'String',
+    LONGBLOB: 'String',
+    LONGTEXT: 'String',
 };
-
 const DB_TYPES = Object.keys(TYPES).map(value => ({ value, label: value }));
-
-function getTypes(type, chinese) {
-    const types = TYPES[type.toUpperCase()] || {};
-    const defaultFormType = 'input';
-    const defaultDataType = 'String';
-    const form = getFormTypeByChinese(chinese, types.form || defaultFormType);
-    const data = types.data || defaultDataType;
-
-    return {
-        form,
-        data,
-    };
-}
 
 class Oracle extends DbInterface {
     database;
@@ -192,26 +102,19 @@ class Oracle extends DbInterface {
             const { rows } = res;
             return rows.map(item => {
                 const [tableName, name, comment] = item;
-                const commentInfo = getInfoByComment(name, comment);
-                const { chinese, options } = commentInfo;
                 // TODO 类型
                 const type = 'VARCHAR';
                 const isNullable = true;
                 const length = undefined;
 
-                const types = getTypes(type, chinese);
-
                 return {
                     id: `${tableName}_${name}`,
                     type,
-                    formType: types.form,
-                    dataType: types.data,
+                    dataType: TYPES[type],
                     name,
                     isNullable,
                     comment,
-                    chinese,
                     length,
-                    options,
                 };
             });
         } catch (err) {

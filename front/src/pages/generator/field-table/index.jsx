@@ -337,21 +337,26 @@ export default ajax()(function FieldTable(props) {
 
     // Tab 页配置
     const tabPotions = useMemo(() => {
+        const showDataType = (files || []).some(item => {
+            const fileType = item?.targetPath?.split('.').pop();
+
+            return !['jsx', 'js', 'vue', 'vux'].includes(fileType);
+        });
         return [
             {
                 key: 'type', tab: '类型&验证',
                 columns: [
-                    { title: '数据类型', dataIndex: 'dataType', width: 150, formProps: { type: 'select', options: DATA_TYPE_OPTIONS } },
+                    showDataType && { title: '数据类型', dataIndex: 'dataType', width: 150, formProps: { type: 'select', options: DATA_TYPE_OPTIONS } },
                     { title: '表单类型', dataIndex: 'formType', width: 150, formProps: { type: 'select', options: FORM_ELEMENT_OPTIONS } },
                     { title: '校验规则', dataIndex: 'validation', formProps: { type: 'select', mode: 'multiple', options: VALIDATE_OPTIONS } },
-                ],
+                ].filter(Boolean),
             },
             {
                 key: 'options', tab: '模板选项',
                 columns: [...optionColumns],
             },
         ];
-    }, [optionColumns]);
+    }, [files, optionColumns]);
 
     // 表格列
     const columns = useMemo(() => {

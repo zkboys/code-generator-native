@@ -44,7 +44,7 @@ ${has(_detail || _edit, 'import DetailModal from \'./DetailModal\';')}
 
 export default config({
     path: '/${mn.module_names}',
-})(function DepartmentUserList(props) {
+})(function ${mn.ModuleName}List(props) {
     const [loading, setLoading] = useState(false);
     ${has(_page, 'const [pageNum, setPageNum] = useState(1);')}
     ${has(_page, 'const [pageSize, setPageSize] = useState(20);')}

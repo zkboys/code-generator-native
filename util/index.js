@@ -367,6 +367,50 @@ function getValidation(info) {
     return [!isNullable && 'required'].filter(Boolean);
 }
 
+
+const typeMap = {
+    String: 'input',
+    long: 'number',
+    int: 'number',
+    boolean: 'switch',
+    BigInteger: 'number',
+    float: 'number',
+    double: 'number',
+    BigDecimal: 'number',
+    Date: 'date',
+    Time: 'time',
+    Timestamp: 'date-time',
+};
+
+/**
+ * 根据数据库信息获取表单类型
+ * @param info
+ */
+function getFormType(info) {
+    return typeMap[info.dataType] || 'input';
+}
+
+/**
+ * 根据数据库信息，获取中文名
+ * @param info
+ */
+function getChinese(info) {
+    let { comment } = info;
+    if (!comment) comment = '';
+    const cs = comment.trim().split(' ');
+    if (cs && cs.length) return cs[0];
+
+    return '';
+}
+
+/**
+ * 根据数据库信息获取码表数据
+ * @param info
+ */
+function getOptions(info) {
+
+}
+
 module.exports = {
     downloadTemplates,
     getLocalTemplates,
@@ -384,4 +428,7 @@ module.exports = {
     getNames,
     saveNames,
     getValidation,
+    getChinese,
+    getFormType,
+    getOptions,
 };

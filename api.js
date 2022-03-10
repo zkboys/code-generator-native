@@ -13,6 +13,9 @@ const {
     updateVersion,
     getNames,
     getValidation,
+    getChinese,
+    getFormType,
+    getOptions,
 } = require('./util');
 const { DB_TYPES } = require('./db/MySql');
 const packageJson = require('./package.json');
@@ -47,11 +50,18 @@ module.exports = apiRouter
         return res.map(item => {
             const { name } = item;
 
-            return {
+            const info = {
                 ...item,
                 dbName: name,
                 name: getModuleNames(name).moduleName,
-                validation: getValidation(item),
+            };
+
+            return {
+                ...info,
+                chinese: getChinese(info),
+                formType: getFormType(info),
+                validation: getValidation(info),
+                options: getOptions(info),
             };
         });
     })
