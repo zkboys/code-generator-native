@@ -673,7 +673,9 @@ export default ajax()(function FieldTable(props) {
                 onOk={(values, replace) => {
                     const records = values.map((chinese, index) => {
                         const number = index + 1;
-                        const name = number < 10 ? `0${number}` : `${number}`;
+                        let name = number < 10 ? `0${number}` : `${number}`;
+                        const isItems = activeKey === 'items';
+                        name = isItems ? name : '';
 
                         return getNewRecord({ chinese, name });
                     });
