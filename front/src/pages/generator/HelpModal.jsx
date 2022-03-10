@@ -1,8 +1,7 @@
 import { ModalContent } from 'src/components';
 import { Button, Alert, Space } from 'antd';
 import { modal } from 'src/hocs';
-
-export const isMac = /macintosh|mac os x/i.test(navigator.userAgent);
+import {isMac} from 'src/commons';
 
 export default modal({
   top: 50,

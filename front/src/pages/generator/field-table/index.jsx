@@ -87,16 +87,14 @@ export default ajax()(function FieldTable(props) {
         setDataSource([...dataSource]);
     }, [dataSource]);
 
-    // 表格新增一行事件
-    const handleAdd = useCallback((append = false) => {
-        // const length = dataSource.length;
+    const getNewRecord = useCallback((fields = {}) => {
         const isItems = activeKey === 'items';
         let name;
         if (isItems) {
             name = dataSource.length + 1;
             name = name < 10 ? `0${name}` : `name`;
         }
-        const newRecord = {
+        return {
             id: uuid(),
             // comment: `新增列${length + 1}`,
             // chinese: `新增列${length + 1}`,
@@ -108,11 +106,18 @@ export default ajax()(function FieldTable(props) {
             isNullable: true,
             __isNew: true,
             __isItems: isItems,
+            ...fields,
         };
+
+    }, [activeKey, dataSource.length]);
+
+    // 表格新增一行事件
+    const handleAdd = useCallback((append = false) => {
+        const newRecord = getNewRecord();
 
         append ? dataSource.push(newRecord) : dataSource.unshift(newRecord);
         setDataSource([...dataSource]);
-    }, [activeKey, dataSource]);
+    }, [dataSource, getNewRecord]);
 
     // 删除行
     const handleDelete = useCallback((id) => {
@@ -666,15 +671,12 @@ export default ajax()(function FieldTable(props) {
                 visible={fastVisible}
                 onCancel={() => setFastVisible(false)}
                 onOk={(values, replace) => {
-                    const records = values.map(chinese => ({
-                        id: uuid(),
-                        chinese,
-                        type: 'VARCHAR',
-                        formType: 'input',
-                        dataType: 'String',
-                        isNullable: true,
-                        __isNew: true,
-                    }));
+                    const records = values.map((chinese, index) => {
+                        const number = index + 1;
+                        const name = number < 10 ? `0${number}` : `${number}`;
+
+                        return getNewRecord({ chinese, name });
+                    });
                     const nextDataSource = replace ? records : [...dataSource, ...records];
 
                     setDataSource(nextDataSource);

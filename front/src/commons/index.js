@@ -1,7 +1,7 @@
 import Storage from './Storage';
 
 export function toLogin() {
-  // TODO
+    // TODO
 }
 
 export const storage = new Storage();
@@ -12,16 +12,16 @@ export const storage = new Storage();
  * @returns {number | Requireable<number>}
  */
 export function getElementTop(element) {
-  if (!element) return 0;
-  let actualTop = element.offsetTop;
-  let current = element.offsetParent;
+    if (!element) return 0;
+    let actualTop = element.offsetTop;
+    let current = element.offsetParent;
 
-  while (current !== null) {
-    actualTop += current.offsetTop;
-    current = current.offsetParent;
-  }
+    while (current !== null) {
+        actualTop += current.offsetTop;
+        current = current.offsetParent;
+    }
 
-  return actualTop;
+    return actualTop;
 }
 
 
@@ -30,16 +30,16 @@ export function getElementTop(element) {
  * @returns {number}
  */
 export function getScrollBarWidth() {
-  let scrollDiv = document.createElement('div');
-  scrollDiv.style.position = 'absolute';
-  scrollDiv.style.top = '-9999px';
-  scrollDiv.style.width = '50px';
-  scrollDiv.style.height = '50px';
-  scrollDiv.style.overflow = 'scroll';
-  document.body.appendChild(scrollDiv);
-  let scrollBarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth;
-  window.document.body.removeChild(scrollDiv);
-  return scrollBarWidth;
+    let scrollDiv = document.createElement('div');
+    scrollDiv.style.position = 'absolute';
+    scrollDiv.style.top = '-9999px';
+    scrollDiv.style.width = '50px';
+    scrollDiv.style.height = '50px';
+    scrollDiv.style.overflow = 'scroll';
+    document.body.appendChild(scrollDiv);
+    let scrollBarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth;
+    window.document.body.removeChild(scrollDiv);
+    return scrollBarWidth;
 }
 
 
@@ -50,14 +50,14 @@ export function getScrollBarWidth() {
  * @returns {string}  eg: /front/pages/user-center/index.jsx
  */
 export function stringFormat(str, data) {
-  if (!str || typeof str !== 'string' || !data) return str;
+    if (!str || typeof str !== 'string' || !data) return str;
 
-  return Object.entries(data)
-    .reduce((prev, curr) => {
-      const [key, value] = curr;
-      const reg = new RegExp('({)?\\{' + key + '\\}(?!})', 'gm');
-      return prev.replace(reg, value);
-    }, str);
+    return Object.entries(data)
+        .reduce((prev, curr) => {
+            const [key, value] = curr;
+            const reg = new RegExp('({)?\\{' + key + '\\}(?!})', 'gm');
+            return prev.replace(reg, value);
+        }, str);
 }
 
 /**
@@ -66,131 +66,133 @@ export function stringFormat(str, data) {
  * @returns {{start: boolean, end: boolean, position: number}|{start: boolean, end: boolean, position: *}}
  */
 export function getCursorPosition(input) {
-  let position = 0;
-  let start = false;
-  let end = false;
+    let position = 0;
+    let start = false;
+    let end = false;
 
-  if (!input) return {
-    start,
-    end,
-    position,
-  };
+    if (!input) return {
+        start,
+        end,
+        position,
+    };
 
-  if (typeof input.selectionStart == 'number') { // 非IE浏览器
-    position = input.selectionStart;
-  } else { // IE
-    const range = document.selection?.createRange();
-    if (!range) return;
-    range.moveStart('character', -input.value.length);
-    position = range.text.length;
-  }
+    if (typeof input.selectionStart == 'number') { // 非IE浏览器
+        position = input.selectionStart;
+    } else { // IE
+        const range = document.selection?.createRange();
+        if (!range) return;
+        range.moveStart('character', -input.value.length);
+        position = range.text.length;
+    }
 
-  start = position === 0;
-  end = position === input?.value.length;
+    start = position === 0;
+    end = position === input?.value.length;
 
-  return {
-    start,
-    end,
-    position,
-  };
+    return {
+        start,
+        end,
+        position,
+    };
 }
 
 /**
  * 触发window的热size事件
  */
 export function triggerWindowResize() {
-  // 触发 window resize 事件，重新调整页面高度
-  if (document.createEvent) {
-    const ev = document.createEvent('HTMLEvents');
-    ev.initEvent('resize', true, true);
-    window.dispatchEvent(ev);
-  } else if (document.createEventObject) {
-    window.fireEvent('onresize');
-  }
+    // 触发 window resize 事件，重新调整页面高度
+    if (document.createEvent) {
+        const ev = document.createEvent('HTMLEvents');
+        ev.initEvent('resize', true, true);
+        window.dispatchEvent(ev);
+    } else if (document.createEventObject) {
+        window.fireEvent('onresize');
+    }
 }
 
 export function getNextTabIndex(e, options) {
-  const { tabIndex, columnIndex, totalColumn, totalRow, rowIndex } = options;
-  const { keyCode, ctrlKey, shiftKey, altKey, metaKey } = e;
-  const enterKey = keyCode === 13;
+    const { tabIndex, columnIndex, totalColumn, totalRow, rowIndex } = options;
+    const { keyCode, ctrlKey, shiftKey, altKey, metaKey } = e;
+    const enterKey = keyCode === 13;
 
-  const isDelete = (ctrlKey || metaKey) && shiftKey && enterKey;
+    const isDelete = (ctrlKey || metaKey) && shiftKey && enterKey;
 
-  if ((ctrlKey || shiftKey || altKey || metaKey) && !isDelete) return;
+    if ((ctrlKey || shiftKey || altKey || metaKey) && !isDelete) return;
 
-  const isUp = keyCode === 38;
-  const isRight = keyCode === 39;
-  const isDown = keyCode === 40 || keyCode === 13;
-  const isLeft = keyCode === 37;
+    const isUp = keyCode === 38;
+    const isRight = keyCode === 39;
+    const isDown = keyCode === 40 || keyCode === 13;
+    const isLeft = keyCode === 37;
 
-  // 移动光标
-  const cursorPosition = getCursorPosition(e.target);
-  if (isLeft && !cursorPosition.start) return;
-  if (isRight && !cursorPosition.end) return;
+    // 移动光标
+    const cursorPosition = getCursorPosition(e.target);
+    if (isLeft && !cursorPosition.start) return;
+    if (isRight && !cursorPosition.end) return;
 
-  const columnStartTabIndex = columnIndex * totalRow;
-  const columnEndTabIndex = (columnIndex + 1) * totalRow - 1;
+    const columnStartTabIndex = columnIndex * totalRow;
+    const columnEndTabIndex = (columnIndex + 1) * totalRow - 1;
 
-  let nextTabIndex;
-  let isAdd;
+    let nextTabIndex;
+    let isAdd;
 
-  if (isUp) {
-    // 到顶了
-    if (tabIndex === columnStartTabIndex) return;
+    if (isUp) {
+        // 到顶了
+        if (tabIndex === columnStartTabIndex) return;
 
-    nextTabIndex = tabIndex - 1;
-  }
-
-  if (isRight) {
-    // 右侧
-    if (columnIndex === totalColumn - 1) {
-      // 右下角
-      if (tabIndex === columnEndTabIndex) {
-        isAdd = true;
-        nextTabIndex = totalRow;
-      } else {
-        // 选中下一行第一个
-        nextTabIndex = rowIndex + 1;
-      }
-    } else {
-      // 选择右侧一个
-      nextTabIndex = tabIndex + totalRow;
+        nextTabIndex = tabIndex - 1;
     }
-  }
 
-  if (isDown) {
-    if (tabIndex === columnEndTabIndex) {
-      isAdd = true;
-      nextTabIndex = tabIndex + columnIndex + 1;
-    } else {
-      nextTabIndex = tabIndex + 1;
+    if (isRight) {
+        // 右侧
+        if (columnIndex === totalColumn - 1) {
+            // 右下角
+            if (tabIndex === columnEndTabIndex) {
+                isAdd = true;
+                nextTabIndex = totalRow;
+            } else {
+                // 选中下一行第一个
+                nextTabIndex = rowIndex + 1;
+            }
+        } else {
+            // 选择右侧一个
+            nextTabIndex = tabIndex + totalRow;
+        }
     }
-  }
 
-  if (isLeft) {
-    // 左上角
-    if (tabIndex === columnStartTabIndex && columnIndex === 0) return;
-
-    // 左侧第一列继续左移动，选中上一行最后一个
-    if (columnIndex === 0) nextTabIndex = totalRow * (totalColumn - 1) + (rowIndex - 1);
-
-    // 选择前一个
-    if (columnIndex !== 0) nextTabIndex = tabIndex - totalRow;
-  }
-
-  if (isDelete) {
-    isAdd = false;
-
-    if (tabIndex === columnEndTabIndex) {
-      nextTabIndex = (totalRow - 1) * columnIndex + (rowIndex - 1);
-    } else {
-      nextTabIndex = (totalRow - 1) * columnIndex + (rowIndex + 1) - 1;
+    if (isDown) {
+        if (tabIndex === columnEndTabIndex) {
+            isAdd = true;
+            nextTabIndex = tabIndex + columnIndex + 1;
+        } else {
+            nextTabIndex = tabIndex + 1;
+        }
     }
-  }
 
-  return {
-    isAdd,
-    isDelete,
-    nextTabIndex,
-  };
+    if (isLeft) {
+        // 左上角
+        if (tabIndex === columnStartTabIndex && columnIndex === 0) return;
+
+        // 左侧第一列继续左移动，选中上一行最后一个
+        if (columnIndex === 0) nextTabIndex = totalRow * (totalColumn - 1) + (rowIndex - 1);
+
+        // 选择前一个
+        if (columnIndex !== 0) nextTabIndex = tabIndex - totalRow;
+    }
+
+    if (isDelete) {
+        isAdd = false;
+
+        if (tabIndex === columnEndTabIndex) {
+            nextTabIndex = (totalRow - 1) * columnIndex + (rowIndex - 1);
+        } else {
+            nextTabIndex = (totalRow - 1) * columnIndex + (rowIndex + 1) - 1;
+        }
+    }
+
+    return {
+        isAdd,
+        isDelete,
+        nextTabIndex,
+    };
 }
+
+export const isMac = /macintosh|mac os x/i.test(navigator.userAgent);

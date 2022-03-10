@@ -1,10 +1,9 @@
-import { useCallback, useState, useRef } from 'react';
-import { ModalContent, confirm } from 'src/components';
-import { Button, Input } from 'antd';
-import { modal } from 'src/hocs';
-import { useHeight } from 'src/hooks';
-
-export const isMac = /macintosh|mac os x/i.test(navigator.userAgent);
+import {useCallback, useState, useRef} from 'react';
+import {ModalContent, confirm} from 'src/components';
+import {Button, Input} from 'antd';
+import {modal} from 'src/hocs';
+import {useHeight} from 'src/hooks';
+import {isMac} from 'src/commons';
 
 export default modal({
     top: 50,
@@ -23,13 +22,19 @@ export default modal({
         const values = value.split('\n')
             .map(item => item.trim())
             .filter(Boolean);
-        console.log(values);
         if (!values?.length) return;
-        if (replace) {
+        if (replace && dataSource.length) {
             await confirm('您确定要覆盖吗？');
         }
         onOk(values, replace);
-    }, [value, onOk]);
+    }, [value, dataSource.length, onOk]);
+
+    const handlePressEnter = useCallback(async (e) => {
+        const { ctrlKey, metaKey } = e;
+        if (!(ctrlKey || metaKey)) return;
+
+        await handleSubmit(true);
+    }, [handleSubmit]);
 
     return (
         <ModalContent
@@ -53,7 +58,8 @@ export default modal({
                     style={{ height }}
                     value={value}
                     onChange={e => setValue(e.target.value)}
-                    placeholder={'一行一个！'}
+                    onPressEnter={handlePressEnter}
+                    placeholder={`一行一个！${isMac ? '⌘' : 'ctrl'} + enter 覆盖提交！`}
                 />
             </div>
         </ModalContent>
