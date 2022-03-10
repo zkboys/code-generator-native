@@ -198,6 +198,7 @@ export default ajax()(function FieldTable(props) {
                 const title = template?.shortName;
                 const dataIndex = ['fileOptions', template?.id];
                 const options = template?.fieldOptions || [];
+                if (!options.length) return;
                 return {
                     title,
                     dataIndex,
@@ -206,7 +207,7 @@ export default ajax()(function FieldTable(props) {
                         options,
                     },
                 };
-            });
+            }).filter(Boolean);
     }, [templateIds, templateOptions]);
 
 
@@ -349,7 +350,7 @@ export default ajax()(function FieldTable(props) {
     }, [handleKeyDown, totalRow, form, optionColumns, templateOptions, dataSource]);
 
     // Tab 页配置
-    const tabPotions = useMemo(() => {
+    const tabOptions = useMemo(() => {
         const showDataType = (files || []).some(item => {
             const fileType = item?.targetPath?.split('.').pop();
 
@@ -379,7 +380,7 @@ export default ajax()(function FieldTable(props) {
 
     // 表格列
     const columns = useMemo(() => {
-        const tabColumns = tabPotions
+        const tabColumns = tabOptions
             ?.find(item => item.key === activeKey)
             ?.columns
             ?.map(item => ({ ...item, className: s.tabColumn })) || [];
@@ -433,7 +434,7 @@ export default ajax()(function FieldTable(props) {
             }
             return column;
         }).map(column => formColumn(column, totalInputColumn));
-    }, [tabPotions, activeKey, dbInfoVisible, dbTypeOptions, handleDelete, formColumn]);
+    }, [tabOptions, activeKey, dbInfoVisible, dbTypeOptions, handleDelete, formColumn]);
 
     // 生成代码、代码预览
     const handleGenerate = useCallback(async (preview = false) => {
@@ -645,7 +646,7 @@ export default ajax()(function FieldTable(props) {
                 activeKey={activeKey}
                 onChange={setActiveKey}
             >
-                {tabPotions.map(item => <TabPane key={item.key} tab={item.tab}/>)}
+                {tabOptions.map(item => <TabPane key={item.key} tab={item.tab}/>)}
             </Tabs>
             <MyTable
                 onSortEnd={handleSortEnd}
