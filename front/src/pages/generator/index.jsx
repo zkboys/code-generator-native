@@ -24,7 +24,7 @@ export default ajax()(function Generator(props) {
     const [loadingTip, setLoadingTip] = useState(undefined);
     const [checkExist, setCheckExist] = useState({});
     const [dataSource, setDataSource] = useState([]);
-    const [filesVisible, setFilesVisible] = useState(false);
+    const [filesVisible, setFilesVisible] = useState(true);
     const [activeKey, setActiveKey] = useState('files');
     const [helpVisible, setHelpVisible] = useState(false);
     const [batchVisible, setBatchVisible] = useState(false);
