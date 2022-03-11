@@ -536,8 +536,6 @@ export default ajax()(function Generator(props) {
                             <Space style={{ marginRight: 16 }}>
                                 <Button
                                     icon={<PlusOutlined />}
-                                    type="primary"
-                                    ghost
                                     onClick={() => handleAdd()}
                                 >
                                     添加一行
@@ -573,8 +571,6 @@ export default ajax()(function Generator(props) {
                         right: (
                             <Space>
                                 <Button
-                                    type={'primary'}
-                                    ghost
                                     icon={<CopyOutlined />}
                                     disabled={!tableOptions?.length}
                                     onClick={() => setBatchVisible(true)}
