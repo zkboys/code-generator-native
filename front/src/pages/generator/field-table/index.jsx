@@ -535,7 +535,7 @@ export default ajax()(function FieldTable(props) {
             setDbTypeOptions(dbTypeOptions);
         })();
     }, [dbUrl, fetchDbTypeOptions]);
-    
+
     // 默认文件选项全选
     useEffect(() => {
         (async () => {
@@ -605,7 +605,7 @@ export default ajax()(function FieldTable(props) {
                                 生成文件
                             </Button>
                             <Checkbox
-                                disabled={!tableNames?.length || !sql}
+                                disabled={!tableNames?.length && !sql}
                                 checked={dbInfoVisible}
                                 onChange={e => setDbInfoVisible(e.target.checked)}
                             >
