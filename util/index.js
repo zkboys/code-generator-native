@@ -1,15 +1,16 @@
 const path = require('path');
 const fs = require('fs-extra');
+const assert = require('assert');
+const { exec } = require('child_process');
 const staticCache = require('koa-static-cache');
 const inflection = require('inflection');
 const openBrowser = require('./openBrowser');
 const choosePort = require('./choosePort');
 const config = require('../config');
-const assert = require('assert');
-const { exec } = require('child_process');
 const packageJson = require('../package.json');
 const { Name: NameModel } = require('../database');
 const translate = require('./translate');
+const db = require('../db');
 
 async function downloadTemplates() {
     const systemTemplatesDir = config.systemTemplatesPath;
@@ -449,6 +450,41 @@ function getOptions(info) {
     }).filter(Boolean);
 }
 
+/**
+ * 根据数据库表，获取所有的列信息
+ * @param dbUrl
+ * @param tableNames
+ * @returns {Promise<unknown extends (object & {then(onfulfilled: infer F): any}) ? (F extends ((value: infer V, ...args: any) => any) ? Awaited<V> : never) : unknown extends ReadonlyArray<infer InnerArr> ? FlatArray<InnerArr, [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20][0]> : (unknown extends (object & {then(onfulfilled: infer F): any}) ? (F extends ((value: infer V, ...args: any) => any) ? Awaited<V> : never) : unknown)>}
+ */
+async function getTablesColumns(dbUrl, tableNames) {
+    const _db = await db(dbUrl);
+
+    const res = await Promise.all(tableNames.map(async tableName => {
+        const columns = await _db.getColumns(tableName);
+
+        return columns.map(item => ({ ...item, tableName }));
+    }));
+
+    return res.flat().map(item => {
+        const { name } = item;
+
+        const info = {
+            ...item,
+            dbName: name,
+            name: getModuleNames(name).moduleName,
+        };
+
+        info.options = getOptions(info);
+
+        return {
+            ...info,
+            chinese: getChinese(info),
+            formType: getFormType(info),
+            validation: getValidation(info),
+        };
+    }).filter(Boolean);
+}
+
 module.exports = {
     downloadTemplates,
     getLocalTemplates,
@@ -469,4 +505,5 @@ module.exports = {
     getChinese,
     getFormType,
     getOptions,
+    getTablesColumns,
 };

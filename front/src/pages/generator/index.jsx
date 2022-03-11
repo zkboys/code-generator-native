@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useCallback, useRef} from 'react';
-import {Form, Space, Button, notification, Modal, Input, Select, Tooltip} from 'antd';
+import {Form, Space, Button, notification, Modal, Input, Select, Tooltip, Row, Col, Radio} from 'antd';
 import {MinusCircleOutlined, PlusCircleOutlined} from '@ant-design/icons';
 import {storage} from 'src/commons';
 import {PageContent, OptionsTag} from 'src/components';
@@ -18,6 +18,7 @@ export default ajax()(function Generator(props) {
     // 控制表格更新，如果频繁更新，会比较卡
     const [refreshTable, setRefreshTable] = useState({});
     const [checkExist, setCheckExist] = useState({});
+    const [dataSource, setDataSource] = useState([]);
     const [form] = Form.useForm();
 
     const fetchDbTables = useCallback(async (dbUrl) => {
@@ -53,7 +54,7 @@ export default ajax()(function Generator(props) {
 
     // 数据库连接改变事件
     const { run: handleDbUrlChange } = useDebounceFn(async (e) => {
-        form.setFieldsValue({ tableName: undefined, moduleName: undefined });
+        form.setFieldsValue({ tableNames: undefined, moduleName: undefined });
         let tableOptions;
         try {
             const dbUrl = e.target.value;
@@ -70,13 +71,30 @@ export default ajax()(function Generator(props) {
         setTableOptions(tableOptions);
     }, { wait: 300 });
 
-    // 数据库表改变事件
-    const { run: handleTableNameChange } = useDebounceFn(async (tableName) => {
-        const moduleNames = await fetchModuleNames(tableName);
+    const handleModuleName = useCallback(async (tableName) => {
+        let moduleNames;
+        let moduleName;
+
+        if (tableName) {
+            moduleNames = await fetchModuleNames(tableName);
+            moduleName = moduleNames['module-name'];
+        }
         setModuleNames(moduleNames);
-        form.setFieldsValue({ moduleName: moduleNames['module-name'] });
-        searchFields();
-    }, { wait: 300 });
+        form.setFieldsValue({ moduleName });
+    }, [fetchModuleNames, form]);
+
+    // 数据库表改变事件
+    const handleTableNameChange = useCallback(async (tableNames) => {
+        await handleModuleName(tableNames?.[0]);
+
+        const dbUrl = form.getFieldValue('dbUrl');
+
+        // 查询表格数据
+        if (!dbUrl || !tableNames?.length) return setDataSource([]);
+
+        const dataSource = await props.ajax.post('/db/tables/columns', { dbUrl, tableNames }, { setLoading });
+        setDataSource(dataSource);
+    }, [form, handleModuleName, props.ajax]);
 
     // 模块名改变事件
     const { run: handleModuleNameChange } = useDebounceFn(async (e) => {
@@ -130,6 +148,37 @@ export default ajax()(function Generator(props) {
             setLoadingTip(undefined);
         }
     }, [fetchUpdate]);
+
+    // 解析sql
+    const handleParseSql = useCallback(async () => {
+        const sql = form.getFieldValue('sql');
+        const dbUrl = form.getFieldValue('dbUrl');
+        if (!sql?.trim()) {
+            return Modal.info({
+                title: '温馨提示',
+                content: 'sql语句不能为空！',
+            });
+        }
+        if (!dbUrl?.trim()) {
+            return Modal.info({
+                title: '温馨提示',
+                content: '数据库连接不能为空！',
+            });
+        }
+        if (!sql) return;
+        const dataSource = await props.ajax.post('/db/sql', { dbUrl, sql }, { setLoading });
+        setDataSource(dataSource || []);
+
+        await handleModuleName(dataSource?.[0].tableName);
+    }, [form, handleModuleName, props.ajax]);
+
+    // sql语句输入框，command 或 ctrl + enter 解析
+    const handleSqlPressEnter = useCallback(async (e) => {
+        const { ctrlKey, metaKey } = e;
+        if (!(ctrlKey || metaKey)) return;
+
+        await handleParseSql();
+    }, [handleParseSql]);
 
     // 初始化时，加载模板
     useEffect(() => {
@@ -221,44 +270,92 @@ export default ajax()(function Generator(props) {
                 className={s.query}
                 form={form}
                 layout="inline"
-                initialValues={{ files: [{}] }}
+                initialValues={{ files: [{}], searchType: 'sql' }}
                 onValuesChange={handleFormChange}
             >
-                <Form.Item
-                    align="right"
-                    label={<div style={{ paddingLeft: 28 }}>数据库连接</div>}
-                    name="dbUrl"
-                >
-                    <Input
-                        style={{ width: 307 }}
-                        placeholder="mysql://username:password@host:port/database"
-                        onChange={handleDbUrlChange}
-                    />
-                </Form.Item>
-                <Form.Item
-                    label="数据库表"
-                    name="tableName"
-                >
-                    <Select
-                        showSearch
-                        style={{ width: 315 }}
-                        placeholder="请选择数据库表"
-                        onChange={handleTableNameChange}
-                        options={tableOptions}
-                    />
-                </Form.Item>
-                <Form.Item
-                    label="模块名"
-                    name="moduleName"
-                    rules={[{ required: true, message: '请输入模块名！' }]}
-                >
-                    <Input
-                        style={{ width: 200 }}
-                        placeholder="比如：user-center"
-                        onChange={handleModuleNameChange}
-                    />
-                </Form.Item>
-                <div style={{ width: '100%', marginTop: 8 }}>
+                <Row style={{ width: '100%', paddingRight: 50 }}>
+                    <Col flex="0 0 600px">
+                        <Form.Item
+                            align="right"
+                            label={<div style={{ paddingLeft: 28 }}>数据库连接</div>}
+                            name="dbUrl"
+                        >
+                            <Input
+                                placeholder="mysql://username:password@host:port/database"
+                                onChange={handleDbUrlChange}
+                            />
+                        </Form.Item>
+                    </Col>
+                    <Col flex="0 0 115px">
+                        <Form.Item name="searchType">
+                            <Radio.Group
+                                options={[
+                                    { value: 'sql', label: 'Sql' },
+                                    { value: 'tables', label: '表' },
+                                ]}
+                                optionType="button"
+                                buttonStyle="solid"
+                            />
+                        </Form.Item>
+                    </Col>
+                    <Col flex={1}>
+                        <Form.Item noStyle shouldUpdate>
+                            {({ getFieldValue }) => {
+                                const searchType = getFieldValue('searchType');
+                                if (searchType === 'tables') {
+                                    return (
+                                        <Form.Item name="tableNames">
+                                            <Select
+                                                mode="multiple"
+                                                showSearch
+                                                placeholder="请选择数据库表"
+                                                onChange={handleTableNameChange}
+                                                options={tableOptions}
+                                            />
+                                        </Form.Item>
+                                    );
+                                }
+
+                                return (
+                                    <div className={s.sqlWrapper}>
+                                        <div className={s.sqlAreaWrapper}>
+                                            <Form.Item name="sql">
+                                                <Input.TextArea
+                                                    style={{ height: 78 }}
+                                                    className={s.sqlArea}
+                                                    placeholder="请输入sql语句"
+                                                    onPressEnter={handleSqlPressEnter}
+                                                />
+                                            </Form.Item>
+                                        </div>
+                                        <Button
+                                            type="primary"
+                                            className={s.sqlButton}
+                                            onClick={handleParseSql}
+                                        >
+                                            解析
+                                        </Button>
+                                    </div>
+                                );
+                            }}
+                        </Form.Item>
+                    </Col>
+                </Row>
+                <div style={{ marginTop: 8 }}>
+                    <Form.Item
+                        labelCol={{ flex: '0 0 113px' }}
+                        label="模块名"
+                        name="moduleName"
+                        rules={[{ required: true, message: '请输入模块名！' }]}
+                    >
+                        <Input
+                            style={{ width: 471 }}
+                            placeholder="比如：user-center"
+                            onChange={handleModuleNameChange}
+                        />
+                    </Form.Item>
+                </div>
+                <div style={{ width: '100%', marginTop: 4 }}>
                     <Form.List name="files">
                         {(fields, { add, remove }) => (
                             <>
@@ -375,6 +472,7 @@ export default ajax()(function Generator(props) {
                 <FieldTable
                     refreshTable={refreshTable}
                     form={form}
+                    dataSource={dataSource}
                     templateOptions={templateOptions}
                     tableOptions={tableOptions}
                     onGenerate={handleGenerate}

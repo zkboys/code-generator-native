@@ -1,5 +1,6 @@
 const Router = require('koa-router');
 const assert = require('assert');
+const NodeSQLParser = require('node-sql-parser');
 const db = require('./db');
 const {
     getLocalTemplates,
@@ -12,10 +13,7 @@ const {
     getLastVersion,
     updateVersion,
     getNames,
-    getValidation,
-    getChinese,
-    getFormType,
-    getOptions,
+    getTablesColumns,
 } = require('./util');
 const { DB_TYPES } = require('./db/MySql');
 const packageJson = require('./package.json');
@@ -39,32 +37,64 @@ module.exports = apiRouter
         return db(dbUrl).getTables();
     })
     /** 获取数据库表字段 */
-    .get('/db/tables/:tableName', async ctx => {
-        const { dbUrl } = ctx.query;
-        const { tableName } = ctx.params;
+    .post('/db/tables/columns', async ctx => {
+        const { dbUrl, tableNames } = ctx.request.body;
 
-        assert(tableName, '数据库表不能为空');
+        assert(tableNames, '数据库表不能为空');
         assert(dbUrl, '数据库地址不能为空！');
 
-        const res = await db(dbUrl).getColumns(tableName);
-        return res.map(item => {
-            const { name } = item;
+        const columns = await getTablesColumns(dbUrl, tableNames);
 
-            const info = {
-                ...item,
-                dbName: name,
-                name: getModuleNames(name).moduleName,
-            };
+        // 去重
+        return columns.reduce((prev, item) => {
+            if (!prev.some(it => it.name === item.name)) {
+                prev.push(item);
+            }
+        }, []);
+    })
+    /** 解析sql语句，获取数据库表字段 */
+    .post('/db/sql', async ctx => {
+        const { dbUrl, sql } = ctx.request.body;
 
-            info.options = getOptions(info);
+        const parser = new NodeSQLParser.Parser();
+        const ast = parser.astify(sql);
+        const { columns, from } = ast;
 
-            return {
-                ...info,
-                chinese: getChinese(info),
-                formType: getFormType(info),
-                validation: getValidation(info),
-            };
+        const tableNames = from.map(item => item.table);
+        const allColumns = await getTablesColumns(dbUrl, tableNames);
+
+        if (columns === '*') return allColumns;
+
+        let cols = [];
+        columns.forEach(item => {
+            const { expr } = item;
+            let { table, column } = expr;
+            let tableName;
+            if (!table) tableName = from[0].table;
+
+            if (table) {
+                const t = from.find(it => it.table === table || it.as === table);
+                tableName = t.table;
+            }
+            column = column.toLowerCase();
+            tableName = tableName.toLowerCase();
+
+            if (column === '*') {
+                allColumns.forEach(col => {
+                    if (col.tableName.toLowerCase() === tableName && !cols.some(it => it.name === col.name)) {
+                        cols.push(col);
+                    }
+                });
+                return;
+            }
+            const col = allColumns.find(it => (it.name.toLowerCase() === column || it.dbName.toLowerCase() === column) && it.tableName.toLowerCase() === tableName);
+            if (!col) return;
+            if (!cols.some(it => it.name === col.name)) {
+                cols.push(col);
+            }
         });
+
+        return cols;
     })
     /** 获取数据库类型 options */
     .get('/db/types', async ctx => {

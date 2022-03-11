@@ -20,7 +20,6 @@ import {
     QuestionCircleOutlined,
     CopyOutlined,
 } from '@ant-design/icons';
-import {useDebounceEffect} from 'ahooks';
 import c from 'classnames';
 import {v4 as uuid} from 'uuid';
 import {OptionsTag, Content, confirm, Operator} from 'src/components';
@@ -51,7 +50,8 @@ export default ajax()(function FieldTable(props) {
 
     const {
         dbUrl,
-        tableName,
+        tableNames,
+        sql,
         files,
     } = form.getFieldsValue();
 
@@ -68,6 +68,11 @@ export default ajax()(function FieldTable(props) {
     const [batchVisible, setBatchVisible] = useState(false);
     const [fastVisible, setFastVisible] = useState(false);
     const [dbInfoVisible, setDbInfoVisible] = useState(false);
+
+    // 同步父级dataSource
+    useEffect(() => {
+        setDataSource(props.dataSource);
+    }, [props.dataSource]);
 
     const fetchGenerateFiles = useCallback(async (params) => {
         return await props.ajax.post('/generate/files', params, { setLoading });
@@ -198,7 +203,7 @@ export default ajax()(function FieldTable(props) {
                 const title = template?.shortName;
                 const dataIndex = ['fileOptions', template?.id];
                 const options = template?.fieldOptions || [];
-                if (!options.length) return;
+                if (!options.length) return null;
                 return {
                     title,
                     dataIndex,
@@ -524,24 +529,13 @@ export default ajax()(function FieldTable(props) {
         }, 1000);
     }, [props.ajax, fetchTemplates]);
 
-    useDebounceEffect(() => {
+    useEffect(() => {
         (async () => {
             const dbTypeOptions = await fetchDbTypeOptions({ dbUrl });
             setDbTypeOptions(dbTypeOptions);
         })();
-    }, [dbUrl, fetchDbTypeOptions], { wait: 500 });
-
-    // 查询表格数据
-    useDebounceEffect(() => {
-        (async () => {
-            // 相关参数不存在，清空数据
-            if (!dbUrl || !tableName) return setDataSource([]);
-
-            const dataSource = await props.ajax.get(`/db/tables/${tableName}`, { dbUrl }, { setLoading });
-            setDataSource(dataSource);
-        })();
-    }, [dbUrl, tableName, props.ajax], { wait: 500 });
-
+    }, [dbUrl, fetchDbTypeOptions]);
+    
     // 默认文件选项全选
     useEffect(() => {
         (async () => {
@@ -560,7 +554,9 @@ export default ajax()(function FieldTable(props) {
                 });
             });
 
-            setDataSource(changed ? [...dataSource] : dataSource);
+            if (changed) {
+                setDataSource([...dataSource]);
+            }
         })();
     }, [dataSource, optionColumns]);
 
@@ -609,7 +605,7 @@ export default ajax()(function FieldTable(props) {
                                 生成文件
                             </Button>
                             <Checkbox
-                                disabled={!tableName}
+                                disabled={!tableNames?.length || !sql}
                                 checked={dbInfoVisible}
                                 onChange={e => setDbInfoVisible(e.target.checked)}
                             >

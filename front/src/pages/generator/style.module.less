@@ -49,7 +49,7 @@
 
 .github {
   position: fixed;
-  top: 14px;
+  top: 10px;
   right: 16px;
   display: block;
   background: #fff;
@@ -57,4 +57,26 @@
   height: 26px;
   border-radius: 50%;
   border: 1px solid #fff;
+}
+
+.sqlWrapper {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  z-index: 999;
+}
+
+.sqlAreaWrapper {
+  flex: 1;
+}
+
+.sqlArea {
+  height: 78px;
+  background: @body-background
+}
+
+.sqlButton {
+  flex: 0;
+  height: 78px;
 }
