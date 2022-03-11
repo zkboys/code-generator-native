@@ -74,14 +74,18 @@ module.exports = apiRouter
         columns.forEach(item => {
             const { expr } = item;
             let { table, column } = expr;
-            let tableName;
-            if (!table) tableName = from[0].table;
-
-            if (table) {
-                const t = from.find(it => it.table === table || it.as === table);
-                tableName = t.table;
-            }
             column = column.toLowerCase();
+
+            if (!table) {
+                const col = allColumns.find(it => it.name.toLowerCase() === column);
+                if (!cols.some(it => it.name === col.name)) {
+                    cols.push(col);
+                }
+                return;
+            }
+
+            let tableName = from.find(it => it.table === table || it.as === table).table;
+
             tableName = tableName.toLowerCase();
 
             if (column === '*') {
