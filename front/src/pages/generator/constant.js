@@ -41,6 +41,7 @@ export const DATA_TYPE_OPTIONS = [
 export const VALIDATE_OPTIONS = [
     { value: 'required', label: '必填' },
     { value: 'noSpace', label: '无空格' },
+    { value: 'unique', label: '不可重复' },
     { value: 'mobile', label: '手机号', pattern: /^1\d{10}$/ },
     { value: 'landLine', label: '座机号', pattern: /^([0-9]{3,4}-)?[0-9]{7,8}$/ },
     { value: 'email', label: '邮箱', pattern: /^(\w-*\.*)+@(\w-?)+(\.\w{2,})+$/ },

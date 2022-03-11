@@ -1,6 +1,6 @@
 import {useCallback, useState, useEffect} from 'react';
 import {Form, Row, Col} from 'antd';
-import {ModalContent, FormItem, validateRules} from '@ra-lib/admin';
+import {ModalContent, FormItem, useDebounceValidator} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
 
 export default config({
@@ -16,6 +16,17 @@ export default config({
     const { record, isEdit, onOk } = props;
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
+
+    const checkText = useDebounceValidator(async (rule, value) => {
+        if (!value) return;
+
+        const res = await props.ajax.get('/menus/texts/${value}');
+        if (!res) return;
+
+        const id = form.getFieldValue('id');
+        if (isEdit && res.id !== id && res.text === value) throw Error('文本不能重复！');
+        if (!isEdit && res.text === value) throw Error('文本不能重复！');
+    });
 
     const handleSubmit = useCallback(async (values) => {
         const params = {
@@ -68,19 +79,9 @@ export default config({
                             type="input"
                             label="文本"
                             name="text"
-                            required
-                            noSpace
                             maxLength={200}
                             rules={[
-                                validateRules.mobile(),
-                                validateRules.landLine(),
-                                validateRules.email(),
-                                validateRules.cardNumber(),
-                                validateRules.qq(),
-                                validateRules.ip(),
-                                validateRules.port(),
-                                validateRules.positiveInteger(),
-                                validateRules.numberWithTwoDecimal(),
+                                { validator: checkText },
                             ]}
                         />
                     </Col>

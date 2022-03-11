@@ -6,15 +6,18 @@ module.exports = {
     getContent: config => {
         const { file, moduleNames: mn, fields, NULL_LINE } = config;
         const ignore = ['id', 'updatedAt', 'createdAt', 'isDeleted'];
+        const ignoreRules = ['required', 'noSpace', 'unique'];
         const formFields = fields.filter(item => item.fieldOptions.includes('表单') && !ignore.includes(item.__names.moduleName));
         const { options = [] } = file;
         const _edit = options.includes('修改');
-        const _validateRules = fields.some(item => item.validation && item.validation.some(it => !['required', 'noSpace'].includes(it.value)));
+        const _validateRules = fields.some(item => item.validation && item.validation.some(it => !ignoreRules.includes(it.value)));
+        const uniqueFields = fields.filter(item => item.validation && item.validation.some(it => it.value === 'unique'));
+
 
         return `
 import {useCallback, useState${_edit ? ', useEffect' : ''}} from 'react';
 import {Form, Row, Col} from 'antd';
-import {ModalContent, FormItem${_validateRules ? ', validateRules' : ''}} from '@ra-lib/admin';
+import {ModalContent, FormItem${_validateRules ? ', validateRules' : ''}${uniqueFields.length ? ', useDebounceValidator' : ''}} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
 
 export default config({
@@ -30,6 +33,20 @@ export default config({
     const {${_edit ? ' record, isEdit, ' : ''}onOk } = props;
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
+    
+    ${uniqueFields.map(field => {
+        
+        return `const check${field.__names.ModuleName} = useDebounceValidator(async (rule, value) => {
+        if (!value) return;
+
+        const res = await props.ajax.get('/${mn.moduleNames}/${field.__names.moduleNames}/\${value}');
+        if (!res) return;
+
+        const id = form.getFieldValue('id');
+        if (isEdit && res.id !== id && res.${field.name} === value) throw Error('${field.chinese}不能重复！');
+        if (!isEdit && res.${field.name} === value) throw Error('${field.chinese}不能重复！');
+    });`;
+        })}
 
     const handleSubmit = useCallback(async (values) => {
         const params = {
@@ -68,7 +85,8 @@ export default config({
                 ${_edit ? `{isEdit ? <FormItem hidden name="id"/> : null}` : NULL_LINE}
                 <Row>
                     ${formFields.map(item => {
-            const validation = item.validation.filter(item => !['required', 'noSpace'].includes(item.value));
+            const validation = item.validation.filter(item => !ignoreRules.includes(item.value));
+            const uniqueValidation = item.validation.some(it => it.value === 'unique');
             return `<Col span={12}>
                         <FormItem
                             {...layout}
@@ -81,7 +99,8 @@ export default config({
                             ${item.options && item.options.length ? `options={[
                                 ${item.options.map(it => `{value: '${it.value}', label: '${it.label}'},`).join('\n                                ')}
                             ]}` : NULL_LINE}
-                            ${validation.length ? `rules={[
+                            ${validation.length || uniqueValidation ? `rules={[
+                                ${uniqueValidation? `{ validator: check${item.__names.ModuleName} },`: NULL_LINE}
                                 ${validation.map(item => {
                 return `validateRules.${item.value}(),`;
             }).join('\n                                ')}
