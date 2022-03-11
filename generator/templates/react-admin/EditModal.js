@@ -9,11 +9,12 @@ module.exports = {
         const formFields = fields.filter(item => item.fieldOptions.includes('表单') && !ignore.includes(item.__names.moduleName));
         const { options = [] } = file;
         const _edit = options.includes('修改');
+        const _validateRules = fields.some(item => item.validation && item.validation.some(it => !['required', 'noSpace'].includes(it.value)));
 
         return `
 import {useCallback, useState${_edit ? ', useEffect' : ''}} from 'react';
 import {Form, Row, Col} from 'antd';
-import {ModalContent, FormItem} from '@ra-lib/admin';
+import {ModalContent, FormItem${_validateRules ? ', validateRules' : ''}} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
 
 export default config({
@@ -66,7 +67,9 @@ export default config({
             >
                 ${_edit ? `{isEdit ? <FormItem hidden name="id"/> : null}` : NULL_LINE}
                 <Row>
-                    ${formFields.map(item => `<Col span={12}>
+                    ${formFields.map(item => {
+            const validation = item.validation.filter(item => !['required', 'noSpace'].includes(item.value));
+            return `<Col span={12}>
                         <FormItem
                             {...layout}
                             type="${item.formType}"
@@ -77,14 +80,15 @@ export default config({
                             ${item.length ? `maxLength={${item.length}}` : NULL_LINE}
                             ${item.options && item.options.length ? `options={[
                                 ${item.options.map(it => `{value: '${it.value}', label: '${it.label}'},`).join('\n                                ')}
-                            ]}`: NULL_LINE}
-                            ${item.validation.filter(it => it.pattern).length ? `rules={[
-                                ${item.validation.filter(it => it.pattern).map(item => {
-            return `{pattern: ${item.pattern}, message: '请输入正确的${item.label}！'},`;
-        }).join('\n                                ')}
+                            ]}` : NULL_LINE}
+                            ${validation.length ? `rules={[
+                                ${validation.map(item => {
+                return `validateRules.${item.value}(),`;
+            }).join('\n                                ')}
                             ]}` : NULL_LINE}
                         />        
-                    </Col>`).join('\n                    ')}
+                    </Col>`;
+        }).join('\n                    ')}
                 </Row>
             </ModalContent>
         </Form>

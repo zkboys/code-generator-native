@@ -23,12 +23,6 @@ export const FORM_ELEMENT_OPTIONS = [
     { value: 'transfer', label: '穿梭框' },
 ];
 
-export const FIELD_EDIT_TYPES = {
-    input: 'input',
-    select: 'select',
-    tags: 'tags',
-};
-
 // 后端数据类型，以java为准，如果后端是其他类型，编写模板时，基于java再次转换
 export const DATA_TYPE_OPTIONS = [
     { value: 'String', label: 'String' },
