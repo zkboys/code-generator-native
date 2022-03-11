@@ -450,23 +450,10 @@ export default ajax()(function FieldTable(props) {
 
             if (dataSource.some(item => !item.name || !item.chinese)) return Modal.info({ title: '温馨提示', content: '表格的字段配置有必填项未填写！' });
             const { files, moduleName } = values;
-            const config = dataSource.map(item => {
-                const validation = item.validation?.map(value => {
-                    const record = VALIDATE_OPTIONS.find(it => it.value === value);
-                    return {
-                        ...record,
-                        pattern: record.pattern?.toString(),
-                    };
-                });
-                return {
-                    ...item,
-                    validation,
-                };
-            });
             const params = {
                 moduleName,
                 files,
-                config,
+                config: dataSource,
             };
 
             if (preview) {

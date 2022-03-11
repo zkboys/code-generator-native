@@ -10,8 +10,8 @@ module.exports = {
         const formFields = fields.filter(item => item.fieldOptions.includes('表单') && !ignore.includes(item.__names.moduleName));
         const { options = [] } = file;
         const _edit = options.includes('修改');
-        const _validateRules = fields.some(item => item.validation && item.validation.some(it => !ignoreRules.includes(it.value)));
-        const uniqueFields = fields.filter(item => item.validation && item.validation.some(it => it.value === 'unique'));
+        const _validateRules = fields.some(item => item.validation && item.validation.some(it => !ignoreRules.includes(it)));
+        const uniqueFields = fields.filter(item => item.validation && item.validation.includes('unique'));
 
 
         return `
@@ -35,8 +35,8 @@ export default config({
     const [form] = Form.useForm();
     
     ${uniqueFields.map(field => {
-        
-        return `const check${field.__names.ModuleName} = useDebounceValidator(async (rule, value) => {
+
+            return `const check${field.__names.ModuleName} = useDebounceValidator(async (rule, value) => {
         if (!value) return;
 
         const res = await props.ajax.get('/${mn.moduleNames}/${field.__names.moduleNames}/\${value}');
@@ -86,24 +86,24 @@ export default config({
                 ${_edit ? `{isEdit ? <FormItem hidden name="id"/> : null}` : NULL_LINE}
                 <Row>
                     ${formFields.map(item => {
-            const validation = item.validation.filter(item => !ignoreRules.includes(item.value));
-            const uniqueValidation = item.validation.some(it => it.value === 'unique');
+            const validation = item.validation.filter(item => !ignoreRules.includes(item));
+            const uniqueValidation = item.validation.some(it => it === 'unique');
             return `<Col span={12}>
                         <FormItem
                             {...layout}
                             type="${item.formType}"
                             label="${item.chinese}"
                             name="${item.__names.moduleName}"
-                            ${item.validation.some(it => it.value === 'required') ? 'required' : NULL_LINE}
-                            ${item.validation.some(it => it.value === 'noSpace') ? 'noSpace' : NULL_LINE}
+                            ${item.validation.includes('required') ? 'required' : NULL_LINE}
+                            ${item.validation.includes('noSpace') ? 'noSpace' : NULL_LINE}
                             ${item.length ? `maxLength={${item.length}}` : NULL_LINE}
                             ${item.options && item.options.length ? `options={[
                                 ${item.options.map(it => `{value: '${it.value}', label: '${it.label}'},`).join('\n                                ')}
                             ]}` : NULL_LINE}
                             ${validation.length || uniqueValidation ? `rules={[
-                                ${uniqueValidation? `{ validator: check${item.__names.ModuleName} },`: NULL_LINE}
+                                ${uniqueValidation ? `{ validator: check${item.__names.ModuleName} },` : NULL_LINE}
                                 ${validation.map(item => {
-                return `validateRules.${item.value}(),`;
+                return `validateRules.${item}(),`;
             }).join('\n                                ')}
                             ]}` : NULL_LINE}
                         />        

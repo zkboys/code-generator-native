@@ -12,6 +12,21 @@ const { Name: NameModel } = require('../database');
 const translate = require('./translate');
 const db = require('../db');
 
+const TYPE_MAP = {
+    String: 'input',
+    long: 'number',
+    int: 'number',
+    boolean: 'switch',
+    BigInteger: 'number',
+    float: 'number',
+    double: 'number',
+    BigDecimal: 'number',
+    Date: 'date',
+    Time: 'time',
+    Timestamp: 'date-time',
+};
+
+
 async function downloadTemplates() {
     const systemTemplatesDir = config.systemTemplatesPath;
     const systemTemplates = getAllFiles(systemTemplatesDir);
@@ -365,24 +380,26 @@ async function saveNames(names) {
  * @returns {(boolean|string)[]}
  */
 function getValidation(info) {
-    const { isNullable } = info;
-    // TODO 扩展其他校验规则
-    return [!isNullable && 'required'].filter(Boolean);
-}
+    const { isNullable, comment = '', name } = info;
+    const isXxx = (chinese, validator) => {
+        if (comment.includes(chinese) || name.toLowerCase().includes(validator)) {
+            return validator;
+        }
+    };
 
-const typeMap = {
-    String: 'input',
-    long: 'number',
-    int: 'number',
-    boolean: 'switch',
-    BigInteger: 'number',
-    float: 'number',
-    double: 'number',
-    BigDecimal: 'number',
-    Date: 'date',
-    Time: 'time',
-    Timestamp: 'date-time',
-};
+    return [
+        !isNullable && 'required',
+        isXxx('手机号', 'mobile'),
+        isXxx('邮箱', 'email'),
+        isXxx('ip地址', 'ip'),
+        isXxx('IP地址', 'ip'),
+        isXxx('座机号', 'landLine'),
+        isXxx('身份证号', 'cardNumber'),
+        isXxx('qq号', 'qq'),
+        isXxx('QQ号', 'qq'),
+        isXxx('端口号', 'port'),
+    ].filter(Boolean);
+}
 
 /**
  * 根据数据库信息获取表单类型
@@ -391,7 +408,7 @@ const typeMap = {
 function getFormType(info) {
     if (info.options && info.options.length) return 'select';
 
-    return typeMap[info.dataType] || 'input';
+    return TYPE_MAP[info.dataType] || 'input';
 }
 
 /**
