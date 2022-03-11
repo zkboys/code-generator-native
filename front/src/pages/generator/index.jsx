@@ -1,7 +1,7 @@
 import React, {useState, useEffect, useCallback, useRef} from 'react';
 import {Form, Space, Button, notification, Modal, Input, Select, Tooltip, Row, Col, Radio} from 'antd';
 import {MinusCircleOutlined, PlusCircleOutlined} from '@ant-design/icons';
-import {storage} from 'src/commons';
+import {storage, isMac} from 'src/commons';
 import {PageContent, OptionsTag} from 'src/components';
 import FieldTable from './field-table';
 import s from './style.module.less';
@@ -323,7 +323,7 @@ export default ajax()(function Generator(props) {
                                                 <Input.TextArea
                                                     style={{ height: 78 }}
                                                     className={s.sqlArea}
-                                                    placeholder="请输入sql语句"
+                                                    placeholder={`请输入sql语句，${isMac ? '⌘' : 'ctrl'} + enter 进行解析`}
                                                     onPressEnter={handleSqlPressEnter}
                                                 />
                                             </Form.Item>

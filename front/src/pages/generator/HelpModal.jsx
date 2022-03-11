@@ -34,6 +34,7 @@ export default modal({
                     message="页面操作"
                     description={(
                         <ol>
+                            <li>sql语句：{isMac ? '⌘' : 'ctrl'} + enter，进行解析提交；</li>
                             <li>标签：{isMac ? '⌘' : 'ctrl'} + 鼠标左键，快速全选/取消标签；</li>
                             <li>「更新本地模版」：将工具中内置模版更新到本地，同名模版会被覆盖；</li>
                             <li>字段表格：通过方向键快，可以在input框之间速移动光标；回车光标跳入下一行</li>
