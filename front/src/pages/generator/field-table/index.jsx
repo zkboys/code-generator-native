@@ -46,6 +46,8 @@ export default ajax()(function FieldTable(props) {
         form,
         onGenerate,
         fetchTemplates,
+        filesVisible,
+        onFilesVisibleChange,
     } = props;
 
     const {
@@ -363,16 +365,13 @@ export default ajax()(function FieldTable(props) {
         });
         return [
             {
-                key: 'type', tab: '类型&验证',
+                key: 'type', tab: '文件编辑',
                 columns: [
                     showDataType && { title: '数据类型', dataIndex: 'dataType', width: 150, formProps: { type: 'select', options: DATA_TYPE_OPTIONS } },
                     { title: '表单类型', dataIndex: 'formType', width: 150, formProps: { type: 'select', options: FORM_ELEMENT_OPTIONS } },
-                    { title: '校验规则', dataIndex: 'validation', formProps: { type: 'select', mode: 'multiple', options: VALIDATE_OPTIONS } },
+                    { title: '校验规则', dataIndex: 'validation', width: 250, formProps: { type: 'select', mode: 'multiple', options: VALIDATE_OPTIONS } },
+                    ...optionColumns,
                 ].filter(Boolean),
-            },
-            {
-                key: 'options', tab: '模板选项',
-                columns: [...optionColumns],
             },
             {
                 key: 'items', tab: '选项编辑',
@@ -591,6 +590,12 @@ export default ajax()(function FieldTable(props) {
                             >
                                 生成文件
                             </Button>
+                            <Checkbox
+                                checked={filesVisible}
+                                onChange={e => onFilesVisibleChange(e.target.checked)}
+                            >
+                                展开文件列表
+                            </Checkbox>
                             <Checkbox
                                 disabled={!tableNames?.length && !sql}
                                 checked={dbInfoVisible}
