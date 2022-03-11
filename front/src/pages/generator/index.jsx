@@ -323,7 +323,7 @@ export default ajax()(function Generator(props) {
                                                 <Input.TextArea
                                                     style={{ height: 78 }}
                                                     className={s.sqlArea}
-                                                    placeholder={`请输入sql语句，${isMac ? '⌘' : 'ctrl'} + enter 进行解析`}
+                                                    placeholder={`请输入sql语句，多表重复字段将会被去重，${isMac ? '⌘' : 'ctrl'} + enter 进行解析`}
                                                     onPressEnter={handleSqlPressEnter}
                                                 />
                                             </Form.Item>
@@ -343,13 +343,13 @@ export default ajax()(function Generator(props) {
                 </Row>
                 <div style={{ marginTop: 8 }}>
                     <Form.Item
-                        labelCol={{ flex: '0 0 113px' }}
+                        labelCol={{ flex: '0 0 112px' }}
                         label="模块名"
                         name="moduleName"
                         rules={[{ required: true, message: '请输入模块名！' }]}
                     >
                         <Input
-                            style={{ width: 471 }}
+                            style={{ width: 472 }}
                             placeholder="比如：user-center"
                             onChange={handleModuleNameChange}
                         />
