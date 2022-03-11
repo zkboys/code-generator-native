@@ -63,11 +63,12 @@ export default config({
 
     ${_edit ? `// 初始化，查询详情数据
     useEffect(() => {
+        if (!isEdit) return;
         (async () => {
             const res = await props.ajax.get('/${mn.module_names}', { id: record?.id }, [], { setLoading });
             form.setFieldsValue(res || {});
         })();
-    }, [form, props.ajax, record?.id]);` : NULL_LINE}
+    }, [isEdit, form, props.ajax, record?.id]);` : NULL_LINE}
 
     const layout = { labelCol: { flex: '100px' } };
     return (

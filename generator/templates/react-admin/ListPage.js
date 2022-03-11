@@ -40,7 +40,7 @@ import {Button, Form, Space, ${has(_batchDelete, 'Modal, ', false)}${has(_import
 import {PageContent, QueryBar, FormItem, Table, ${has(_page, 'Pagination, ', false)}${has(_edit || _detail || _delete, 'Operator', false)}} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
 ${has(_add || _edit, 'import EditModal from \'./EditModal\';')}
-${has(_detail || _edit, 'import DetailModal from \'./DetailModal\';')}
+${has(_detail, 'import DetailModal from \'./DetailModal\';')}
 
 export default config({
     path: '/${mn.module_names}',
