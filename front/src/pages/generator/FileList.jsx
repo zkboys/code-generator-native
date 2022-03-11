@@ -7,7 +7,6 @@ import { OptionsTag } from 'src/components';
 import s from './style.module.less';
 
 function FileList(props) {
-    console.log('FileList render');
     const {
         form,
         templateOptions,

@@ -3,7 +3,6 @@ import { Tooltip } from 'antd';
 import s from './style.module.less';
 
 function Feedback() {
-    console.log('Feedback render');
     return (
         <Tooltip
             title="问题反馈"
