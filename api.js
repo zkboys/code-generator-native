@@ -44,12 +44,12 @@ module.exports = apiRouter
         assert(dbUrl, '数据库地址不能为空！');
 
         const columns = await getTablesColumns(dbUrl, tableNames);
-
         // 去重
         return columns.reduce((prev, item) => {
             if (!prev.some(it => it.name === item.name)) {
                 prev.push(item);
             }
+            return prev;
         }, []);
     })
     /** 解析sql语句，获取数据库表字段 */

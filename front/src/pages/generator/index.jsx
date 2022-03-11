@@ -270,7 +270,7 @@ export default ajax()(function Generator(props) {
                 className={s.query}
                 form={form}
                 layout="inline"
-                initialValues={{ files: [{}], searchType: 'sql' }}
+                initialValues={{ files: [{}], searchType: 'tables' }}
                 onValuesChange={handleFormChange}
             >
                 <Row style={{ width: '100%', paddingRight: 50 }}>
