@@ -5,7 +5,7 @@ import ResizeObserver from 'rc-resize-observer';
 import {SortableContainer, SortableElement} from 'react-sortable-hoc';
 import classNames from 'classnames';
 import {getScrollBarWidth} from 'src/commons';
-import s from './virtual-table.module.less';
+import s from './style.module.less';
 
 const SCROLL_BAR_WIDTH = getScrollBarWidth();
 const ROW_HEIGHT = 65;

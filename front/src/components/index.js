@@ -6,3 +6,4 @@ export { default as CodeEditor } from './code-editor';
 export { default as OptionsTag } from './options-tag';
 export { default as confirm } from './confirm';
 export { default as Operator } from './operator';
+export { default as virtualTable } from './virtual-table';

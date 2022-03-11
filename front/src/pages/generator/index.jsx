@@ -1,14 +1,20 @@
-import React, {useState, useEffect, useCallback, useRef} from 'react';
-import {Form, Space, Button, notification, Modal, Input, Select, Tooltip, Row, Col, Radio, Tag} from 'antd';
-import {MinusCircleOutlined, PlusCircleOutlined} from '@ant-design/icons';
-import stringToColor from 'string-to-color';
-import {storage, isMac} from 'src/commons';
-import {PageContent, OptionsTag} from 'src/components';
-import FieldTable from './field-table';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Form, Button, notification, Modal, Input, Select, Row, Col, Radio, Space, Checkbox, Tabs } from 'antd';
+import { CodeOutlined, CopyOutlined, DownloadOutlined, FileDoneOutlined, PlusOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { useDebounceFn } from 'ahooks';
+import { v4 as uuid } from 'uuid';
+import { storage, isMac } from 'src/commons';
+import { confirm, PageContent } from 'src/components';
+import { ajax } from 'src/hocs';
+import FieldTable from './FieldTable';
+import Feedback from './Feedback';
+import FileList from './FileList';
 import s from './style.module.less';
-import {useDebounceFn} from 'ahooks';
-import {ajax} from 'src/hocs';
-import TargetPathInput from './TargetPathInput';
+import PreviewModal from 'src/pages/generator/PreviewModal';
+import HelpModal from 'src/pages/generator/HelpModal';
+import BatchModal from 'src/pages/generator/BatchModal';
+
+const { TabPane } = Tabs;
 
 export default ajax()(function Generator(props) {
     const [tableOptions, setTableOptions] = useState([]);
@@ -16,21 +22,24 @@ export default ajax()(function Generator(props) {
     const [moduleNames, setModuleNames] = useState({});
     const [loading, setLoading] = useState();
     const [loadingTip, setLoadingTip] = useState(undefined);
-    // 控制表格更新，如果频繁更新，会比较卡
-    const [refreshTable, setRefreshTable] = useState({});
     const [checkExist, setCheckExist] = useState({});
     const [dataSource, setDataSource] = useState([]);
     const [filesVisible, setFilesVisible] = useState(false);
+    const [activeKey, setActiveKey] = useState('files');
+    const [helpVisible, setHelpVisible] = useState(false);
+    const [batchVisible, setBatchVisible] = useState(false);
+    const [dbInfoVisible, setDbInfoVisible] = useState(false);
+    const [previewParams, setPreviewParams] = useState(null);
+    const [dbTypeOptions, setDbTypeOptions] = useState([]);
+    const [files, setFiles] = useState([]);
     const [form] = Form.useForm();
 
-    const fetchDbTables = useCallback(async (dbUrl) => {
-        return await props.ajax.get('/db/tables', { dbUrl });
-    }, [props.ajax]);
-
+    // 发请求获取模块名
     const fetchModuleNames = useCallback(async (name) => {
         return await props.ajax.get(`/moduleNames/${name}`);
     }, [props.ajax]);
 
+    // 发请求，获取模版
     const fetchTemplates = useCallback(async (options = {}) => {
         const templates = await props.ajax.get('/templates', null, { ...options });
 
@@ -39,40 +48,96 @@ export default ajax()(function Generator(props) {
         return templateOptions;
     }, [props.ajax]);
 
-    const fetchVersion = useCallback(async () => {
-        return await props.ajax.get('/version', null, { errorTip: false });
-    }, [props.ajax]);
-
-    const fetchUpdate = useCallback(async () => {
-        return await props.ajax.put('/update', null, { errorTip: false, setLoading });
-    }, [props.ajax]);
-
-    const { run: searchFields } = useDebounceFn(() => setRefreshTable({}), { wait: 300 });
-
     // 生成文件事件
-    const handleGenerate = useCallback(() => {
-        setCheckExist({});
-    }, []);
+    // 生成代码、代码预览
+    const handleGenerate = useCallback(async (preview = false) => {
+        try {
+            if (!dataSource?.length) return Modal.info({ title: '温馨提示', content: '表格的字段配置不能为空！' });
+
+            const values = await form.validateFields();
+
+            if (dataSource.some(item => !item.name || !item.chinese)) return Modal.info({ title: '温馨提示', content: '表格的字段配置有必填项未填写！' });
+            const { files, moduleName } = values;
+            const params = {
+                moduleName,
+                files,
+                config: dataSource,
+            };
+
+            if (preview) {
+                setPreviewParams(params);
+            } else {
+                // 检测文件是否存在
+                const res = await props.ajax.post('/generate/files/exist', params, { setLoading }) || [];
+
+                // 用户选择是否覆盖
+                for (let targetPath of res) {
+                    const file = files.find(it => it.targetPath === targetPath);
+
+                    try {
+                        await confirm({
+                            width: 600,
+                            title: '文件已存在',
+                            content: targetPath,
+                            okText: '覆盖',
+                            okButtonProps: {
+                                danger: true,
+                            },
+                        });
+                        file.rewrite = true;
+                    } catch (e) {
+                        file.rewrite = false;
+                    }
+                }
+
+                const paths = await props.ajax.post('/generate/files', params, { setLoading });
+                if (!paths?.length) return Modal.info({ title: '温馨提示', content: '未生成任何文件！' });
+
+                Modal.success({
+                    width: 600,
+                    title: '生成文件如下',
+                    content: (
+                        <div style={{ maxHeight: 200, overflow: 'auto' }}>
+                            {paths.map(p => <div key={p}>{p}</div>)}
+                        </div>
+                    ),
+                });
+
+                setCheckExist({});
+            }
+        } catch (e) {
+            if (e?.errorFields?.length) {
+                return Modal.info({ title: '温馨提示', content: '表单填写有误，请检查后再提交！' });
+            }
+            console.error(e);
+        }
+    }, [form, dataSource, props.ajax]);
 
     // 数据库连接改变事件
     const { run: handleDbUrlChange } = useDebounceFn(async (e) => {
         form.setFieldsValue({ tableNames: undefined, moduleName: undefined });
         let tableOptions;
+        let dbTypeOptions;
         try {
             const dbUrl = e.target.value;
-            const tables = await fetchDbTables(dbUrl);
+            const tables = await props.ajax.get('/db/tables', { dbUrl });
             tableOptions = tables.map(item => ({
                 value: item.name,
                 label: `${item.name}${item.comment ? `（${item.comment}）` : ''}`,
                 comment: item.comment,
             }));
+
+            dbTypeOptions = await props.ajax.get('/db/types', { dbUrl });
         } catch (e) {
             tableOptions = [];
+            dbTypeOptions = [];
         }
 
         setTableOptions(tableOptions);
+        setDbTypeOptions(dbTypeOptions);
     }, { wait: 300 });
 
+    // 设置模块名
     const handleModuleName = useCallback(async (tableName) => {
         let moduleNames;
         let moduleName;
@@ -81,9 +146,38 @@ export default ajax()(function Generator(props) {
             moduleNames = await fetchModuleNames(tableName);
             moduleName = moduleNames['module-name'];
         }
+
+        // moduleName并没有改变，不设置
+        if (moduleName === form.getFieldValue('moduleName')) return;
+
         setModuleNames(moduleNames);
         form.setFieldsValue({ moduleName });
     }, [fetchModuleNames, form]);
+
+    const handleDataSourceChange = useCallback(dataSource => {
+        const files = form.getFieldValue('files');
+        let changed;
+        files.forEach(col => {
+            const { templateId } = col;
+            const template = templateOptions.find(item => item.value === templateId)?.record;
+            const options = template?.fieldOptions || [];
+
+            dataSource.forEach(item => {
+                if (!item.fileOptions) item.fileOptions = {};
+
+                if (!item.fileOptions[templateId]) {
+                    item.fileOptions[templateId] = [...options];
+                    changed = true;
+                }
+            });
+        });
+
+        if (changed) {
+            setDataSource([...dataSource]);
+        }
+
+        setDataSource(dataSource);
+    }, [templateOptions, form]);
 
     // 数据库表改变事件
     const handleTableNameChange = useCallback(async (tableNames) => {
@@ -92,11 +186,11 @@ export default ajax()(function Generator(props) {
         const dbUrl = form.getFieldValue('dbUrl');
 
         // 查询表格数据
-        if (!dbUrl || !tableNames?.length) return setDataSource([]);
+        if (!dbUrl || !tableNames?.length) return handleDataSourceChange([]);
 
         const dataSource = await props.ajax.post('/db/tables/columns', { dbUrl, tableNames }, { setLoading });
-        setDataSource(dataSource);
-    }, [form, handleModuleName, props.ajax]);
+        handleDataSourceChange(dataSource);
+    }, [form, handleModuleName, props.ajax, handleDataSourceChange]);
 
     // 模块名改变事件
     const { run: handleModuleNameChange } = useDebounceFn(async (e) => {
@@ -105,6 +199,22 @@ export default ajax()(function Generator(props) {
         const moduleNames = await fetchModuleNames(moduleName);
         setModuleNames(moduleNames);
     }, { wait: 300 });
+
+    // 文件改变 添加、删除、修改模版、地址、选项
+    const handleFilesChange = useCallback(() => {
+        setTimeout(() => {
+            const files = form.getFieldValue('files');
+            setFiles(files);
+        });
+    }, [form]);
+
+    // 添加模版
+    const handleFilesAdd = useCallback(() => {
+        handleFilesChange();
+        setTimeout(() => {
+            handleDataSourceChange(dataSource);
+        });
+    }, [handleFilesChange, dataSource, handleDataSourceChange]);
 
     // 模版改变事件
     const handleTemplateChange = useCallback((name, templateId) => {
@@ -118,25 +228,21 @@ export default ajax()(function Generator(props) {
         files[name] = file;
 
         form.setFieldsValue({ files: [...files] });
-        searchFields();
-    }, [templateOptions, form, searchFields]);
+        handleFilesChange();
+    }, [templateOptions, form, handleFilesChange]);
 
     // 表单改变事件
-    const formChangeStRef = useRef(0);
-    const handleFormChange = useCallback(() => {
-        clearTimeout(formChangeStRef.current);
-        formChangeStRef.current = setTimeout(() => {
-            const { dbUrl, files } = form.getFieldsValue();
-            storage.local.setItem('files', files);
-            storage.local.setItem('dbUrl', dbUrl);
-        }, 500);
-    }, [form]);
+    const { run: handleFormChange } = useDebounceFn(() => {
+        const { dbUrl, files } = form.getFieldsValue();
+        storage.local.setItem('files', files);
+        storage.local.setItem('dbUrl', dbUrl);
+    }, { wait: 500 });
 
     // 更新软件版本
     const handleUpdate = useCallback(async () => {
         try {
             setLoadingTip('更新中，请稍成功后请重启服务！');
-            await fetchUpdate();
+            await props.ajax.put('/update', null, { errorTip: false, setLoading });
             Modal.info({
                 title: '温馨提示',
                 content: '更新成功！请重启服务，使用最新版本！',
@@ -149,7 +255,7 @@ export default ajax()(function Generator(props) {
         } finally {
             setLoadingTip(undefined);
         }
-    }, [fetchUpdate]);
+    }, [props.ajax]);
 
     // 解析sql
     const handleParseSql = useCallback(async () => {
@@ -169,10 +275,10 @@ export default ajax()(function Generator(props) {
         }
         if (!sql) return;
         const dataSource = await props.ajax.post('/db/sql', { dbUrl, sql }, { setLoading });
-        setDataSource(dataSource || []);
+        handleDataSourceChange(dataSource || []);
 
         await handleModuleName(dataSource?.[0].tableName);
-    }, [form, handleModuleName, props.ajax]);
+    }, [form, handleModuleName, props.ajax, handleDataSourceChange]);
 
     // sql语句输入框，command 或 ctrl + enter 解析
     const handleSqlPressEnter = useCallback(async (e) => {
@@ -181,6 +287,51 @@ export default ajax()(function Generator(props) {
 
         await handleParseSql();
     }, [handleParseSql]);
+
+    // 获取新加一行初始化数据
+    const getNewRecord = useCallback((fields = {}) => {
+        const isItems = activeKey === 'items';
+        let name;
+        if (isItems) {
+            name = dataSource.length + 1;
+            name = name < 10 ? `0${name}` : `name`;
+        }
+        return {
+            id: uuid(),
+            // comment: `新增列${length + 1}`,
+            // chinese: `新增列${length + 1}`,
+            // name: `field${length + 1}`,
+            name,
+            type: 'VARCHAR',
+            formType: 'input',
+            dataType: 'String',
+            isNullable: true,
+            __isNew: true,
+            __isItems: isItems,
+            ...fields,
+        };
+
+    }, [activeKey, dataSource.length]);
+
+    // 表格新增一行事件
+    const handleAdd = useCallback((append = false) => {
+        const newRecord = getNewRecord();
+
+        append ? dataSource.push(newRecord) : dataSource.unshift(newRecord);
+        handleDataSourceChange([...dataSource]);
+    }, [dataSource, getNewRecord, handleDataSourceChange]);
+
+    // 更新本地模版
+    const handleUpdateLocalTemplates = useCallback(async () => {
+        await confirm('本地同名模版将被覆盖，是否继续？');
+        await props.ajax.get('/templates/local/download', null, { successTip: '更新成功！' });
+
+        // 等待本地服务器重启
+        const si = setInterval(async () => {
+            await fetchTemplates({ errorTip: false });
+            clearInterval(si);
+        }, 1000);
+    }, [props.ajax, fetchTemplates]);
 
     // 初始化时，加载模板
     useEffect(() => {
@@ -234,11 +385,14 @@ export default ajax()(function Generator(props) {
         if (!nextFiles?.length) return;
 
         form.setFieldsValue({ files: nextFiles });
-    }, [form, templateOptions]);
 
+        handleFilesChange();
+    }, [form, templateOptions, handleFilesChange]);
+
+    // 检查是否有新版本
     useEffect(() => {
         (async () => {
-            const res = await fetchVersion();
+            const res = await props.ajax.get('/version', null, { errorTip: false });
             const { lastVersion, currentVersion } = res;
             if (currentVersion !== lastVersion) {
                 notification.success({
@@ -264,7 +418,7 @@ export default ajax()(function Generator(props) {
                 });
             }
         })();
-    }, [fetchVersion, handleUpdate]);
+    }, [props.ajax, handleUpdate]);
 
     return (
         <PageContent className={s.root} loading={loading} loadingTip={loadingTip}>
@@ -301,7 +455,10 @@ export default ajax()(function Generator(props) {
                         </Form.Item>
                     </Col>
                     <Col flex={1}>
-                        <Form.Item noStyle shouldUpdate>
+                        <Form.Item
+                            noStyle
+                            shouldUpdate={(p, c) => p.searchType !== c.searchType}
+                        >
                             {({ getFieldValue }) => {
                                 const searchType = getFieldValue('searchType');
                                 if (searchType === 'tables') {
@@ -358,182 +515,123 @@ export default ajax()(function Generator(props) {
                     </Form.Item>
                 </div>
                 <div style={{ width: '100%', marginTop: 4 }}>
-                    <Form.List name="files">
-                        {(fields, { add, remove }) => (
-                            <>
-                                {fields.map(({ key, name, isListField, ...restField }, index) => {
-                                    const isFirst = index === 0;
-                                    const isLast = index === fields.length - 1;
-                                    const number = index + 1;
-                                    const label = `文件${number}`;
-
-                                    const templateId = form.getFieldValue(['files', name, 'templateId']);
-                                    const record = templateOptions.find(item => item.value === templateId)?.record;
-                                    const color = stringToColor(record?.name);
-                                    const options = record?.options || [];
-
-                                    const addButton = (
-                                        <Button
-                                            className={s.filePlus}
-                                            type="link"
-                                            icon={<PlusCircleOutlined/>}
-                                            onClick={() => {
-                                                const files = form.getFieldValue('files');
-                                                const record = templateOptions.find(item => !files.find(it => it.templateId === item.value))?.record;
-                                                const { id: templateId, targetPath, options } = record || {};
-                                                add({ templateId, targetPath, options: [...options] });
-                                                searchFields();
-                                            }}
-                                        />
-                                    );
-
-                                    return (
-                                        <div key={key} style={{ display: !filesVisible ? 'inline-block' : 'block' }}>
-                                            <div className={s.fileName} style={{ display: !filesVisible ? 'inline-block' : 'none' }}>
-                                                {isFirst ? (
-                                                    <div>
-                                                        {(fields.length < templateOptions.length) && addButton}
-                                                        <span style={{ marginLeft: 8 }}>
-                                                            所选文件：
-                                                        </span>
-                                                    </div>
-                                                ) : null}
-                                                <Tag
-                                                    color={color}
-                                                    closable={fields.length !== 1}
-                                                    onClose={() => {
-                                                        remove(name);
-                                                        searchFields();
-                                                    }}
-                                                >
-                                                    {record?.name}
-                                                </Tag>
-                                            </div>
-                                            <div className={s.fileRow} style={{ display: filesVisible ? 'flex' : 'none' }}>
-                                                <Space className={s.fileOperator}>
-                                                    <Button
-                                                        className={s.fileMinus}
-                                                        danger
-                                                        icon={<MinusCircleOutlined/>}
-                                                        type="link"
-                                                        disabled={fields.length === 1}
-                                                        onClick={() => {
-                                                            remove(name);
-                                                            searchFields();
-                                                        }}
-                                                    />
-                                                    {isFirst && (fields.length < templateOptions.length) && addButton}
-                                                </Space>
-                                                <Form.Item
-                                                    noStyle
-                                                    shouldUpdate={(prevValues, currValues) => {
-                                                        return prevValues?.files?.length !== currValues?.files?.length;
-                                                    }}
-                                                >
-                                                    {({ getFieldValue }) => {
-                                                        const files = getFieldValue('files');
-                                                        const options = templateOptions.filter(item => {
-                                                            if (templateId === item.value) return true;
-                                                            return !files.find(f => f.templateId === item.value);
-                                                        });
-                                                        return (
-                                                            <div>
-                                                                <Form.Item
-                                                                    {...restField}
-                                                                    label={label}
-                                                                    name={[name, 'templateId']}
-                                                                    rules={[{ required: true, message: '请选择模板文件！' }]}
-                                                                >
-                                                                    <Select
-                                                                        style={{ width: 211 }}
-                                                                        options={options}
-                                                                        placeholder="请选择模板"
-                                                                        onChange={(id) => handleTemplateChange(name, id)}
-                                                                    />
-                                                                </Form.Item>
-                                                            </div>
-                                                        );
-                                                    }}
-                                                </Form.Item>
-                                                <Form.Item
-                                                    {...restField}
-                                                    label="目标位置"
-                                                    name={[name, 'targetPath']}
-                                                    rules={[
-                                                        { required: true, message: '请输入目标文件位置！' },
-                                                        {
-                                                            validator(_, value) {
-                                                                if (!value) return Promise.resolve();
-                                                                const files = form.getFieldValue('files');
-                                                                const records = files.filter(item => item.targetPath === value);
-                                                                if (records.length > 1) return Promise.reject('不能使用相同的目标文件！请修改');
-                                                                return Promise.resolve();
-                                                            },
-                                                        },
-                                                    ]}
-                                                >
-                                                    <TargetPathInput
-                                                        style={{ width: 400 }}
-                                                        moduleNames={moduleNames}
-                                                        templateId={form.getFieldValue(['files', name, 'templateId'])}
-                                                        templateOptions={templateOptions}
-                                                        placeholder="请输入目标文件位置"
-                                                        name={['files', name, 'targetPath']}
-                                                        form={form}
-                                                        checkExist={checkExist}
-                                                    />
-                                                </Form.Item>
-                                                <Form.Item
-                                                    {...restField}
-                                                    name={[name, 'options']}
-                                                >
-                                                    <OptionsTag options={options}/>
-                                                </Form.Item>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </>
-                        )}
-                    </Form.List>
+                    <FileList
+                        form={form}
+                        templateOptions={templateOptions}
+                        filesVisible={filesVisible}
+                        moduleNames={moduleNames}
+                        checkExist={checkExist}
+                        onTemplateChange={handleTemplateChange}
+                        onTargetPathChange={handleFilesChange}
+                        onOptionsChange={handleFilesChange}
+                        onAdd={handleFilesAdd}
+                        onRemove={handleFilesChange}
+                    />
                 </div>
+                <Tabs
+                    style={{ width: '100%' }}
+                    tabBarExtraContent={{
+                        left: (
+                            <Space style={{ marginRight: 16 }}>
+                                <Button
+                                    icon={<PlusOutlined />}
+                                    type="primary"
+                                    ghost
+                                    onClick={() => handleAdd()}
+                                >
+                                    添加一行
+                                </Button>
+                                <Button
+                                    icon={<CodeOutlined />}
+                                    onClick={() => handleGenerate(true)}
+                                >
+                                    代码预览
+                                </Button>
+                                <Button
+                                    type="primary"
+                                    danger
+                                    icon={<FileDoneOutlined />}
+                                    onClick={() => handleGenerate()}
+                                >
+                                    生成文件
+                                </Button>
+                                <Checkbox
+                                    checked={filesVisible}
+                                    onChange={e => setFilesVisible(e.target.checked)}
+                                >
+                                    展开文件列表
+                                </Checkbox>
+                                <Checkbox
+                                    checked={dbInfoVisible}
+                                    onChange={e => setDbInfoVisible(e.target.checked)}
+                                >
+                                    显示数据库信息
+                                </Checkbox>
+                            </Space>
+                        ),
+                        right: (
+                            <Space>
+                                <Button
+                                    type={'primary'}
+                                    ghost
+                                    icon={<CopyOutlined />}
+                                    disabled={!tableOptions?.length}
+                                    onClick={() => setBatchVisible(true)}
+                                >
+                                    批量生成
+                                </Button>
+                                <Button
+                                    icon={<DownloadOutlined />}
+                                    onClick={handleUpdateLocalTemplates}
+                                >
+                                    更新本地模版
+                                </Button>
+                                <Button
+                                    icon={<QuestionCircleOutlined />}
+                                    onClick={() => setHelpVisible(true)}
+                                >
+                                    帮助
+                                </Button>
+                            </Space>
+                        ),
+                    }}
+                    activeKey={activeKey}
+                    onChange={setActiveKey}
+                >
+                    <TabPane key="files" tab="文件编辑" />
+                    <TabPane key="items" tab="选项编辑" />
+                </Tabs>
                 <FieldTable
-                    refreshTable={refreshTable}
                     form={form}
+                    files={files}
+                    filesVisible={filesVisible}
+                    activeKey={activeKey}
+                    dbInfoVisible={dbInfoVisible}
                     dataSource={dataSource}
                     templateOptions={templateOptions}
-                    tableOptions={tableOptions}
-                    onGenerate={handleGenerate}
-                    fetchTemplates={fetchTemplates}
-                    filesVisible={filesVisible}
-                    onFilesVisibleChange={setFilesVisible}
+                    dbTypeOptions={dbTypeOptions}
+                    onDataSourceChange={handleDataSourceChange}
+                    onAdd={handleAdd}
+                    getNewRecord={getNewRecord}
                 />
+                <PreviewModal
+                    visible={!!previewParams}
+                    params={previewParams}
+                    onOk={() => setPreviewParams(null)}
+                    onCancel={() => setPreviewParams(null)}
+                />
+                <HelpModal
+                    visible={helpVisible}
+                    onCancel={() => setHelpVisible(false)}
+                />
+                <BatchModal
+                    visible={batchVisible}
+                    onCancel={() => setBatchVisible(false)}
+                    form={form}
+                    tableOptions={tableOptions}
+                />
+                <Feedback />
             </Form>
-            <Tooltip
-                title="问题反馈"
-                placement="left"
-            >
-                <a
-                    className={s.github}
-                    href="https://github.com/zkboys/code-generator-native/issues"
-                    target={'_blank'} rel="noreferrer"
-                >
-                    <svg
-                        height="24"
-                        width="24"
-                        aria-hidden="true"
-                        viewBox="0 0 16 16"
-                        version="1.1"
-                        data-view-component="true"
-                        className="octicon octicon-mark-github v-align-middle"
-                    >
-                        <path
-                            fillRule="evenodd"
-                            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
-                        />
-                    </svg>
-                </a>
-            </Tooltip>
         </PageContent>
     );
 });

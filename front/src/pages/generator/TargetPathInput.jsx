@@ -1,10 +1,10 @@
-import {useEffect, useState} from 'react';
-import {ExclamationCircleOutlined, CheckCircleOutlined} from '@ant-design/icons';
+import React, { useEffect, useState } from 'react';
+import { ExclamationCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import ajax from 'src/commons/ajax';
-import {Input} from 'antd';
-import {stringFormat} from 'src/commons';
+import { Input } from 'antd';
+import { stringFormat } from 'src/commons';
 
-export default function TargetPathInput(props) {
+function TargetPathInput(props) {
     const { value, form, name, moduleNames, checkExist, templateOptions, templateId, ...others } = props;
     const [exist, setExist] = useState(false);
 
@@ -29,10 +29,12 @@ export default function TargetPathInput(props) {
         <div>
             <Input value={value} {...others} />
             <span style={{ marginLeft: 4 }}>
-                {exist ? <ExclamationCircleOutlined style={{ color: 'orange' }}/> : <CheckCircleOutlined style={{ color: 'green' }}/>}
+                {exist ? <ExclamationCircleOutlined style={{ color: 'orange' }} /> : <CheckCircleOutlined style={{ color: 'green' }} />}
             </span>
         </div>
     );
 }
+
+export default React.memo(TargetPathInput);
 
 

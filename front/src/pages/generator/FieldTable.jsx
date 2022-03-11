@@ -1,138 +1,60 @@
-import React, {useCallback, useMemo, useState, useRef, useEffect} from 'react';
+import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react';
 import {
-    Checkbox,
-    Tabs,
     Table,
     Button,
     Space,
-    Modal,
     Input,
     Form,
     Switch,
     Select,
     InputNumber,
 } from 'antd';
-import {
-    CodeOutlined,
-    FileDoneOutlined,
-    PlusOutlined,
-    DownloadOutlined,
-    QuestionCircleOutlined,
-    CopyOutlined,
-} from '@ant-design/icons';
 import c from 'classnames';
-import {v4 as uuid} from 'uuid';
-import {OptionsTag, Content, confirm, Operator} from 'src/components';
-import {useHeight} from 'src/hooks';
-import {ajax} from 'src/hocs';
-import {getNextTabIndex} from 'src/commons';
-import {DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS} from '../constant';
-import virtualTable from './virtual-table';
-import PreviewModal from '../PreviewModal';
-import HelpModal from '../HelpModal';
-import BatchModal from '../BatchModal';
-import FastChineseModal from '../FastChineseModal';
+import { OptionsTag, Content, Operator, virtualTable } from 'src/components';
+import { useHeight } from 'src/hooks';
+import { ajax } from 'src/hocs';
+import { getNextTabIndex } from 'src/commons';
+import { DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS } from './constant';
+import FastChineseModal from './FastChineseModal';
 
 import s from './style.module.less';
 
-const MyTable = virtualTable((Table));
+const MyTable = React.memo(virtualTable((Table)));
 
-const { TabPane } = Tabs;
-
-export default ajax()(function FieldTable(props) {
+export default React.memo(ajax()(function FieldTable(props) {
+    console.log('FieldTable render');
     const {
         templateOptions,
-        tableOptions,
         form,
-        onGenerate,
-        fetchTemplates,
+        activeKey,
+        dbInfoVisible,
+        dbTypeOptions,
+        onDataSourceChange,
+        dataSource,
+        onAdd,
+        getNewRecord,
+        files,
         filesVisible,
-        onFilesVisibleChange,
     } = props;
 
-    const {
-        dbUrl,
-        tableNames,
-        sql,
-        files,
-    } = form.getFieldsValue();
-
-    const templateIds = (files || []).map(item => item.templateId);
-
-    const [dataSource, setDataSource] = useState([]);
-    const [loading, setLoading] = useState(false);
     const rootRef = useRef(null);
-    const [height] = useHeight(rootRef, 104, [templateIds]);
-    const [previewParams, setPreviewParams] = useState(null);
-    const [activeKey, setActiveKey] = useState('type');
-    const [dbTypeOptions, setDbTypeOptions] = useState([]);
-    const [helpVisible, setHelpVisible] = useState(false);
-    const [batchVisible, setBatchVisible] = useState(false);
+    const [height] = useHeight(rootRef, 50, [files, filesVisible]);
     const [fastVisible, setFastVisible] = useState(false);
-    const [dbInfoVisible, setDbInfoVisible] = useState(false);
-
-    // 同步父级dataSource
-    useEffect(() => {
-        setDataSource(props.dataSource);
-    }, [props.dataSource]);
-
-    const fetchGenerateFiles = useCallback(async (params) => {
-        return await props.ajax.post('/generate/files', params, { setLoading });
-    }, [props.ajax]);
-
-    const fetchCheckFilesExist = useCallback(async (params) => {
-        return await props.ajax.post('/generate/files/exist', params, { setLoading });
-    }, [props.ajax]);
-
-    const fetchDbTypeOptions = useCallback(async (params) => {
-        return await props.ajax.get('/db/types', params);
-    }, [props.ajax]);
 
     // 拖拽排序结束
     const handleSortEnd = useCallback((sortProps) => {
         let { oldIndex, newIndex } = sortProps;
         dataSource.splice(newIndex, 0, ...dataSource.splice(oldIndex, 1));
-        setDataSource([...dataSource]);
-    }, [dataSource]);
-
-    const getNewRecord = useCallback((fields = {}) => {
-        const isItems = activeKey === 'items';
-        let name;
-        if (isItems) {
-            name = dataSource.length + 1;
-            name = name < 10 ? `0${name}` : `name`;
-        }
-        return {
-            id: uuid(),
-            // comment: `新增列${length + 1}`,
-            // chinese: `新增列${length + 1}`,
-            // name: `field${length + 1}`,
-            name,
-            type: 'VARCHAR',
-            formType: 'input',
-            dataType: 'String',
-            isNullable: true,
-            __isNew: true,
-            __isItems: isItems,
-            ...fields,
-        };
-
-    }, [activeKey, dataSource.length]);
-
-    // 表格新增一行事件
-    const handleAdd = useCallback((append = false) => {
-        const newRecord = getNewRecord();
-
-        append ? dataSource.push(newRecord) : dataSource.unshift(newRecord);
-        setDataSource([...dataSource]);
-    }, [dataSource, getNewRecord]);
+        onDataSourceChange([...dataSource]);
+    }, [dataSource, onDataSourceChange]);
 
     // 删除行
     const handleDelete = useCallback((id) => {
         const nextDataSource = dataSource.filter(item => item.id !== id);
-        setDataSource(nextDataSource);
-    }, [dataSource]);
+        onDataSourceChange(nextDataSource);
+    }, [dataSource, onDataSourceChange]);
 
+    // 自动填充中文或字段名
     const handleAutoName = useCallback(async (e) => {
         const names = dataSource.map(item => {
             const { id, name, chinese } = item;
@@ -156,7 +78,7 @@ export default ajax()(function FieldTable(props) {
 
         // 更新数据
         form.setFieldsValue({ dataSource });
-        setDataSource([...dataSource]);
+        onDataSourceChange([...dataSource]);
 
         // 等待页面刷新之后，重新使输入框获取焦点
         if (currentTabIndex !== undefined) {
@@ -166,7 +88,7 @@ export default ajax()(function FieldTable(props) {
             });
         }
 
-    }, [dataSource, form, props.ajax]);
+    }, [dataSource, form, props.ajax, onDataSourceChange]);
 
     // 键盘时间，使输入框获取焦点，上、下、左、右、回车
     const handleKeyDown = useCallback((e, options) => {
@@ -185,7 +107,7 @@ export default ajax()(function FieldTable(props) {
         }
 
         if (isAdd) {
-            handleAdd(true);
+            onAdd(true);
         }
 
         // 等待新增行渲染
@@ -195,11 +117,13 @@ export default ajax()(function FieldTable(props) {
             nextInput.focus();
             nextInput.select();
         });
-    }, [handleAdd, handleDelete, handleAutoName]);
+    }, [onAdd, handleDelete, handleAutoName]);
 
     // 选项列
     const optionColumns = useMemo(() => {
-        return templateIds.filter(Boolean)
+        return files
+            .map(item => item.templateId)
+            .filter(Boolean)
             .map((templateId) => {
                 const template = templateOptions.find(item => item.value === templateId)?.record;
                 const title = template?.shortName;
@@ -215,13 +139,12 @@ export default ajax()(function FieldTable(props) {
                     },
                 };
             }).filter(Boolean);
-    }, [templateIds, templateOptions]);
+    }, [files, templateOptions]);
 
-
-    // 渲染表格中的表单项
     // 一共多少行
     const totalRow = dataSource.length;
 
+    // 渲染表格中的表单项
     const formColumn = useCallback((column, totalInputColumn) => {
         if (!column?.formProps?.type) return column;
 
@@ -342,7 +265,7 @@ export default ajax()(function FieldTable(props) {
                                                     name: ['dataSource', index, 'fileOptions'],
                                                     value: options,
                                                 }]);
-                                                setDataSource([...dataSource]);
+                                                onDataSourceChange([...dataSource]);
                                             }}
                                         />
                                     );
@@ -354,40 +277,34 @@ export default ajax()(function FieldTable(props) {
                 );
             },
         };
-    }, [handleKeyDown, totalRow, form, optionColumns, templateOptions, dataSource]);
+    }, [handleKeyDown, onDataSourceChange, totalRow, form, optionColumns, templateOptions, dataSource]);
 
     // Tab 页配置
-    const tabOptions = useMemo(() => {
+    const tabColumns = useMemo(() => {
         const showDataType = (files || []).some(item => {
             const fileType = item?.targetPath?.split('.').pop();
 
             return !['jsx', 'js', 'vue', 'vux'].includes(fileType);
         });
-        return [
-            {
-                key: 'type', tab: '文件编辑',
-                columns: [
-                    showDataType && { title: '数据类型', dataIndex: 'dataType', width: 150, formProps: { type: 'select', options: DATA_TYPE_OPTIONS } },
-                    { title: '表单类型', dataIndex: 'formType', width: 150, formProps: { type: 'select', options: FORM_ELEMENT_OPTIONS } },
-                    { title: '校验规则', dataIndex: 'validation', width: 250, formProps: { type: 'select', mode: 'multiple', options: VALIDATE_OPTIONS } },
-                    ...optionColumns,
-                ].filter(Boolean),
-            },
-            {
-                key: 'items', tab: '选项编辑',
-                columns: [
-                    { title: '描述', dataIndex: 'description', formProps: { type: 'input', placeholder: '请输入描述' } },
-                ],
-            },
-        ];
-    }, [files, optionColumns]);
+        if (activeKey === 'files') {
+            return [
+                showDataType && { title: '数据类型', dataIndex: 'dataType', width: 150, formProps: { type: 'select', options: DATA_TYPE_OPTIONS } },
+                { title: '表单类型', dataIndex: 'formType', width: 150, formProps: { type: 'select', options: FORM_ELEMENT_OPTIONS } },
+                { title: '校验规则', dataIndex: 'validation', width: 250, formProps: { type: 'select', mode: 'multiple', options: VALIDATE_OPTIONS } },
+                ...optionColumns,
+            ].filter(Boolean);
+        }
+        if (activeKey === 'items') {
+            return [
+                { title: '描述', dataIndex: 'description', formProps: { type: 'input', placeholder: '请输入描述' } },
+            ];
+        }
+
+        return [];
+    }, [files, optionColumns, activeKey]);
 
     // 表格列
     const columns = useMemo(() => {
-        const tabColumns = tabOptions
-            ?.find(item => item.key === activeKey)
-            ?.columns
-            ?.map(item => ({ ...item, className: s.tabColumn })) || [];
         let totalInputColumn = 0;
         const isItems = activeKey === 'items';
         return [
@@ -405,7 +322,7 @@ export default ajax()(function FieldTable(props) {
                             },
                         },
                     ];
-                    return <Operator items={items}/>;
+                    return <Operator items={items} />;
                 },
             },
             { title: isItems ? '码值（value）' : '字段', dataIndex: 'name', width: isItems ? 300 : 150, formProps: { type: 'input', required: true } },
@@ -438,119 +355,13 @@ export default ajax()(function FieldTable(props) {
             }
             return column;
         }).map(column => formColumn(column, totalInputColumn));
-    }, [tabOptions, activeKey, dbInfoVisible, dbTypeOptions, handleDelete, formColumn]);
-
-    // 生成代码、代码预览
-    const handleGenerate = useCallback(async (preview = false) => {
-        try {
-            if (!dataSource?.length) return Modal.info({ title: '温馨提示', content: '表格的字段配置不能为空！' });
-
-            const values = await form.validateFields();
-
-            if (dataSource.some(item => !item.name || !item.chinese)) return Modal.info({ title: '温馨提示', content: '表格的字段配置有必填项未填写！' });
-            const { files, moduleName } = values;
-            const params = {
-                moduleName,
-                files,
-                config: dataSource,
-            };
-
-            if (preview) {
-                setPreviewParams(params);
-            } else {
-                // 检测文件是否存在
-                const res = await fetchCheckFilesExist({ files }) || [];
-
-                // 用户选择是否覆盖
-                for (let targetPath of res) {
-                    const file = files.find(it => it.targetPath === targetPath);
-
-                    try {
-                        await confirm({
-                            width: 600,
-                            title: '文件已存在',
-                            content: targetPath,
-                            okText: '覆盖',
-                            okButtonProps: {
-                                danger: true,
-                            },
-                        });
-                        file.rewrite = true;
-                    } catch (e) {
-                        file.rewrite = false;
-                    }
-                }
-
-                const paths = await fetchGenerateFiles(params);
-                if (!paths?.length) return Modal.info({ title: '温馨提示', content: '未生成任何文件！' });
-
-                Modal.success({
-                    width: 600,
-                    title: '生成文件如下',
-                    content: (
-                        <div style={{ maxHeight: 200, overflow: 'auto' }}>
-                            {paths.map(p => <div key={p}>{p}</div>)}
-                        </div>
-                    ),
-                });
-                onGenerate && onGenerate();
-            }
-        } catch (e) {
-            if (e?.errorFields?.length) {
-                return Modal.info({ title: '温馨提示', content: '表单填写有误，请检查后再提交！' });
-            }
-            console.error(e);
-        }
-    }, [form, dataSource, fetchCheckFilesExist, fetchGenerateFiles, onGenerate]);
-
-    // 更新本地模版
-    const handleUpdateLocalTemplates = useCallback(async () => {
-        await confirm('本地同名模版将被覆盖，是否继续？');
-        await props.ajax.get('/templates/local/download', null, { successTip: '更新成功！' });
-
-        // 等待本地服务器重启
-        const si = setInterval(async () => {
-            await fetchTemplates({ errorTip: false });
-            clearInterval(si);
-        }, 1000);
-    }, [props.ajax, fetchTemplates]);
-
-    useEffect(() => {
-        (async () => {
-            const dbTypeOptions = await fetchDbTypeOptions({ dbUrl });
-            setDbTypeOptions(dbTypeOptions);
-        })();
-    }, [dbUrl, fetchDbTypeOptions]);
-
-    // 默认文件选项全选
-    useEffect(() => {
-        (async () => {
-            let changed;
-            optionColumns.forEach(col => {
-                const [, templateId] = col.dataIndex;
-                const options = [...col.formProps.options];
-
-                dataSource.forEach(item => {
-                    if (!item.fileOptions) item.fileOptions = {};
-
-                    if (!item.fileOptions[templateId]) {
-                        item.fileOptions[templateId] = [...options];
-                        changed = true;
-                    }
-                });
-            });
-
-            if (changed) {
-                setDataSource([...dataSource]);
-            }
-        })();
-    }, [dataSource, optionColumns]);
+    }, [tabColumns, activeKey, dbInfoVisible, dbTypeOptions, handleDelete, formColumn]);
 
     // dataSource改变，将数据同步到form中
     useEffect(() => form.setFieldsValue({ dataSource }), [form, dataSource]);
 
     return (
-        <Content loading={loading} ref={rootRef} className={s.root}>
+        <Content ref={rootRef} className={s.fieldTableRoot}>
             {/* 表单改变，将数据同步到dataSource中 */}
             <Form.Item noStyle shouldUpdate>
                 {({ getFieldValue }) => {
@@ -564,78 +375,6 @@ export default ajax()(function FieldTable(props) {
                     });
                 }}
             </Form.Item>
-            <Tabs
-                tabBarExtraContent={{
-                    left: (
-                        <Space style={{ marginRight: 16 }}>
-                            <Button
-                                icon={<PlusOutlined/>}
-                                type="primary"
-                                ghost
-                                onClick={() => handleAdd()}
-                            >
-                                添加一行
-                            </Button>
-                            <Button
-                                icon={<CodeOutlined/>}
-                                onClick={() => handleGenerate(true)}
-                            >
-                                代码预览
-                            </Button>
-                            <Button
-                                type="primary"
-                                danger
-                                icon={<FileDoneOutlined/>}
-                                onClick={() => handleGenerate()}
-                            >
-                                生成文件
-                            </Button>
-                            <Checkbox
-                                checked={filesVisible}
-                                onChange={e => onFilesVisibleChange(e.target.checked)}
-                            >
-                                展开文件列表
-                            </Checkbox>
-                            <Checkbox
-                                disabled={!tableNames?.length && !sql}
-                                checked={dbInfoVisible}
-                                onChange={e => setDbInfoVisible(e.target.checked)}
-                            >
-                                显示数据库信息
-                            </Checkbox>
-                        </Space>
-                    ),
-                    right: (
-                        <Space>
-                            <Button
-                                type={'primary'}
-                                ghost
-                                icon={<CopyOutlined/>}
-                                disabled={!tableOptions?.length}
-                                onClick={() => setBatchVisible(true)}
-                            >
-                                批量生成
-                            </Button>
-                            <Button
-                                icon={<DownloadOutlined/>}
-                                onClick={handleUpdateLocalTemplates}
-                            >
-                                更新本地模版
-                            </Button>
-                            <Button
-                                icon={<QuestionCircleOutlined/>}
-                                onClick={() => setHelpVisible(true)}
-                            >
-                                帮助
-                            </Button>
-                        </Space>
-                    ),
-                }}
-                activeKey={activeKey}
-                onChange={setActiveKey}
-            >
-                {tabOptions.map(item => <TabPane key={item.key} tab={item.tab}/>)}
-            </Tabs>
             <MyTable
                 onSortEnd={handleSortEnd}
                 size="small"
@@ -644,23 +383,6 @@ export default ajax()(function FieldTable(props) {
                 dataSource={dataSource}
                 rowKey="id"
                 scroll={{ y: height }}
-            />
-            <PreviewModal
-                visible={!!previewParams}
-                params={previewParams}
-                onOk={() => setPreviewParams(null)}
-                onCancel={() => setPreviewParams(null)}
-            />
-            <HelpModal
-                visible={helpVisible}
-                onCancel={() => setHelpVisible(false)}
-            />
-            <BatchModal
-                visible={batchVisible}
-                onCancel={() => setBatchVisible(false)}
-                dbUrl={dbUrl}
-                files={files}
-                tableOptions={tableOptions}
             />
             <FastChineseModal
                 dataSource={dataSource}
@@ -677,7 +399,7 @@ export default ajax()(function FieldTable(props) {
                     });
                     const nextDataSource = replace ? records : [...dataSource, ...records];
 
-                    setDataSource(nextDataSource);
+                    onDataSourceChange(nextDataSource);
 
                     form.setFieldsValue({ dataSource: nextDataSource });
                     setFastVisible(false);
@@ -685,4 +407,4 @@ export default ajax()(function FieldTable(props) {
             />
         </Content>
     );
-});
+}));

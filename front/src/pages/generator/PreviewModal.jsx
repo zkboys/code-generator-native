@@ -1,11 +1,16 @@
-import React, {useCallback, useState, useEffect} from 'react';
-import {Tabs, Button} from 'antd';
-import {modal, ajax} from 'src/hocs';
-import {CodeEditor, ModalContent} from 'src/components';
+import React, { useCallback, useState, useEffect } from 'react';
+import { Tabs, Button } from 'antd';
+import { modal, ajax } from 'src/hocs';
+import { CodeEditor, ModalContent } from 'src/components';
 
 const { TabPane } = Tabs;
 
-function PreviewModal(props) {
+export default ajax()(modal({
+    title: null,
+    width: '80%',
+    top: 50,
+    maskClosable: true,
+})(props => {
     const { params, onCancel } = props;
     const [loading, setLoading] = useState(false);
     const [files, setFiles] = useState([]);
@@ -48,11 +53,5 @@ function PreviewModal(props) {
             </Tabs>
         </ModalContent>
     );
-}
+}));
 
-export default ajax()(modal({
-    title: null,
-    width: '80%',
-    top: 50,
-    maskClosable: true,
-})(PreviewModal));

@@ -4,11 +4,13 @@ import { Button, Alert, Checkbox, Row, Col, Modal } from 'antd';
 import { modal, ajax } from 'src/hocs';
 
 function BatchModal(props) {
-  const { onCancel, dbUrl, files, tableOptions } = props;
+  const { onCancel, form, tableOptions } = props;
   const [loading, setLoading] = useState(false);
   const [tables, setTables] = useState([]);
   const [checkAll, setCheckAll] = useState(false);
   const [indeterminate, setIndeterminate] = useState(false);
+  const dbUrl = form.getFieldValue('dbUrl');
+  const files = form.getFieldValue('files');
 
   const handleSubmit = useCallback(async () => {
     await confirm('您确定要生成选中的表吗？本地同名文件将被覆盖，请谨慎操作！');
