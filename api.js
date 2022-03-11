@@ -63,7 +63,12 @@ module.exports = apiRouter
         const tableNames = from.map(item => item.table);
         const allColumns = await getTablesColumns(dbUrl, tableNames);
 
-        if (columns === '*') return allColumns;
+        if (columns === '*') return allColumns.reduce((prev, item) => {
+            if (!prev.some(it => it.name === item.name)) {
+                prev.push(item);
+            }
+            return prev;
+        }, []);
 
         let cols = [];
         columns.forEach(item => {

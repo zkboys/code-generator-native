@@ -442,11 +442,11 @@ export default ajax()(function Generator(props) {
                             />
                         </Form.Item>
                     </Col>
-                    <Col flex="0 0 115px">
+                    <Col flex="0 0 112px">
                         <Form.Item name="searchType">
                             <Radio.Group
                                 options={[
-                                    { value: 'sql', label: 'Sql' },
+                                    { value: 'sql', label: 'sql' },
                                     { value: 'tables', label: '表' },
                                 ]}
                                 optionType="button"
@@ -530,6 +530,7 @@ export default ajax()(function Generator(props) {
                 </div>
                 <Tabs
                     style={{ width: '100%' }}
+                    tabBarStyle={{ marginBottom: 0 }}
                     tabBarExtraContent={{
                         left: (
                             <Space style={{ marginRight: 16 }}>

@@ -20,6 +20,11 @@
   background: @body-background;
   box-sizing: border-box;
   cursor: move;
+  transition: background .3s;
+
+  &:hover {
+    background: @background-color-light
+  }
 
   :global {
     .ant-form-item {
