@@ -1,8 +1,6 @@
-import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react';
+import React, { useCallback, useMemo, useRef, useEffect } from 'react';
 import {
     Table,
-    Button,
-    Space,
     Input,
     Form,
     Switch,
@@ -15,7 +13,6 @@ import { useHeight } from 'src/hooks';
 import { ajax } from 'src/hocs';
 import { getNextTabIndex } from 'src/commons';
 import { DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS } from './constant';
-import FastChineseModal from './FastChineseModal';
 
 import s from './style.module.less';
 
@@ -31,14 +28,14 @@ export default React.memo(ajax()(function FieldTable(props) {
         onDataSourceChange,
         dataSource,
         onAdd,
-        getNewRecord,
+        onAutoName,
+        onAutoValidation,
         files,
         filesVisible,
     } = props;
 
     const rootRef = useRef(null);
     const [height] = useHeight(rootRef, 50, [files, filesVisible]);
-    const [fastVisible, setFastVisible] = useState(false);
 
     // 拖拽排序结束
     const handleSortEnd = useCallback((sortProps) => {
@@ -53,49 +50,17 @@ export default React.memo(ajax()(function FieldTable(props) {
         onDataSourceChange(nextDataSource);
     }, [dataSource, onDataSourceChange]);
 
-    // 自动填充中文或字段名
-    const handleAutoName = useCallback(async (e) => {
-        const names = dataSource.map(item => {
-            const { id, name, chinese } = item;
-            return {
-                id,
-                name: name?.trim(),
-                chinese: chinese?.trim(),
-            };
-        });
-        const res = await props.ajax.post('/autoNames', { names });
-        if (!res?.length) return;
-        dataSource.forEach(item => {
-            const record = res.find(it => it.id === item.id);
-            if (record) {
-                item.name = record.name;
-                item.chinese = record.chinese;
-            }
-        });
-        // 获取鼠标焦点所在input，数据更新后会失去焦点，要再次选中
-        const currentTabIndex = e?.target?.getAttribute('tabindex');
-
-        // 更新数据
-        form.setFieldsValue({ dataSource });
-        onDataSourceChange([...dataSource]);
-
-        // 等待页面刷新之后，重新使输入框获取焦点
-        if (currentTabIndex !== undefined) {
-            setTimeout(() => {
-                const input = document.querySelector(`input[tabindex='${currentTabIndex}']`);
-                if (input) input.focus();
-            });
-        }
-
-    }, [dataSource, form, props.ajax, onDataSourceChange]);
-
     // 键盘时间，使输入框获取焦点，上、下、左、右、回车
-    const handleKeyDown = useCallback((e, options) => {
+    const handleKeyDown = useCallback(async (e, options) => {
         const { record } = options;
         const { keyCode, ctrlKey, metaKey, shiftKey } = e;
         const enterKey = keyCode === 13;
 
-        if ((ctrlKey || metaKey) && enterKey && !shiftKey) return handleAutoName(e);
+        if ((ctrlKey || metaKey) && enterKey && !shiftKey) {
+            const ds = await onAutoName(e);
+            await onAutoValidation(e, ds);
+            return;
+        }
 
         const result = getNextTabIndex(e, options);
         if (!result) return;
@@ -116,7 +81,7 @@ export default React.memo(ajax()(function FieldTable(props) {
             nextInput.focus();
             nextInput.select();
         });
-    }, [onAdd, handleDelete, handleAutoName]);
+    }, [onAdd, handleDelete, onAutoName, onAutoValidation]);
 
     // 选项列
     const optionColumns = useMemo(() => {
@@ -324,21 +289,13 @@ export default React.memo(ajax()(function FieldTable(props) {
                     return <Operator items={items} />;
                 },
             },
-            { title: isItems ? '码值（value）' : '字段', dataIndex: 'name', width: isItems ? 300 : 150, formProps: { type: 'input', required: true } },
             {
-                title: (
-                    <Space>
-                        <span>{isItems ? '展示（label）' : '中文名'}</span>
-                        <Button
-                            type="link"
-                            size="small"
-                            onClick={() => setFastVisible(true)}
-                        >
-                            快速添加
-                        </Button>
-                    </Space>
-                ),
-                dataIndex: 'chinese', width: isItems ? 300 : 150, formProps: { type: 'input', required: true, placeholder: '请输入中文名' },
+                title: isItems ? '码值（value）' : '字段', dataIndex: 'name', width: isItems ? 300 : 150,
+                formProps: { type: 'input', required: true },
+            },
+            {
+                title: isItems ? '展示（label）' : '中文名', dataIndex: 'chinese', width: isItems ? 300 : 150,
+                formProps: { type: 'input', required: true, placeholder: '请输入中文名' },
             },
             dbInfoVisible && { title: '注释', dataIndex: 'comment', width: 150 },
             dbInfoVisible && { title: '类型', dataIndex: 'type', width: 100, formProps: { type: 'select', required: true, options: dbTypeOptions } },
@@ -382,27 +339,6 @@ export default React.memo(ajax()(function FieldTable(props) {
                 dataSource={dataSource}
                 rowKey="id"
                 scroll={{ y: height }}
-            />
-            <FastChineseModal
-                dataSource={dataSource}
-                visible={fastVisible}
-                onCancel={() => setFastVisible(false)}
-                onOk={(values, replace) => {
-                    const records = values.map((chinese, index) => {
-                        const number = index + 1;
-                        let name = number < 10 ? `0${number}` : `${number}`;
-                        const isItems = activeKey === 'items';
-                        name = isItems ? name : '';
-
-                        return getNewRecord({ chinese, name });
-                    });
-                    const nextDataSource = replace ? records : [...dataSource, ...records];
-
-                    onDataSourceChange(nextDataSource);
-
-                    form.setFieldsValue({ dataSource: nextDataSource });
-                    setFastVisible(false);
-                }}
             />
         </Content>
     );

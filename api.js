@@ -16,6 +16,7 @@ const {
     updateVersion,
     getNames,
     getTablesColumns,
+    getValidation,
 } = require('./util');
 const { DB_TYPES } = require('./db/MySql');
 const packageJson = require('./package.json');
@@ -250,5 +251,21 @@ module.exports = apiRouter
     })
     .get('/help', async () => {
         return await fs.readFile(path.join(__dirname, 'README.md'), 'UTF-8');
+    })
+    .post('/autoValidation', async ctx => {
+        const { fields } = ctx.request.body;
+
+        return fields.map(item => {
+            const { comment, chinese, name, isNullable = true } = item;
+            const validation = getValidation({
+                isNullable,
+                comment: chinese || comment,
+                name,
+            });
+            return {
+                ...item,
+                validation,
+            };
+        });
     })
 ;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Form, Button, notification, Modal, Input, Select, Row, Col, Radio, Space, Checkbox, Tabs } from 'antd';
-import { CodeOutlined, CopyOutlined, DownloadOutlined, FileDoneOutlined, PlusOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { CodeOutlined, CopyOutlined, DownloadOutlined, FileDoneOutlined, PlusOutlined, QuestionCircleOutlined, FormOutlined } from '@ant-design/icons';
 import { useDebounceFn } from 'ahooks';
 import { v4 as uuid } from 'uuid';
 import { storage, isMac } from 'src/commons';
@@ -13,6 +13,7 @@ import s from './style.module.less';
 import PreviewModal from 'src/pages/generator/PreviewModal';
 import HelpModal from 'src/pages/generator/HelpModal';
 import BatchModal from 'src/pages/generator/BatchModal';
+import FastEditModal from './FastEditModal';
 
 const { TabPane } = Tabs;
 
@@ -32,6 +33,7 @@ export default ajax()(function Generator(props) {
     const [previewParams, setPreviewParams] = useState(null);
     const [dbTypeOptions, setDbTypeOptions] = useState([]);
     const [files, setFiles] = useState([]);
+    const [fastVisible, setFastVisible] = useState(false);
     const [form] = Form.useForm();
 
     // 发请求获取模块名
@@ -334,6 +336,85 @@ export default ajax()(function Generator(props) {
         }, 1000);
     }, [props.ajax, fetchTemplates]);
 
+    // 自动填充中文或字段名
+    const handleAutoName = useCallback(async (e, ds) => {
+        const _dataSource = ds || dataSource;
+        const names = _dataSource.map(item => {
+            const { id, name, chinese } = item;
+            return {
+                id,
+                name: name?.trim(),
+                chinese: chinese?.trim(),
+            };
+        });
+
+        const res = await props.ajax.post('/autoNames', { names });
+
+        if (!res?.length) return _dataSource;
+
+        _dataSource.forEach(item => {
+            const record = res.find(it => it.id === item.id);
+            if (record) {
+                item.name = record.name;
+                item.chinese = record.chinese;
+            }
+        });
+        // 获取鼠标焦点所在input，数据更新后会失去焦点，要再次选中
+        const currentTabIndex = e?.target?.getAttribute('tabindex');
+
+        // 更新数据
+        form.setFieldsValue({ dataSource: _dataSource });
+        handleDataSourceChange([..._dataSource]);
+
+        // 等待页面刷新之后，重新使输入框获取焦点
+        if (currentTabIndex !== undefined) {
+            setTimeout(() => {
+                const input = document.querySelector(`input[tabindex='${currentTabIndex}']`);
+                if (input) input.focus();
+            });
+        }
+
+        return _dataSource;
+
+    }, [dataSource, form, props.ajax, handleDataSourceChange]);
+
+    // 自动填充校验信息
+    const handleAutoValidation = useCallback(async (e, ds) => {
+        const _dataSource = ds || dataSource;
+        const fields = _dataSource.map(item => {
+            const { id, name, chinese } = item;
+            return {
+                id,
+                name: name?.trim(),
+                chinese: chinese?.trim(),
+            };
+        });
+        const res = await props.ajax.post('/autoValidation', { fields });
+        if (!res?.length) return _dataSource;
+
+        _dataSource.forEach(item => {
+            const record = res.find(it => it.id === item.id);
+            if (record && !item.validation?.length) {
+                item.validation = record.validation;
+            }
+        });
+        // 获取鼠标焦点所在input，数据更新后会失去焦点，要再次选中
+        const currentTabIndex = e?.target?.getAttribute('tabindex');
+
+        // 更新数据
+        form.setFieldsValue({ dataSource: _dataSource });
+        handleDataSourceChange([..._dataSource]);
+
+        // 等待页面刷新之后，重新使输入框获取焦点
+        if (currentTabIndex !== undefined) {
+            setTimeout(() => {
+                const input = document.querySelector(`input[tabindex='${currentTabIndex}']`);
+                if (input) input.focus();
+            });
+        }
+        return _dataSource;
+    }, [dataSource, form, props.ajax, handleDataSourceChange]);
+
     // 初始化时，加载模板
     useEffect(() => {
         (async () => {
@@ -540,16 +621,13 @@ export default ajax()(function Generator(props) {
                     tabBarExtraContent={{
                         left: (
                             <Space style={{ marginRight: 16 }}>
-                                <Button
-                                    icon={<PlusOutlined />}
-                                    onClick={() => handleAdd()}
-                                >
+                                <Button icon={<PlusOutlined />} onClick={() => handleAdd()}>
                                     添加一行
                                 </Button>
-                                <Button
-                                    icon={<CodeOutlined />}
-                                    onClick={() => handleGenerate(true)}
-                                >
+                                <Button icon={<FormOutlined />} onClick={() => setFastVisible(true)}>
+                                    快速编辑
+                                </Button>
+                                <Button icon={<CodeOutlined />} onClick={() => handleGenerate(true)}>
                                     代码预览
                                 </Button>
                                 <Button
@@ -615,6 +693,20 @@ export default ajax()(function Generator(props) {
                     dbTypeOptions={dbTypeOptions}
                     onDataSourceChange={handleDataSourceChange}
                     onAdd={handleAdd}
+                    getNewRecord={getNewRecord}
+                    onAutoName={handleAutoName}
+                    onAutoValidation={handleAutoValidation}
+                />
+                <FastEditModal
+                    visible={fastVisible}
+                    dataSource={dataSource}
+                    onCancel={() => setFastVisible(false)}
+                    onOk={async dataSource => {
+                        handleDataSourceChange(dataSource);
+                        setFastVisible(false);
+                        await handleAutoName(null, dataSource);
+                        await handleAutoValidation(null, dataSource);
+                    }}
                     getNewRecord={getNewRecord}
                 />
                 <PreviewModal

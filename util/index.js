@@ -385,14 +385,14 @@ async function saveNames(names) {
  * @returns {(boolean|string)[]}
  */
 function getValidation(info) {
-    const { isNullable, comment = '', name } = info;
+    const { isNullable, comment = '', name = '' } = info;
     const isXxx = (chinese, validator) => {
         if (comment.includes(chinese) || name.toLowerCase().includes(validator)) {
             return validator;
         }
     };
 
-    return [
+    return Array.from(new Set([
         !isNullable && 'required',
         isXxx('手机号', 'mobile'),
         isXxx('邮箱', 'email'),
@@ -403,7 +403,7 @@ function getValidation(info) {
         isXxx('qq号', 'qq'),
         isXxx('QQ号', 'qq'),
         isXxx('端口号', 'port'),
-    ].filter(Boolean);
+    ].filter(Boolean)));
 }
 
 /**
