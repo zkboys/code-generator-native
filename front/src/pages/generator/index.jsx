@@ -161,7 +161,7 @@ export default ajax()(function Generator(props) {
         files.forEach(col => {
             const { templateId } = col;
             const template = templateOptions.find(item => item.value === templateId)?.record;
-            const options = template?.fieldOptions || [];
+            const options = template?.defaultFieldOptions || template?.fieldOptions || [];
 
             dataSource.forEach(item => {
                 if (!item.fileOptions) item.fileOptions = {};
@@ -381,6 +381,7 @@ export default ajax()(function Generator(props) {
             return {
                 ...item,
                 ...record,
+                options: [...(record.defaultOptions || record.options)],
             };
         }).filter(Boolean);
         if (!nextFiles?.length) return;

@@ -42,8 +42,8 @@ function FileList(props) {
                                 onClick={() => {
                                     const files = form.getFieldValue('files');
                                     const record = templateOptions.find(item => !files.find(it => it.templateId === item.value))?.record;
-                                    const { id: templateId, targetPath, options } = record || {};
-                                    add({ templateId, targetPath, options: [...options] });
+                                    const { id: templateId, targetPath, options, defaultOptions } = record || {};
+                                    add({ templateId, targetPath, options: [...(defaultOptions || options)] });
                                     onAdd();
                                 }}
                             />

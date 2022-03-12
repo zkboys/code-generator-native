@@ -3,8 +3,10 @@ module.exports = {
     // name: '列表页',
     // 文件级别选项
     options: ['选中', '序号', '分页', '添加', '批量删除', '导入', '导出', '编辑', '详情', '删除'],
+    defaultOptions: ['分页', '添加', '编辑', '详情', '删除'],
     // 字段级别选项
     fieldOptions: ['条件', '列表'],
+    defaultFieldOptions: ['列表'],
     // 生成文件的默认目标路径
     targetPath: '/src/pages/{module-name}/index.jsx',
     // 获取文件内容
@@ -184,7 +186,7 @@ export default config({
                         name="${item.__names.moduleName}"
                         ${item.options && item.options.length ? `options={[
                             ${item.options.map(it => `{value: '${it.value}', label: '${it.label}'},`).join('\n                            ')}
-                        ]}`: NULL_LINE}
+                        ]}` : NULL_LINE}
                     />`).join('\n                    ')}
                     <FormItem>
                         <Space>
