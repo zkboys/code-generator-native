@@ -84,7 +84,7 @@ export default modal({
                     );
                 })}
             </div>
-            <div ref={textAreaRef}>
+            <div ref={textAreaRef} style={{ marginTop: 8 }}>
                 <Input.TextArea
                     style={{ height }}
                     value={value}
