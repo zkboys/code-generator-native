@@ -28,8 +28,7 @@ export default React.memo(ajax()(function FieldTable(props) {
         onDataSourceChange,
         dataSource,
         onAdd,
-        onAutoName,
-        onAutoValidation,
+        onAutoFill,
         files,
         filesVisible,
     } = props;
@@ -56,11 +55,7 @@ export default React.memo(ajax()(function FieldTable(props) {
         const { keyCode, ctrlKey, metaKey, shiftKey } = e;
         const enterKey = keyCode === 13;
 
-        if ((ctrlKey || metaKey) && enterKey && !shiftKey) {
-            const ds = await onAutoName(e);
-            await onAutoValidation(e, ds);
-            return;
-        }
+        if ((ctrlKey || metaKey) && enterKey && !shiftKey) return onAutoFill(e);
 
         const result = getNextTabIndex(e, options);
         if (!result) return;
@@ -81,7 +76,7 @@ export default React.memo(ajax()(function FieldTable(props) {
             nextInput.focus();
             nextInput.select();
         });
-    }, [onAdd, handleDelete, onAutoName, onAutoValidation]);
+    }, [onAdd, handleDelete, onAutoFill]);
 
     // 选项列
     const optionColumns = useMemo(() => {

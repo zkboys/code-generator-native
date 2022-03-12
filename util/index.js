@@ -385,7 +385,9 @@ async function saveNames(names) {
  * @returns {(boolean|string)[]}
  */
 function getValidation(info) {
-    const { isNullable, comment = '', name = '' } = info;
+    let { isNullable = true, comment = '', chinese = '', name = '' } = info;
+    comment = chinese || comment;
+
     const isXxx = (chinese, validator) => {
         if (comment.includes(chinese) || name.toLowerCase().includes(validator)) {
             return validator;
@@ -395,6 +397,7 @@ function getValidation(info) {
     return Array.from(new Set([
         !isNullable && 'required',
         isXxx('手机号', 'mobile'),
+        isXxx('电话', 'mobile'),
         isXxx('邮箱', 'email'),
         isXxx('ip地址', 'ip'),
         isXxx('IP地址', 'ip'),
