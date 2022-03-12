@@ -482,7 +482,9 @@ export default ajax()(function Generator(props) {
                                                 <Input.TextArea
                                                     style={{ height: 78 }}
                                                     className={s.sqlArea}
-                                                    placeholder={`请输入sql语句，多表重复字段将会被去重，${isMac ? '⌘' : 'ctrl'} + enter 进行解析`}
+                                                    placeholder={`支持多表关联，可以输入 ?、\${xx}、#{xx}等占位符；
+多表重复字段将会被去重；
+解析快捷键：${isMac ? '⌘' : 'ctrl'} + enter。`}
                                                     onPressEnter={handleSqlPressEnter}
                                                 />
                                             </Form.Item>
