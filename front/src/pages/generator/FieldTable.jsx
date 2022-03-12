@@ -248,7 +248,7 @@ export default React.memo(ajax()(function FieldTable(props) {
         if (activeKey === 'files') {
             return [
                 showDataType && { title: '数据类型', dataIndex: 'dataType', width: 150, formProps: { type: 'select', options: DATA_TYPE_OPTIONS } },
-                { title: '表单类型', dataIndex: 'formType', width: 150, formProps: { type: 'select', options: FORM_ELEMENT_OPTIONS } },
+                { title: '表单类型', dataIndex: 'formType', width: 160, formProps: { type: 'select', required: true, options: FORM_ELEMENT_OPTIONS } },
                 { title: '校验规则', dataIndex: 'validation', width: 250, formProps: { type: 'select', mode: 'multiple', options: VALIDATE_OPTIONS } },
                 ...optionColumns,
             ].filter(Boolean);

@@ -8,7 +8,7 @@ const openBrowser = require('./openBrowser');
 const choosePort = require('./choosePort');
 const config = require('../config');
 const packageJson = require('../package.json');
-const { Name: NameModel } = require('../database');
+const { Name: NameModel, FormType: FormTypeModel, Validation: ValidationModel } = require('../database');
 const translate = require('./translate');
 const db = require('../db');
 
@@ -103,7 +103,7 @@ function getFilesContent(options) {
     const { files, moduleName, fields, ...others } = options;
     // 保存用户字段配置 name chinese
     // 不是用await，防止阻塞
-    saveNames((fields || []).filter(item => !item.__isItems));
+    saveFields((fields || []).filter(item => !item.__isItems));
 
     const templates = getLocalTemplates();
 
@@ -386,21 +386,44 @@ async function getChinese(fields) {
 
 /**
  * 将中英文配置保存到词库中
- * @param names
+ * @param fields
  * @returns {Promise<void>}
  */
-async function saveNames(names) {
+async function saveFields(fields) {
     const { authenticated } = require('../database');
     if (!authenticated) return;
 
-    names = names.filter(item => item.name && item.chinese);
-    for (let item of names) {
-        const { name, chinese } = item;
-        const result = await NameModel.findOne({ where: { name, chinese } });
-        if (result) {
-            await result.update({ weight: result.weight + 1 });
-        } else {
-            await NameModel.create({ name, chinese, weight: 0 });
+    for (let item of fields) {
+        const { name, chinese, formType, validation } = item;
+        // 保存中英文
+        if (name && chinese) {
+            const result = await NameModel.findOne({ where: { name, chinese } });
+            if (result) {
+                await result.update({ weight: result.weight + 1 });
+            } else {
+                await NameModel.create({ name, chinese, weight: 0 });
+            }
+        }
+
+        // 保存表单类型
+        if (name && formType) {
+            const result = await FormTypeModel.findOne({ where: { name, formType } });
+            if (result) {
+                await result.update({ weight: result.weight + 1 });
+            } else {
+                await FormTypeModel.create({ name, formType, weight: 0 });
+            }
+        }
+
+        // 保存校验规则
+        if (name && validation && validation.length) {
+            const validationStr = validation.join(',');
+            const result = await ValidationModel.findOne({ where: { name, validation: validationStr } });
+            if (result) {
+                await result.update({ weight: result.weight + 1 });
+            } else {
+                await ValidationModel.create({ name, validation: validationStr, weight: 0 });
+            }
         }
     }
 }
@@ -413,7 +436,18 @@ async function saveNames(names) {
 async function getValidation(fields) {
     const items = fields.filter(item => !item.validation || !item.validation.length);
     if (!items.length) return [];
+
+    const { authenticated } = require('../database');
+
+    const results = authenticated ? await ValidationModel.findAll({
+        where: { name: items.map(item => item.name) },
+        order: [['weight', 'desc'], ['updatedAt', 'desc']],
+    }) : [];
+
     return Promise.all(items.map(async item => {
+        const record = results.find(it => it.name === item.name);
+        if (record) return { ...item, validation: record.validation?.split(',') };
+
         let { isNullable = true, comment = '', chinese = '', name = '' } = item;
         comment = chinese || comment;
 
@@ -445,11 +479,21 @@ async function getValidation(fields) {
  * @param fields
  * @returns {Promise<unknown[]>|*[]}
  */
-function getFormType(fields) {
+async function getFormType(fields) {
     const items = fields.filter(item => !item.formType || !item.formType.length);
     if (!items.length) return [];
 
+    const { authenticated } = require('../database');
+
+    const results = authenticated ? await FormTypeModel.findAll({
+        where: { name: items.map(item => item.name) },
+        order: [['weight', 'desc'], ['updatedAt', 'desc']],
+    }) : [];
+
     return Promise.all(items.map(async item => {
+        const record = results.find(it => it.name === item.name);
+        if (record) return { ...item, formType: record.formType };
+
         if (item.options && item.options.length) return 'select';
 
         const formType = TYPE_MAP[item.dataType] || 'input';

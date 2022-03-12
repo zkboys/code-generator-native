@@ -1,11 +1,13 @@
 const sequelize = require('./sequelize');
 
-// sequelize.sync({ force: true });
+// sequelize.sync({ force: false });
 
 module.exports = {
     sequelize,
     authenticated: false,
     Name: require('./model/Name'),
+    FormType: require('./model/FormType'),
+    Validation: require('./model/Validation'),
 };
 
 (async () => {
