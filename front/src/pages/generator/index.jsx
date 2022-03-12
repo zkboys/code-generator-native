@@ -57,11 +57,11 @@ export default ajax()(function Generator(props) {
             const values = await form.validateFields();
 
             if (dataSource.some(item => !item.name || !item.chinese)) return Modal.info({ title: '温馨提示', content: '表格的字段配置有必填项未填写！' });
-            const { files, moduleName } = values;
+            const { files, dataSource: ds, ...others } = values;
             const params = {
-                moduleName,
+                ...others,
                 files,
-                config: dataSource,
+                fields: dataSource,
             };
 
             if (preview) {

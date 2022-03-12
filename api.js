@@ -150,10 +150,13 @@ module.exports = apiRouter
         return !!(res && res.length);
     })
     .post('/generate/files', async ctx => {
-        const { files, moduleName, config } = ctx.request.body;
+        const { files, ...others } = ctx.request.body;
         const nextFiles = files.filter(item => item.rewrite !== false);
 
-        return await writeFile(nextFiles, moduleName, config);
+        return await writeFile({
+            ...others,
+            files: nextFiles,
+        });
     })
     .post('/generate/files/batch', async ctx => {
         const { files, tables, dbUrl } = ctx.request.body;
@@ -189,14 +192,13 @@ module.exports = apiRouter
                     options,
                 };
             });
-            const res = await writeFile(nextFiles, moduleName, fields);
+            const res = await writeFile({files: nextFiles, moduleName, fields});
             result.push(res);
         }
         return result.flat();
     })
     .post('/generate/preview', async ctx => {
-        const { files, moduleName, config } = ctx.request.body;
-        return await getFilesContent(files, moduleName, config);
+        return await getFilesContent(ctx.request.body);
     })
     .get('/version', async ctx => {
         const lastVersion = await getLastVersion();

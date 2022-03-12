@@ -96,12 +96,11 @@ function getAllFiles(dir, fileList = []) {
 
 /**
  * 获取文件内容
- * @param files
- * @param moduleName
- * @param fields
+ * @param options
  * @returns {Promise<*>}
  */
-function getFilesContent(files, moduleName, fields) {
+function getFilesContent(options) {
+    const { files, moduleName, fields, ...others } = options;
     // 保存用户字段配置 name chinese
     // 不是用await，防止阻塞
     saveNames((fields || []).filter(item => !item.__isItems));
@@ -127,7 +126,15 @@ function getFilesContent(files, moduleName, fields) {
             };
         });
         const NULL_LINE = '_____NULL_LINE_____';
-        const cfg = { NULL_LINE, file, files, moduleNames, fields: fis };
+
+        const cfg = {
+            ...others,
+            NULL_LINE,
+            file,
+            files,
+            moduleNames,
+            fields: fis,
+        };
         const content = template.getContent(cfg)
             .trim()
             .split('\n')
@@ -162,13 +169,11 @@ async function checkFilesExist(filePaths) {
 
 /**
  * 写入文件
- * @param files
- * @param moduleName
- * @param fields
+ * @param options
  * @returns {Promise<void>}
  */
-async function writeFile(files, moduleName, fields) {
-    const filesContents = getFilesContent(files, moduleName, fields);
+async function writeFile(options) {
+    const filesContents = getFilesContent(options);
     const result = [];
     for (let file of filesContents) {
         const { targetPath, content } = file;
