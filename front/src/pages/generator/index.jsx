@@ -154,6 +154,7 @@ export default ajax()(function Generator(props) {
         form.setFieldsValue({ moduleName });
     }, [fetchModuleNames, form]);
 
+    // 设置dataSource
     const handleDataSourceChange = useCallback(dataSource => {
         const files = form.getFieldValue('files');
         let changed;
