@@ -181,6 +181,8 @@ export default React.memo(ajax()(function FieldTable(props) {
                                             style={{ width: elementWidth }}
                                             placeholder={placeholder}
                                             options={options}
+                                            showSearch
+                                            optionFilterProp={'label'}
                                             {...otherFormProps}
                                         />
                                     );

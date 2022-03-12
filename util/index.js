@@ -610,7 +610,7 @@ async function autoFill(fields) {
 
     fields.forEach(item => {
         const { validation, formType } = item;
-        if (!validation) {
+        if (!validation || !validation.length) {
             item.validation = validations.find(it => it.id === item.id)?.validation;
         }
 

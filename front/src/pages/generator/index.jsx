@@ -492,6 +492,7 @@ export default ajax()(function Generator(props) {
                                             <Select
                                                 mode="multiple"
                                                 showSearch
+                                                optionFilterProp={'label'}
                                                 placeholder="请选择数据库表"
                                                 onChange={handleTableNameChange}
                                                 options={tableOptions}
