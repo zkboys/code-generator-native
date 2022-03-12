@@ -417,7 +417,7 @@ async function saveFields(fields) {
 
         // 保存校验规则
         if (name && validation && validation.length) {
-            const validationStr = validation.join(',');
+            const validationStr = validation.sort().join(',');
             const result = await ValidationModel.findOne({ where: { name, validation: validationStr } });
             if (result) {
                 await result.update({ weight: result.weight + 1 });
