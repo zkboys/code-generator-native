@@ -54,7 +54,9 @@ module.exports = apiRouter
     })
     /** 解析sql语句，获取数据库表字段 */
     .post('/db/sql', async ctx => {
-        const { dbUrl, sql } = ctx.request.body;
+        let { dbUrl, sql } = ctx.request.body;
+
+        sql = sql.replace(/(?<=([\$\#]+[\s]*\{)).*?(?=\})/g, '?').replace(/[\$\#]+[\s]*\{\?\}/g, '?');
 
         const parser = new NodeSQLParser.Parser();
         const ast = parser.astify(sql);
