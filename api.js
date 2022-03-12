@@ -1,5 +1,7 @@
 const Router = require('koa-router');
 const assert = require('assert');
+const fs = require('fs-extra');
+const path = require('path');
 const NodeSQLParser = require('node-sql-parser');
 const db = require('./db');
 const {
@@ -192,7 +194,7 @@ module.exports = apiRouter
                     options,
                 };
             });
-            const res = await writeFile({files: nextFiles, moduleName, fields});
+            const res = await writeFile({ files: nextFiles, moduleName, fields });
             result.push(res);
         }
         return result.flat();
@@ -245,5 +247,8 @@ module.exports = apiRouter
             }
             return item;
         });
+    })
+    .get('/help', async () => {
+        return await fs.readFile(path.join(__dirname, 'README.md'), 'UTF-8');
     })
 ;
