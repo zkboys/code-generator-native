@@ -315,44 +315,70 @@ async function updateVersion() {
 }
 
 /**
- * 从词库、或翻译获取对应的中英文
- * @param names
- * @param fromField
+ * 从词库、或翻译获取对应的英文
+ * @param fields
  * @returns {Promise<unknown[]|*[]>}
  */
-async function getNames(names, fromField) {
-    const values = names.map(item => item[fromField]);
-    if (!values.length) return [];
+async function getNames(fields) {
+    const items = fields.filter(item => item.chinese && !item.name);
+
+    if (!items.length) return [];
 
     const { authenticated } = require('../database');
 
     const results = authenticated ? await NameModel.findAll({
-        where: { [fromField]: values },
+        where: { chinese: items.map(item => item.chinese) },
         order: [['weight', 'desc'], ['updatedAt', 'desc']],
     }) : [];
 
-    const result = await Promise.all(values.map(async value => {
-        const record = results.find(item => item[fromField] === value);
-        if (record) return record;
+    const result = await Promise.all(items.map(async item => {
+        const record = results.find(it => it.chinese === item.chinese);
+        if (record) return { ...item, name: record.name };
 
-        // 未查到结果 调用翻译接口
-        const isFromName = fromField === 'name';
-        // 英文驼峰式命名，转空格（自然语言方式），翻译接口才可以理解
-        const val = isFromName ? getModuleNames(value)['module name'] : value;
+        // 未查询出结果，调用翻译接口
+        const params = { q: item.chinese, from: 'zh', to: 'en' };
+        const res = await translate(params);
 
-        const params = {
-            q: val,
-            from: isFromName ? 'en' : 'zh',
-            to: isFromName ? 'zh' : 'en',
-        };
+        if (!res) return;
+        // 结果转驼峰命名
+        const name = getModuleNames(res.replace(/\s/g, '_')).moduleName;
+        return { ...item, name };
+    }));
+
+    return result.filter(Boolean);
+}
+
+
+/**
+ * 从词库、或翻译获取对应的中文
+ * @param fields
+ * @returns {Promise<unknown[]|*[]>}
+ */
+async function getChinese(fields) {
+    const items = fields.filter(item => item.name && !item.chinese);
+
+    if (!items.length) return [];
+
+    const { authenticated } = require('../database');
+
+    const results = authenticated ? await NameModel.findAll({
+        where: { name: items.map(item => item.name) },
+        order: [['weight', 'desc'], ['updatedAt', 'desc']],
+    }) : [];
+
+    const result = await Promise.all(items.map(async item => {
+        const record = results.find(it => it.name === item.name);
+        if (record) return { ...item, chinese: record.chinese };
+
+        // 转成自然语言，翻译好识别
+        const q = getModuleNames(item.name)['module name'];
+
+        const params = { q, from: 'en', to: 'zh' };
         const res = await translate(params);
 
         if (!res) return;
 
-        return {
-            name: isFromName ? value : res,
-            chinese: isFromName ? res : value,
-        };
+        return { ...item, chinese: res };
     }));
 
     return result.filter(Boolean);
@@ -380,43 +406,56 @@ async function saveNames(names) {
 }
 
 /**
- * 根据数据库信息，获取校验规则
- * @param info
- * @returns {(boolean|string)[]}
+ * 根据字段信息，获取校验规则
+ * @param fields
+ * @returns {Promise<unknown[]|*[]>}
  */
-function getValidation(info) {
-    let { isNullable = true, comment = '', chinese = '', name = '' } = info;
-    comment = chinese || comment;
+async function getValidation(fields) {
+    const items = fields.filter(item => !item.validation || !item.validation.length);
+    if (!items.length) return [];
+    return Promise.all(items.map(async item => {
+        let { isNullable = true, comment = '', chinese = '', name = '' } = item;
+        comment = chinese || comment;
 
-    const isXxx = (chinese, validator) => {
-        if (comment.includes(chinese) || name.toLowerCase().includes(validator)) {
-            return validator;
-        }
-    };
+        const isXxx = (chinese, validator) => {
+            if (comment.includes(chinese) || name.toLowerCase().includes(validator)) {
+                return validator;
+            }
+        };
 
-    return Array.from(new Set([
-        !isNullable && 'required',
-        isXxx('手机号', 'mobile'),
-        isXxx('电话', 'mobile'),
-        isXxx('邮箱', 'email'),
-        isXxx('ip地址', 'ip'),
-        isXxx('IP地址', 'ip'),
-        isXxx('座机号', 'landLine'),
-        isXxx('身份证号', 'cardNumber'),
-        isXxx('qq号', 'qq'),
-        isXxx('QQ号', 'qq'),
-        isXxx('端口号', 'port'),
-    ].filter(Boolean)));
+        const validation = Array.from(new Set([
+            !isNullable && 'required',
+            isXxx('手机号', 'mobile'),
+            isXxx('电话', 'mobile'),
+            isXxx('邮箱', 'email'),
+            isXxx('ip地址', 'ip'),
+            isXxx('IP地址', 'ip'),
+            isXxx('座机号', 'landLine'),
+            isXxx('身份证号', 'cardNumber'),
+            isXxx('qq号', 'qq'),
+            isXxx('QQ号', 'qq'),
+            isXxx('端口号', 'port'),
+        ].filter(Boolean)));
+        return { ...item, validation };
+    }));
 }
 
 /**
- * 根据数据库信息获取表单类型
- * @param info
+ * 根据字段信息获取表单类型
+ * @param fields
+ * @returns {Promise<unknown[]>|*[]}
  */
-function getFormType(info) {
-    if (info.options && info.options.length) return 'select';
+function getFormType(fields) {
+    const items = fields.filter(item => !item.formType || !item.formType.length);
+    if (!items.length) return [];
 
-    return TYPE_MAP[info.dataType] || 'input';
+    return Promise.all(items.map(async item => {
+        if (item.options && item.options.length) return 'select';
+
+        const formType = TYPE_MAP[item.dataType] || 'input';
+
+        return { ...item, formType };
+    }));
 }
 
 /**
@@ -436,7 +475,7 @@ function splitComment(comment) {
  * 根据数据库信息，获取中文名
  * @param info
  */
-function getChinese(info) {
+function getChineseFromDb(info) {
     let { comment } = info;
     const items = splitComment(comment);
     return items[0];
@@ -479,7 +518,7 @@ function getOptions(info) {
  * 根据数据库表，获取所有的列信息
  * @param dbUrl
  * @param tableNames
- * @returns {Promise<unknown extends (object & {then(onfulfilled: infer F): any}) ? (F extends ((value: infer V, ...args: any) => any) ? Awaited<V> : never) : unknown extends ReadonlyArray<infer InnerArr> ? FlatArray<InnerArr, [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20][0]> : (unknown extends (object & {then(onfulfilled: infer F): any}) ? (F extends ((value: infer V, ...args: any) => any) ? Awaited<V> : never) : unknown)>}
+ * @returns {Promise<{chinese: *, dbName, name}[]>}
  */
 async function getTablesColumns(dbUrl, tableNames) {
     const _db = await db(dbUrl);
@@ -503,11 +542,40 @@ async function getTablesColumns(dbUrl, tableNames) {
 
         return {
             ...info,
-            chinese: getChinese(info),
-            formType: getFormType(info),
-            validation: getValidation(info),
+            chinese: getChineseFromDb(info),
         };
     }).filter(Boolean);
+}
+
+async function autoFill(fields) {
+    const _chinese = await getChinese(fields);
+    const names = await getNames(fields);
+
+    fields.forEach(item => {
+        const { name, chinese } = item;
+        if (!chinese) {
+            item.chinese = _chinese.find(it => it.id === item.id)?.chinese;
+        }
+        if (!name) {
+            item.name = names.find(it => it.id === item.id)?.name;
+        }
+    });
+
+    const validations = await getValidation(fields);
+    const formTypes = await getFormType(fields);
+
+    fields.forEach(item => {
+        const { validation, formType } = item;
+        if (!validation) {
+            item.validation = validations.find(it => it.id === item.id)?.validation;
+        }
+
+        if (!formType) {
+            item.formType = formTypes.find(it => it.id === item.id)?.formType;
+        }
+    });
+
+    return fields;
 }
 
 module.exports = {
@@ -524,11 +592,6 @@ module.exports = {
     writeFile,
     getLastVersion,
     updateVersion,
-    getNames,
-    saveNames,
-    getValidation,
-    getChinese,
-    getFormType,
-    getOptions,
     getTablesColumns,
+    autoFill,
 };

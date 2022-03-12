@@ -14,10 +14,8 @@ const {
     stringFormat,
     getLastVersion,
     updateVersion,
-    getNames,
+    autoFill,
     getTablesColumns,
-    getValidation,
-    getFormType,
 } = require('./util');
 const { DB_TYPES } = require('./db/MySql');
 const packageJson = require('./package.json');
@@ -224,46 +222,6 @@ module.exports = apiRouter
     .post('/autoFill', async ctx => {
         const { fields } = ctx.request.body;
 
-        const _chinese = [];
-        const _names = [];
-        fields.forEach(item => {
-            const { name, chinese } = item;
-            if (!name && chinese) _chinese.push(item);
-            if (name && !chinese) _names.push(item);
-        });
-
-        const chineseRes = await getNames(_chinese, 'chinese');
-        const nameRes = await getNames(_names, 'name');
-        const result = [...chineseRes, ...nameRes];
-
-        // 赋值中英文
-        fields.forEach(item => {
-            const { name, chinese } = item;
-            if (!name && chinese) {
-                const record = result.find(it => it.chinese === chinese);
-                item.name = record?.name;
-                if (item.name) item.name = getModuleNames(item.name).moduleName;
-            }
-            if (name && !chinese) {
-                const record = result.find(it => it.name === name);
-                item.chinese = record?.chinese;
-            }
-        });
-
-        return await Promise.all(fields.map(async item => {
-            let { chinese, name, validation, formType } = item;
-
-            if (!validation || !validation.length) validation = await getValidation(item);
-
-            if (!formType) formType = await getFormType({ ...item, validation });
-
-            return {
-                ...item,
-                name,
-                chinese,
-                validation,
-                formType,
-            };
-        }));
+        return await autoFill(fields);
     })
 ;
