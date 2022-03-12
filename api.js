@@ -56,7 +56,7 @@ module.exports = apiRouter
     .post('/db/sql', async ctx => {
         let { dbUrl, sql } = ctx.request.body;
 
-        sql = sql.replace(/(?<=([\$\#]+[\s]*\{)).*?(?=\})/g, '?').replace(/[\$\#]+[\s]*\{\?\}/g, '?');
+        sql = sql.replace(/[\$\#]+[\s]*({)?\{[\s\w]*\}(?!})/g, '?');
 
         const parser = new NodeSQLParser.Parser();
         const ast = parser.astify(sql);

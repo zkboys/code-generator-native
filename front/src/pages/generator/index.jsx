@@ -483,7 +483,7 @@ export default ajax()(function Generator(props) {
                                                     style={{ height: 78 }}
                                                     className={s.sqlArea}
                                                     placeholder={[
-                                                        '支持多表关联，可以输入 ?、${xx}、#{xx}等占位符；',
+                                                        `支持多表关联，可以输入 ?、\${xx}、#{xx}等占位符；`,
                                                         '多表重复字段将会被去重；',
                                                         `解析快捷键：${isMac ? '⌘' : 'ctrl'} + enter。`,
                                                     ].join('\n')}
@@ -533,7 +533,7 @@ export default ajax()(function Generator(props) {
                     />
                 </div>
                 <Tabs
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', userSelect: 'none' }}
                     tabBarStyle={{ marginBottom: 0 }}
                     tabBarExtraContent={{
                         left: (
