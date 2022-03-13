@@ -8,6 +8,7 @@ module.exports = {
     Name: require('./model/Name'),
     FormType: require('./model/FormType'),
     Validation: require('./model/Validation'),
+    UseLog: require('./model/UseLog'),
 };
 
 (async () => {

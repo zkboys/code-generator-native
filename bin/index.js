@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const path = require('path');
 const spawn = require('cross-spawn');
-const { initLocalTemplates, choosePort, openBrowser } = require('../util');
+const { initLocalTemplates, choosePort, openBrowser, saveUseLog } = require('../util');
 const config = require('../config');
 
 const program = require('commander');
@@ -37,4 +37,9 @@ const ROOT_PATH = path.join(__dirname, '..');
     // spawn('node', ['index.js', `--port=${port}`], { stdio: 'inherit', cwd: ROOT_PATH });
 
     openBrowser(`http://${HOST}:${port}`);
+
+    // 记录使用情况，等待数据库连接
+    setTimeout(async () => {
+        await saveUseLog();
+    }, 1000);
 })();

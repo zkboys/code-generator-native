@@ -4,11 +4,18 @@ const assert = require('assert');
 const { exec } = require('child_process');
 const staticCache = require('koa-static-cache');
 const inflection = require('inflection');
+const { internalIpV4 } = require('./ip');
+
 const openBrowser = require('./openBrowser');
 const choosePort = require('./choosePort');
 const config = require('../config');
 const packageJson = require('../package.json');
-const { Name: NameModel, FormType: FormTypeModel, Validation: ValidationModel } = require('../database');
+const {
+    Name: NameModel,
+    FormType: FormTypeModel,
+    Validation: ValidationModel,
+    UseLog: UseLogModel,
+} = require('../database');
 const translate = require('./translate');
 const db = require('../db');
 
@@ -326,7 +333,7 @@ function stringFormat(str, data) {
  */
 async function getLastVersion() {
     return await new Promise((resolve, reject) => {
-        exec(`npm view ${packageJson.name} version --registry=https://registry.npmmirror.com`, (error, stdout, stderr) => {
+        exec(`npm view ${packageJson.name} version --registry=https://registry.npmmirror.com`, (error, stdout) => {
             if (stdout) return resolve(stdout.trim());
             reject(Error('获取版本失败'));
         });
@@ -339,7 +346,7 @@ async function getLastVersion() {
  */
 async function updateVersion() {
     return await new Promise((resolve, reject) => {
-        exec(`npm i ${packageJson.name} -g --registry=https://registry.npmmirror.com`, (error, stdout, stderr) => {
+        exec(`npm i ${packageJson.name} -g --registry=https://registry.npmmirror.com`, (error, stdout) => {
             if (stdout) return resolve(stdout.trim());
             reject(Error('更新版本失败'));
         });
@@ -658,6 +665,17 @@ async function autoFill(fields) {
     return fields;
 }
 
+/**
+ * 保存使用记录
+ * @returns {Promise<void>}
+ */
+async function saveUseLog() {
+    const { authenticated } = require('../database');
+    const ip = await internalIpV4();
+
+    authenticated && await UseLogModel.create({ ip });
+}
+
 module.exports = {
     downloadTemplates,
     getLocalTemplates,
@@ -674,4 +692,5 @@ module.exports = {
     updateVersion,
     getTablesColumns,
     autoFill,
+    saveUseLog,
 };
