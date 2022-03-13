@@ -11,8 +11,7 @@ export default {
     // 每次插入时的内容
     getContent: config => {
         const { fields, moduleNames: mn } = config;
-        return `
-    ${mn.moduleName}: [
+        return `    ${mn.moduleName}: [
         ${fields.map(item => `{value: '${item.name}', label: '${item.chinese}'},`).join('\n        ')}
     ],
         `;
