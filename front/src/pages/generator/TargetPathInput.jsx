@@ -19,7 +19,7 @@ function TargetPathInput(props) {
     useEffect(() => {
         if (!value) return;
         const st = setTimeout(async () => {
-            const exist = await ajax.post('/generate/file/exist', { targetPath: value });
+            const exist = await ajax.post('/generate/file/exist', { targetPath: value }, { errorTip: false });
             setExist(exist);
         }, 300);
         return () => clearTimeout(st);

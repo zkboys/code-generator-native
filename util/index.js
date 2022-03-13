@@ -26,6 +26,7 @@ const TYPE_MAP = {
     Timestamp: 'date-time',
 };
 
+const INSERT_ANNOTATION = '此注释用于标记代码生成器插入代码位置，请勿删除！';
 
 async function downloadTemplates() {
     const systemTemplatesDir = config.systemTemplatesPath;
@@ -99,7 +100,7 @@ function getAllFiles(dir, fileList = []) {
  * @param options
  * @returns {Promise<*>}
  */
-function getFilesContent(options) {
+async function getFilesContent(options) {
     const { files, moduleName, fields, ...others } = options;
     // 保存用户字段配置 name chinese
     // 不是用await，防止阻塞
@@ -107,8 +108,8 @@ function getFilesContent(options) {
 
     const templates = getLocalTemplates();
 
-    return files.map(file => {
-        const { templateId, name } = file;
+    return Promise.all(files.map(async file => {
+        const { templateId, name, targetPath } = file;
         const template = templates.find(item => item.id === templateId);
 
         assert(template, `${name} 模版不存在!`);
@@ -135,18 +136,39 @@ function getFilesContent(options) {
             moduleNames,
             fields: fis,
         };
-        const content = template.getContent(cfg)
-            .trim()
+        let content = template.getContent(cfg)
             .split('\n')
             .filter(item => !item.includes(NULL_LINE))
             .join('\n');
+
+        // 插入式
+        if (template.getFullContent) {
+            content = content.trimRight();
+            const filePath = path.join(config.nativeRoot, targetPath);
+
+            const targetExist = await fs.exists(filePath);
+
+            let fullContent;
+            if (targetExist) {
+                fullContent = await fs.readFile(filePath, 'UTF-8');
+            } else {
+                fullContent = template.getFullContent(cfg);
+            }
+            const contents = fullContent.split('\n');
+            const insertIndex = contents.findIndex(item => item.includes(INSERT_ANNOTATION));
+            contents.splice(insertIndex, 0, content);
+
+            content = contents.join('\n');
+        } else {
+            content = content.trim();
+        }
 
         return {
             ...template,
             ...file,
             content,
         };
-    });
+    }));
 }
 
 /**
@@ -160,8 +182,11 @@ async function checkFilesExist(filePaths) {
         const filePath = path.join(config.nativeRoot, fp);
         const exist = await fs.exists(filePath);
         if (exist) {
-            if (!result) result = [];
-            result.push(fp);
+            const content = await fs.readFile(filePath, 'UTF-8');
+            if (!content.includes(INSERT_ANNOTATION)) {
+                if (!result) result = [];
+                result.push(fp);
+            }
         }
     }
     return result;
@@ -173,7 +198,7 @@ async function checkFilesExist(filePaths) {
  * @returns {Promise<void>}
  */
 async function writeFile(options) {
-    const filesContents = getFilesContent(options);
+    const filesContents = await getFilesContent(options);
     const result = [];
     for (let file of filesContents) {
         const { targetPath, content } = file;
@@ -191,7 +216,6 @@ async function writeFile(options) {
 
     return result;
 }
-
 
 /**
  * 基于系统模板，初始化本地项目模板
@@ -296,6 +320,10 @@ function stringFormat(str, data) {
         }, str);
 }
 
+/**
+ * 获取生成器最新版本
+ * @returns {Promise<unknown>}
+ */
 async function getLastVersion() {
     return await new Promise((resolve, reject) => {
         exec(`npm view ${packageJson.name} version --registry=https://registry.npmmirror.com`, (error, stdout, stderr) => {
@@ -305,6 +333,10 @@ async function getLastVersion() {
     });
 }
 
+/**
+ * 生成器升级到最新版本
+ * @returns {Promise<unknown>}
+ */
 async function updateVersion() {
     return await new Promise((resolve, reject) => {
         exec(`npm i ${packageJson.name} -g --registry=https://registry.npmmirror.com`, (error, stdout, stderr) => {
@@ -347,7 +379,6 @@ async function getNames(fields) {
 
     return result.filter(Boolean);
 }
-
 
 /**
  * 从词库、或翻译获取对应的中文
@@ -591,6 +622,11 @@ async function getTablesColumns(dbUrl, tableNames) {
     }).filter(Boolean);
 }
 
+/**
+ * 自动填充内容
+ * @param fields
+ * @returns {Promise<*>}
+ */
 async function autoFill(fields) {
     const _chinese = await getChinese(fields);
     const names = await getNames(fields);
