@@ -86,7 +86,7 @@ export default React.memo(ajax()(function FieldTable(props) {
             .map((templateId) => {
                 const template = templateOptions.find(item => item.value === templateId)?.record;
                 const title = template?.shortName;
-                const dataIndex = ['fileOptions', template?.id];
+                const dataIndex = ['fieldOptions', template?.id];
                 const options = template?.fieldOptions || [];
                 if (!options.length) return null;
                 return {
@@ -140,9 +140,9 @@ export default React.memo(ajax()(function FieldTable(props) {
                     };
                 }, {});
 
-            record.fileOptions = options;
+            record.fieldOptions = options;
             form.setFields([{
-                name: ['dataSource', index, 'fileOptions'],
+                name: ['dataSource', index, 'fieldOptions'],
                 value: options,
             }]);
             onDataSourceChange([...dataSource]);

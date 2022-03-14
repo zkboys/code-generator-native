@@ -189,7 +189,7 @@ module.exports = apiRouter
 
             const tableFields = await db(dbUrl).getColumns(tableName);
             const fields = tableFields.map(item => {
-                const options = nextFiles.reduce((prev, curr) => {
+                const fieldOptions = nextFiles.reduce((prev, curr) => {
                     const { templateId, fieldOptions } = curr;
                     return {
                         ...prev,
@@ -198,10 +198,11 @@ module.exports = apiRouter
                 }, {});
                 return {
                     ...item,
-                    options,
+                    fieldOptions,
                 };
             });
-            const res = await writeFile({ files: nextFiles, moduleName, fields });
+            const _fields = await autoFill(fields);
+            const res = await writeFile({ files: nextFiles, moduleName, fields: _fields });
             result.push(res);
         }
         return result.flat();

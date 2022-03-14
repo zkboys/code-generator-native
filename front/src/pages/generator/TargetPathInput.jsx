@@ -14,7 +14,7 @@ function TargetPathInput(props) {
         if (!path) return;
         const val = path.includes('{') ? stringFormat(path, moduleNames) : path;
         form.setFields([{ name, value: val }]);
-    }, [form, name, moduleNames, templateId, templateOptions]);
+    }, [form, name, value, moduleNames, templateId, templateOptions]);
 
     // 检测文件是否存在
     useEffect(() => {

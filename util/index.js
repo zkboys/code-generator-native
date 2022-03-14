@@ -148,7 +148,7 @@ async function getFilesContent(options) {
                     name,
                     targetPath,
                     template: item,
-                    templateId: templateId,
+                    templateId,
                     _file: file,
                 });
             });
@@ -159,7 +159,7 @@ async function getFilesContent(options) {
         const { template, templateId, targetPath, _file } = file;
 
         const fis = fields.map(item => {
-            const fieldOptions = item.fileOptions && item.fileOptions[templateId] || [];
+            const fieldOptions = item.fieldOptions && item.fieldOptions[templateId] || [];
             const __names = getModuleNames(item.name);
             return {
                 ...item,

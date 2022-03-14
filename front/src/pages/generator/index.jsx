@@ -186,10 +186,10 @@ export default ajax()(function Generator(props) {
             const options = template?.defaultFieldOptions || template?.fieldOptions || [];
 
             dataSource.forEach(item => {
-                if (!item.fileOptions) item.fileOptions = {};
+                if (!item.fieldOptions) item.fieldOptions = {};
 
-                if (!item.fileOptions[templateId]) {
-                    item.fileOptions[templateId] = [...options];
+                if (!item.fieldOptions[templateId]) {
+                    item.fieldOptions[templateId] = [...options];
                     changed = true;
                 }
             });
