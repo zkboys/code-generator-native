@@ -6,14 +6,12 @@ const prompts = require('prompts');
 const isInteractive = process.stdout.isTTY;
 
 function clearConsole() {
-    process.stdout.write(
-        process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H',
-    );
+    process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
 }
 
 function choosePort(host, defaultPort, yes) {
-    return detect(defaultPort, host).then(
-        port =>
+    return detect(defaultPort, host)
+        .then(port =>
             new Promise(resolve => {
                 if (port === defaultPort) {
                     return resolve(port);
@@ -50,16 +48,15 @@ function choosePort(host, defaultPort, yes) {
                     console.log(chalk.red(message));
                     resolve(null);
                 }
-            }),
-        err => {
+            }))
+        .catch(err => {
             throw new Error(
                 chalk.red(`Could not find an open port at ${chalk.bold(host)}.`) +
                 '\n' +
                 ('Network error message: ' + err.message || err) +
                 '\n',
             );
-        },
-    );
+        });
 }
 
 module.exports = choosePort;

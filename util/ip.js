@@ -19,19 +19,13 @@ function findIp(gateway) {
 }
 
 async function async(family) {
-    try {
-        const { gateway } = await defaultGateway[family]();
-        return findIp(gateway);
-    } catch {
-    }
+    const { gateway } = await defaultGateway[family]();
+    return findIp(gateway);
 }
 
 function sync(family) {
-    try {
-        const { gateway } = defaultGateway[family].sync();
-        return findIp(gateway);
-    } catch {
-    }
+    const { gateway } = defaultGateway[family].sync();
+    return findIp(gateway);
 }
 
 module.exports = {

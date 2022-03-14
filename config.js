@@ -1,16 +1,8 @@
 const path = require('path');
 
-// 命令行参数 --port=3001
-const args = process.argv.slice(2).reduce((prev, curr) => {
-    const key = curr.split('=')[0].replace('--', '');
-    const value = curr.split('=')[1];
-    return { ...prev, [key]: value };
-}, {});
-
-const port = args.port || 3001;
-
+const args = getCommandArgs();
+const port = Number(args.port) || 3001;
 const nativeRoot = args.nativeRoot || process.cwd();
-// const nativeRoot = process.cwd();
 const generatorPath = 'generator';
 const localGeneratorPath = path.join(nativeRoot, generatorPath);
 const localTemplatesPath = path.join(localGeneratorPath, 'templates');
@@ -29,3 +21,14 @@ module.exports = {
     systemTemplatesPath,
 };
 
+/**
+ * 获取命令行参数 --port=3001 => {port: 3001}
+ * @returns {{}}
+ */
+function getCommandArgs() {
+    return process.argv.slice(2).reduce((prev, curr) => {
+        const key = curr.split('=')[0].replace('--', '');
+        const value = curr.split('=')[1];
+        return { ...prev, [key]: value };
+    }, {});
+}

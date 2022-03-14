@@ -9,6 +9,9 @@ const config = require('./config');
 const api = require('./api');
 const version = require('./package').version;
 
+// 获取端口号
+const port = Number(config.port);
+
 const app = new Koa();
 
 app
@@ -31,9 +34,4 @@ app
         ctx.type = 'html';
         ctx.body = fs.createReadStream(path.resolve(__dirname, 'public', 'index.html'));
     })
-;
-// 获取端口号
-const port = Number(config.port);
-
-app.listen(port);
-console.log(`generator server@${version} started at http://localhost:${port}`);
+    .listen(port, () => console.log(`Generator server@${version} started at http://localhost:${port}`));
