@@ -222,12 +222,12 @@ export default ajax()(function Generator(props) {
     // 模版改变事件
     const handleTemplateChange = useCallback((name, templateId) => {
         const record = templateOptions.find(item => item.value === templateId).record;
-        const { targetPath, options } = record;
+        const { targetPath, defaultOptions, options } = record;
 
         const files = form.getFieldValue('files');
         const file = form.getFieldValue(['files', name]);
         file.targetPath = targetPath;
-        file.options = [...options];
+        file.options = [...(defaultOptions || options)];
         files[name] = file;
 
         form.setFieldsValue({ files: [...files] });
