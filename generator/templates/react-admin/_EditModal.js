@@ -1,5 +1,5 @@
 module.exports = {
-    targetPath: '/src/pages/{module-name}/EditModal.jsx',
+    targetPath: '{parentPath}/EditModal.jsx',
     getContent: config => {
         const { file, moduleNames: mn, fields, NULL_LINE } = config;
         const { options = [] } = file;

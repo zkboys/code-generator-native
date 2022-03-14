@@ -10,9 +10,10 @@ function TargetPathInput(props) {
 
     // 根据模块名，处理地址
     useEffect(() => {
-        const path = templateOptions.find(item => item.value === templateId)?.record?.targetPath;
-        const value = stringFormat(path, moduleNames);
-        form.setFields([{ name, value }]);
+        const path = value || templateOptions.find(item => item.value === templateId)?.record?.targetPath;
+        if (!path) return;
+        const val = path.includes('{') ? stringFormat(path, moduleNames) : path;
+        form.setFields([{ name, value: val }]);
     }, [form, name, moduleNames, templateId, templateOptions]);
 
     // 检测文件是否存在
