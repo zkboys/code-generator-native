@@ -4,6 +4,7 @@ module.exports = {
         const { file, moduleNames: mn, fields, NULL_LINE } = config;
         const { options = [] } = file;
 
+        // 返回false不生成文件
         if (!options.includes('添加') && !options.includes('修改')) return false;
 
         const ignore = ['id', 'updatedAt', 'createdAt', 'isDeleted'];
