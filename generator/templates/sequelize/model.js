@@ -15,6 +15,7 @@ module.exports = sequelize.define('${mn.ModuleName}', {
             const unique = dbOptions.includes('唯一');
 
             if (['VARCHAR', 'CHAR'].includes(type)) type = `STRING(${length})`;
+            if (['INT'].includes(type)) type = 'INTEGER';
 
             // TODO 数据库类型 与 sequelize 类型对应关系
             return `${name}: { type: ${type}, comment: '${chinese}', ${primaryKey ? 'primaryKey: true, ' : ''}${autoIncrement ? 'autoIncrement: true, ' : ''}${allowNull ? 'allowNull: false, ' : ''}${unique ? 'unique: true, ' : ''}},`;

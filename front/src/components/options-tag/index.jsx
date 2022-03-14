@@ -10,7 +10,8 @@ function OptionsTag(props) {
     const handleClick = useCallback((e, label) => {
         e.stopPropagation();
         e.preventDefault();
-        const { ctrlKey, metaKey } = e;
+        const { ctrlKey, metaKey, shiftKey } = e;
+        if (shiftKey) return onClick && onClick(e, ctrlKey || metaKey, value, label);
         let nextValue = [...value];
 
         // 全/反选
@@ -21,7 +22,7 @@ function OptionsTag(props) {
         }
 
         onChange && onChange(nextValue);
-        onClick && onClick(e, ctrlKey || metaKey, nextValue);
+        onClick && onClick(e, ctrlKey || metaKey, nextValue, label);
     }, [value, onChange, options, onClick]);
 
     // options改变，修正value内容

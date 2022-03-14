@@ -100,6 +100,55 @@ export default React.memo(ajax()(function FieldTable(props) {
             }).filter(Boolean);
     }, [files, templateOptions]);
 
+    const handleOptionsTagClick = useCallback((e, ctrlKeyOrMetaKey, values, value, record, name, index) => {
+        if (!ctrlKeyOrMetaKey) return;
+        const { shiftKey } = e;
+        let options;
+        if (shiftKey) {
+            // 竖向权限、取消选择
+            const allOptions = dataSource.map(((item, index) => {
+                const ns = [...name];
+                ns[1] = index;
+                return ns.reduce((prev, key, index) => {
+                    // options可能不存存在，默认 []
+                    if (index === ns.length - 1 && !prev[key]) prev[key] = [];
+                    return prev[key];
+                }, { dataSource });
+            }));
+
+            const isSelectAll = !allOptions[index].includes(value);
+
+            allOptions.forEach(options => {
+                if (isSelectAll) {
+                    if (!options.includes(value)) options.push(value);
+                } else {
+                    const index = options.indexOf(value);
+                    if (index !== -1) options.splice(index, 1);
+                }
+            });
+
+            onDataSourceChange([...dataSource]);
+        } else {
+            const isSelectAll = !!values?.length;
+            // 横向全选、取消选择
+            options = optionColumns.map(item => item.dataIndex[1])
+                .reduce((prev, templateId) => {
+                    const fieldOptions = templateOptions.find(it => it.value === templateId)?.record?.fieldOptions;
+                    return {
+                        ...prev,
+                        [templateId]: isSelectAll ? [...fieldOptions] : [],
+                    };
+                }, {});
+
+            record.fileOptions = options;
+            form.setFields([{
+                name: ['dataSource', index, 'fileOptions'],
+                value: options,
+            }]);
+            onDataSourceChange([...dataSource]);
+        }
+    }, [dataSource, form, onDataSourceChange, optionColumns, templateOptions]);
+
     // 一共多少行
     const totalRow = dataSource.length;
 
@@ -210,25 +259,7 @@ export default React.memo(ajax()(function FieldTable(props) {
                                         <OptionsTag
                                             options={options}
                                             {...otherFormProps}
-                                            onClick={(e, ctrlKeyOrMetaKey, values) => {
-                                                if (!ctrlKeyOrMetaKey) return;
-                                                const isSelectAll = !!values?.length;
-                                                const options = optionColumns.map(item => {
-                                                    return item.dataIndex[1];
-                                                }).reduce((prev, templateId) => {
-                                                    const fieldOptions = templateOptions.find(it => it.value === templateId)?.record?.fieldOptions;
-                                                    return {
-                                                        ...prev,
-                                                        [templateId]: isSelectAll ? [...fieldOptions] : [],
-                                                    };
-                                                }, {});
-                                                record.fileOptions = options;
-                                                form.setFields([{
-                                                    name: ['dataSource', index, 'fileOptions'],
-                                                    value: options,
-                                                }]);
-                                                onDataSourceChange([...dataSource]);
-                                            }}
+                                            onClick={(e, ctrlKeyOrMetaKey, values, value) => handleOptionsTagClick(e, ctrlKeyOrMetaKey, values, value, record, name, index)}
                                         />
                                     );
                                 }

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Button } from 'antd';
+import {useEffect, useState} from 'react';
+import {Button} from 'antd';
 import ReactMarkdown from 'react-markdown';
-import { ModalContent } from 'src/components';
-import { modal, ajax } from 'src/hocs';
+import {ModalContent} from 'src/components';
+import {modal, ajax} from 'src/hocs';
+import {isMac} from 'src/commons';
 
 export default ajax()(modal({
     top: 50,
@@ -17,7 +18,8 @@ export default ajax()(modal({
     useEffect(() => {
         (async () => {
             const content = await props.ajax.get('/help', null, { setLoading });
-            setContent(content);
+
+            setContent(content.replaceAll('`⌘`或`ctrl`', isMac ? '`⌘`' : '`ctrl`'));
         })();
     }, [props.ajax]);
 
