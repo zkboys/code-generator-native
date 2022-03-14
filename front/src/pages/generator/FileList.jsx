@@ -32,7 +32,6 @@ function FileList(props) {
                         const templateId = form.getFieldValue(['files', name, 'templateId']);
                         const record = templateOptions.find(item => item.value === templateId)?.record;
                         const color = stringToColor(record?.name);
-                        const options = record?.options || [];
 
                         const addButton = (
                             <Button
@@ -142,12 +141,21 @@ function FileList(props) {
                                             checkExist={checkExist}
                                         />
                                     </Form.Item>
-                                    <Form.Item
-                                        {...restField}
-                                        name={[name, 'options']}
-                                        onChange={onOptionsChange}
-                                    >
-                                        <OptionsTag options={options} />
+                                    <Form.Item noStyle shouldUpdate>
+                                        {() => {
+                                            const templateId = form.getFieldValue(['files', name, 'templateId']);
+                                            const record = templateOptions.find(item => item.value === templateId)?.record;
+                                            const options = record?.options || [];
+                                            return (
+                                                <Form.Item
+                                                    {...restField}
+                                                    name={[name, 'options']}
+                                                    onChange={onOptionsChange}
+                                                >
+                                                    <OptionsTag options={options} />
+                                                </Form.Item>
+                                            );
+                                        }}
                                     </Form.Item>
                                 </div>
                             </div>

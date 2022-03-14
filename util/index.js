@@ -115,14 +115,39 @@ async function getFilesContent(options) {
     saveFields((fields || []).filter(item => !item.__isItems));
 
     const templates = getLocalTemplates();
+    const moduleNames = getModuleNames(moduleName);
 
-    return Promise.all(files.map(async file => {
-        const { templateId, name, targetPath } = file;
+    const allFiles = [];
+    files.forEach(file => {
+        const { templateId, name } = file;
         const template = templates.find(item => item.id === templateId);
 
         assert(template, `${name} 模版不存在!`);
 
-        const moduleNames = getModuleNames(moduleName);
+        allFiles.push({
+            ...file,
+            template,
+        });
+
+        if (template.extraFiles) {
+            template.extraFiles.forEach(item => {
+                let { targetPath } = item;
+                targetPath = stringFormat(targetPath, moduleNames);
+                const name = targetPath.split('/').pop();
+                allFiles.push({
+                    ...item,
+                    id: targetPath,
+                    name,
+                    targetPath,
+                    template: item,
+                    templateId: templateId,
+                });
+            });
+        }
+    });
+
+    return Promise.all(allFiles.map(async file => {
+        const { template, templateId, targetPath } = file;
 
         const fis = fields.map(item => {
             const fieldOptions = item.fileOptions && item.fileOptions[templateId] || [];
@@ -162,11 +187,17 @@ async function getFilesContent(options) {
             } else {
                 fullContent = template.getFullContent(cfg);
             }
-            const contents = fullContent.split('\n');
-            const insertIndex = contents.findIndex(item => item.includes(INSERT_ANNOTATION));
-            contents.splice(insertIndex, 0, content);
 
-            content = contents.join('\n');
+            // 包含了就不再次插入了
+            if (!fullContent.includes(content)) {
+                const contents = fullContent.split('\n');
+                const insertIndex = contents.findIndex(item => item.includes(INSERT_ANNOTATION));
+                contents.splice(insertIndex, 0, content);
+
+                content = contents.join('\n');
+            } else {
+                content = fullContent;
+            }
         } else {
             content = content.trim();
         }

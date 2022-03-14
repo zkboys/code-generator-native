@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, Button } from 'antd';
 import { modal, ajax } from 'src/hocs';
 import { CodeEditor, ModalContent } from 'src/components';
@@ -15,16 +15,12 @@ export default ajax()(modal({
     const [loading, setLoading] = useState(false);
     const [files, setFiles] = useState([]);
 
-    const fetchGeneratePreview = useCallback(async (params) => {
-        return await props.ajax.post('/generate/preview', params, { setLoading });
-    }, [props.ajax]);
-
     useEffect(() => {
         (async () => {
-            const res = await fetchGeneratePreview(params);
+            const res = await props.ajax.post('/generate/preview', params, { setLoading });
             setFiles(res);
         })();
-    }, [fetchGeneratePreview, params]);
+    }, [props.ajax, params]);
 
     return (
         <ModalContent

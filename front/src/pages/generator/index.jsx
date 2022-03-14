@@ -1,5 +1,5 @@
-import React, {useState, useEffect, useCallback} from 'react';
-import {Form, Button, notification, Modal, Input, Select, Row, Col, Radio, Space, Checkbox, Tabs} from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Form, Button, notification, Modal, Input, Select, Row, Col, Radio, Space, Checkbox, Tabs } from 'antd';
 import {
     CodeOutlined,
     CopyOutlined,
@@ -10,11 +10,11 @@ import {
     FormOutlined,
     DeleteOutlined,
 } from '@ant-design/icons';
-import {useDebounceFn} from 'ahooks';
-import {v4 as uuid} from 'uuid';
-import {storage, isMac} from 'src/commons';
-import {confirm, PageContent} from 'src/components';
-import {ajax} from 'src/hocs';
+import { useDebounceFn } from 'ahooks';
+import { v4 as uuid } from 'uuid';
+import { storage, isMac, stringFormat } from 'src/commons';
+import { confirm, PageContent } from 'src/components';
+import { ajax } from 'src/hocs';
 import FieldTable from './FieldTable';
 import Feedback from './Feedback';
 import FileList from './FileList';
@@ -59,20 +59,31 @@ export default ajax()(function Generator(props) {
         return templateOptions;
     }, [props.ajax]);
 
-    // 生成文件事件
-    // 生成代码、代码预览
+    // 生成文件事件 生成代码、代码预览
     const handleGenerate = useCallback(async (preview = false) => {
         try {
-            if (!dataSource?.length) return Modal.info({ title: '温馨提示', content: '表格的字段配置不能为空！' });
+            let _dataSource = [...dataSource];
+            // if (!_dataSource?.length) return Modal.info({ title: '温馨提示', content: '表格的字段配置不能为空！' });
+            if (!_dataSource?.length) _dataSource = [{
+                id: uuid(),
+                comment: '备注',
+                chinese: '字段名',
+                name: 'field',
+                type: 'VARCHAR',
+                formType: 'input',
+                dataType: 'String',
+                isNullable: true,
+                __isNew: true,
+            }];
 
             const values = await form.validateFields();
 
-            if (dataSource.some(item => !item.name || !item.chinese)) return Modal.info({ title: '温馨提示', content: '表格的字段配置有必填项未填写！' });
+            if (_dataSource.some(item => !item.name || !item.chinese)) return Modal.info({ title: '温馨提示', content: '表格的字段配置有必填项未填写！' });
             const { files, dataSource: ds, ...others } = values;
             const params = {
                 ...others,
                 files,
-                fields: dataSource,
+                fields: _dataSource,
             };
 
             if (preview) {
@@ -233,16 +244,24 @@ export default ajax()(function Generator(props) {
         const record = templateOptions.find(item => item.value === templateId).record;
         const { targetPath, defaultOptions, options } = record;
 
-        const files = form.getFieldValue('files');
-        const file = form.getFieldValue(['files', name]);
-        file.targetPath = targetPath;
-        file.options = [...(defaultOptions || options)];
-        files[name] = file;
+        form.setFields([
+            {
+                name: ['files', name, 'templateId'],
+                value: templateId,
+            },
+            {
+                name: ['files', name, 'targetPath'],
+                value: stringFormat(targetPath, moduleNames),
+            },
+            {
+                name: ['files', name, 'options'],
+                value: [...(defaultOptions || options)],
+            },
+        ]);
 
-        form.setFieldsValue({ files: [...files] });
         handleFilesChange();
         handleDataSourceChange(dataSource);
-    }, [templateOptions, form, handleFilesChange, handleDataSourceChange, dataSource]);
+    }, [moduleNames, templateOptions, form, handleFilesChange, handleDataSourceChange, dataSource]);
 
     // 表单改变事件
     const { run: handleFormChange } = useDebounceFn(() => {
@@ -404,19 +423,16 @@ export default ajax()(function Generator(props) {
             files = [{
                 templateId: record.id,
                 targetPath: record.targetPath,
-                options: [...record.options],
+                options: [...(record.defaultOptions || record.options)],
             }];
         }
 
         const nextFiles = files.map(item => {
             const record = templateOptions.find(it => it.value === item.templateId)?.record;
+
             if (!record) return null;
 
-            return {
-                ...item,
-                ...record,
-                options: [...(record.defaultOptions || record.options)],
-            };
+            return item;
         }).filter(Boolean);
         if (!nextFiles?.length) return;
 
@@ -581,19 +597,19 @@ export default ajax()(function Generator(props) {
                     tabBarExtraContent={{
                         left: (
                             <Space style={{ marginRight: 16 }}>
-                                <Button icon={<PlusOutlined/>} onClick={() => handleAdd()}>
+                                <Button icon={<PlusOutlined />} onClick={() => handleAdd()}>
                                     添加一行
                                 </Button>
-                                <Button icon={<FormOutlined/>} onClick={() => setFastVisible(true)}>
+                                <Button icon={<FormOutlined />} onClick={() => setFastVisible(true)}>
                                     快速编辑
                                 </Button>
-                                <Button icon={<CodeOutlined/>} onClick={() => handleGenerate(true)}>
+                                <Button icon={<CodeOutlined />} onClick={() => handleGenerate(true)}>
                                     代码预览
                                 </Button>
                                 <Button
                                     type="primary"
                                     danger
-                                    icon={<FileDoneOutlined/>}
+                                    icon={<FileDoneOutlined />}
                                     onClick={() => handleGenerate()}
                                 >
                                     生成文件
@@ -620,7 +636,7 @@ export default ajax()(function Generator(props) {
                         right: (
                             <Space>
                                 <Button
-                                    icon={<DeleteOutlined/>}
+                                    icon={<DeleteOutlined />}
                                     disabled={!dataSource?.length}
                                     onClick={async () => {
                                         await confirm('您确定清空表格吗？');
@@ -630,20 +646,20 @@ export default ajax()(function Generator(props) {
                                     清空表格
                                 </Button>
                                 <Button
-                                    icon={<CopyOutlined/>}
+                                    icon={<CopyOutlined />}
                                     disabled={!tableOptions?.length}
                                     onClick={() => setBatchVisible(true)}
                                 >
                                     批量生成
                                 </Button>
                                 <Button
-                                    icon={<DownloadOutlined/>}
+                                    icon={<DownloadOutlined />}
                                     onClick={handleUpdateLocalTemplates}
                                 >
                                     更新本地模版
                                 </Button>
                                 <Button
-                                    icon={<QuestionCircleOutlined/>}
+                                    icon={<QuestionCircleOutlined />}
                                     onClick={() => setHelpVisible(true)}
                                 >
                                     帮助
@@ -654,9 +670,9 @@ export default ajax()(function Generator(props) {
                     activeKey={activeKey}
                     onChange={setActiveKey}
                 >
-                    <TabPane key="files" tab="文件"/>
-                    <TabPane key="items" tab="选项"/>
-                    <TabPane key="db" tab="数据库"/>
+                    <TabPane key="files" tab="文件" />
+                    <TabPane key="items" tab="选项" />
+                    <TabPane key="db" tab="数据库" />
                 </Tabs>
                 <FieldTable
                     form={form}
@@ -699,7 +715,7 @@ export default ajax()(function Generator(props) {
                     form={form}
                     tableOptions={tableOptions}
                 />
-                <Feedback/>
+                <Feedback />
             </Form>
         </PageContent>
     );
