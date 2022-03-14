@@ -306,9 +306,10 @@ export default ajax()(function Generator(props) {
             // chinese: `新增列${length + 1}`,
             // name: `field${length + 1}`,
             name,
-            type: 'VARCHAR',
-            formType: 'input',
-            dataType: 'String',
+            // type: 'VARCHAR',
+            // formType: 'input',
+            // dataType: 'String',
+            length: 50,
             isNullable: true,
             __isNew: true,
             __isItems: isItems,
@@ -445,6 +446,13 @@ export default ajax()(function Generator(props) {
             }
         })();
     }, [props.ajax, handleUpdate]);
+
+    useEffect(() => {
+        if (activeKey === 'items') {
+            setDbInfoVisible(false);
+        }
+
+    }, [activeKey]);
 
     return (
         <PageContent className={s.root} loading={loading} loadingTip={loadingTip}>
@@ -590,6 +598,11 @@ export default ajax()(function Generator(props) {
                                 </Checkbox>
                                 <Checkbox
                                     checked={dbInfoVisible}
+                                    disabled={
+                                        ['items', 'db'].includes(activeKey)
+                                        || !form.getFieldValue('dbUrl')
+                                        || !dataSource?.length
+                                    }
                                     onChange={e => setDbInfoVisible(e.target.checked)}
                                 >
                                     显示数据库信息
@@ -623,8 +636,9 @@ export default ajax()(function Generator(props) {
                     activeKey={activeKey}
                     onChange={setActiveKey}
                 >
-                    <TabPane key="files" tab="文件编辑"/>
-                    <TabPane key="items" tab="选项编辑"/>
+                    <TabPane key="files" tab="文件"/>
+                    <TabPane key="items" tab="选项"/>
+                    <TabPane key="db" tab="数据库"/>
                 </Tabs>
                 <FieldTable
                     form={form}

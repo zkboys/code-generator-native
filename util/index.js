@@ -15,6 +15,7 @@ const {
     FormType: FormTypeModel,
     Validation: ValidationModel,
     UseLog: UseLogModel,
+    DbType: DbTypeModel,
 } = require('../database');
 const translate = require('./translate');
 const db = require('../db');
@@ -359,7 +360,14 @@ async function updateVersion() {
  * @returns {Promise<unknown[]|*[]>}
  */
 async function getNames(fields) {
-    const items = fields.filter(item => item.chinese && !item.name);
+    const items = fields.filter(item => item.chinese && !item.name)
+        .map(item => {
+            const chinese = splitComment(item.chinese)[0];
+            return {
+                ...item,
+                chinese,
+            };
+        });
 
     if (!items.length) return [];
 
@@ -432,7 +440,7 @@ async function saveFields(fields) {
     if (!authenticated) return;
 
     for (let item of fields) {
-        const { name, chinese, formType, validation } = item;
+        const { name, chinese, formType, type, validation } = item;
         // 保存中英文
         if (name && chinese) {
             const result = await NameModel.findOne({ where: { name, chinese } });
@@ -450,6 +458,15 @@ async function saveFields(fields) {
                 await result.update({ weight: result.weight + 1 });
             } else {
                 await FormTypeModel.create({ name, formType, weight: 0 });
+            }
+        }
+        // 保存数据库类型
+        if (name && type) {
+            const result = await DbTypeModel.findOne({ where: { name, type } });
+            if (result) {
+                await result.update({ weight: result.weight + 1 });
+            } else {
+                await DbTypeModel.create({ name, type, weight: 0 });
             }
         }
 
@@ -518,7 +535,7 @@ async function getValidation(fields) {
  * @returns {Promise<unknown[]>|*[]}
  */
 async function getFormType(fields) {
-    const items = fields.filter(item => !item.formType || !item.formType.length);
+    const items = fields.filter(item => !item.formType);
     if (!items.length) return [];
 
     const { authenticated } = require('../database');
@@ -539,6 +556,33 @@ async function getFormType(fields) {
         return { ...item, formType };
     }));
 }
+
+/**
+ * 根据字段信息获取数据库类型
+ * @param fields
+ * @returns {Promise<unknown[]>|*[]}
+ */
+async function getDbType(fields) {
+    const items = fields.filter(item => !item.type);
+    if (!items.length) return [];
+
+    const { authenticated } = require('../database');
+
+    const results = authenticated ? await DbTypeModel.findAll({
+        where: { name: items.map(item => item.name) },
+        order: [['weight', 'desc'], ['updatedAt', 'desc']],
+    }) : [];
+
+    return Promise.all(items.map(async item => {
+        const record = results.find(it => it.name === item.name);
+        if (record) return { ...item, type: record.type };
+
+        const type = 'VARCHAR';
+
+        return { ...item, type };
+    }));
+}
+
 
 /**
  * 基于非_、-、中文、英文、数字，进行拆分
@@ -651,14 +695,20 @@ async function autoFill(fields) {
     const validations = await getValidation(fields);
     const formTypes = await getFormType(fields);
 
+    const types = await getDbType(fields);
+
     fields.forEach(item => {
-        const { validation, formType } = item;
+        const { validation, formType, type } = item;
         if (!validation || !validation.length) {
             item.validation = validations.find(it => it.id === item.id)?.validation;
         }
 
         if (!formType) {
             item.formType = formTypes.find(it => it.id === item.id)?.formType;
+        }
+
+        if (!type) {
+            item.type = types.find(it => it.id === item.id)?.type;
         }
     });
 

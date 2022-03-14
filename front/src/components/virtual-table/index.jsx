@@ -8,7 +8,7 @@ import {getScrollBarWidth} from 'src/commons';
 import s from './style.module.less';
 
 const SCROLL_BAR_WIDTH = getScrollBarWidth();
-const ROW_HEIGHT = 65;
+const ROW_HEIGHT = 55;
 
 const RowElement = SortableElement((props) => props.children);
 const BodyContainer = SortableContainer(props => props.children);

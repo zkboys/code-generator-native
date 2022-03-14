@@ -7,6 +7,7 @@ module.exports = {
     authenticated: false,
     Name: require('./model/Name'),
     FormType: require('./model/FormType'),
+    DbType: require('./model/DbType'),
     Validation: require('./model/Validation'),
     UseLog: require('./model/UseLog'),
 };

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useEffect } from 'react';
+import React, {useCallback, useMemo, useRef, useEffect} from 'react';
 import {
     Table,
     Input,
@@ -8,11 +8,11 @@ import {
     InputNumber,
 } from 'antd';
 import c from 'classnames';
-import { OptionsTag, Content, Operator, virtualTable } from 'src/components';
-import { useHeight } from 'src/hooks';
-import { ajax } from 'src/hocs';
-import { getNextTabIndex } from 'src/commons';
-import { DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS } from './constant';
+import {OptionsTag, Content, Operator, virtualTable} from 'src/components';
+import {useHeight} from 'src/hooks';
+import {ajax} from 'src/hocs';
+import {getNextTabIndex} from 'src/commons';
+import {DATA_TYPE_OPTIONS, FORM_ELEMENT_OPTIONS, VALIDATE_OPTIONS} from './constant';
 
 import s from './style.module.less';
 
@@ -106,9 +106,10 @@ export default React.memo(ajax()(function FieldTable(props) {
     // 渲染表格中的表单项
     const formColumn = useCallback((column, totalInputColumn) => {
         if (!column?.formProps?.type) return column;
+        const isDb = activeKey === 'db';
 
         // 只有新增一行之后才可以编辑的列
-        const isNewEditFields = [
+        const isNewEditFields = isDb ? [] : [
             'type',
             'length',
             'defaultValue',
@@ -238,7 +239,7 @@ export default React.memo(ajax()(function FieldTable(props) {
                 );
             },
         };
-    }, [handleKeyDown, onDataSourceChange, totalRow, form, optionColumns, templateOptions, dataSource]);
+    }, [activeKey, totalRow, handleKeyDown, optionColumns, form, onDataSourceChange, dataSource, templateOptions]);
 
     // Tab 页配置
     const tabColumns = useMemo(() => {
@@ -260,14 +261,29 @@ export default React.memo(ajax()(function FieldTable(props) {
                 { title: '描述', dataIndex: 'description', formProps: { type: 'input', placeholder: '请输入描述' } },
             ];
         }
+        if (activeKey === 'db') {
+            return [
+                { title: '类型', dataIndex: 'type', width: 150, formProps: { type: 'select', options: dbTypeOptions, placeholder: '请选择类型！', required: true } },
+                { title: '长度', dataIndex: 'length', width: 120, formProps: { type: 'number', placeholder: '请输入长度' } },
+                { title: '默认值', dataIndex: 'defaultValue', width: 100, formProps: { type: 'input', placeholder: '请输入默认值' } },
+                { title: '选项', dataIndex: 'dbOptions', formProps: { type: 'tags', options: ['不为空', '自增长', '唯一', '主键'] } },
+            ];
+        }
 
         return [];
-    }, [files, optionColumns, activeKey]);
+    }, [files, activeKey, optionColumns, dbTypeOptions]);
 
     // 表格列
     const columns = useMemo(() => {
         let totalInputColumn = 0;
         const isItems = activeKey === 'items';
+        const isDb = activeKey === 'db';
+
+        const chineseTitle = (() => {
+            if (isItems) return '展示（label）';
+            if (isDb) return '备注';
+            return '中文名';
+        })();
         return [
             {
                 title: '操作', dataIndex: 'operator', width: 60,
@@ -283,7 +299,7 @@ export default React.memo(ajax()(function FieldTable(props) {
                             },
                         },
                     ];
-                    return <Operator items={items} />;
+                    return <Operator items={items}/>;
                 },
             },
             {
@@ -291,8 +307,8 @@ export default React.memo(ajax()(function FieldTable(props) {
                 formProps: { type: 'input', required: true },
             },
             {
-                title: isItems ? '展示（label）' : '中文名', dataIndex: 'chinese', width: isItems ? 300 : 150,
-                formProps: { type: 'input', required: true, placeholder: '请输入中文名' },
+                title: chineseTitle, dataIndex: 'chinese', width: (isItems || isDb) ? 300 : 150,
+                formProps: { type: 'input', required: !isDb, placeholder: `请输入${chineseTitle}` },
             },
             dbInfoVisible && { title: '注释', dataIndex: 'comment', width: 150 },
             dbInfoVisible && { title: '类型', dataIndex: 'type', width: 100, formProps: { type: 'select', required: true, options: dbTypeOptions } },

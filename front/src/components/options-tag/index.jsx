@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect } from 'react';
+import React, {useCallback, useEffect} from 'react';
 import PropTypes from 'prop-types';
-import { Tag } from 'antd';
+import {Tag} from 'antd';
 import stringToColor from 'string-to-color';
 import s from './style.module.less';
 
@@ -51,6 +51,10 @@ function OptionsTag(props) {
                 if (label === '添加') color = '#058673';
 
                 if (label === '列表') color = '#058673';
+
+                if (label === '不为空') color = '#ef8544';
+
+                if (label === '自增长') color = '#248f26';
 
                 return (
                     <Tag
