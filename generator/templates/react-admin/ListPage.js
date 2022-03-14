@@ -1,14 +1,20 @@
+const DetailModalTemplate = require('./_DetailModal.js');
+const EditModalTemplate = require('./_EditModal.js');
 module.exports = {
     // 模版名称
     // name: '列表页',
     // 文件级别选项
-    options: ['选中', '序号', '分页', '添加', '批量删除', '导入', '导出', '编辑', '详情', '删除'],
-    defaultOptions: ['分页', '添加', '编辑', '详情', '删除'],
+    options: ['列表', '选中', '序号', '分页', '添加', '修改', '详情', '删除', '批量删除', '导入', '导出'],
+    defaultOptions: ['列表', '分页', '添加', '修改', '详情', '删除'],
     // 字段级别选项
-    fieldOptions: ['条件', '列表'],
-    defaultFieldOptions: ['列表'],
+    fieldOptions: ['条件', '列表', '表单', '详情'],
+    defaultFieldOptions: ['列表', '表单', '详情'],
     // 生成文件的默认目标路径
     targetPath: '/src/pages/{module-name}/index.jsx',
+    extraFiles: [
+        DetailModalTemplate,
+        EditModalTemplate,
+    ],
     // 获取文件内容
     getContent: config => {
         const { NULL_LINE, file, moduleNames: mn, fields } = config;
@@ -18,6 +24,8 @@ module.exports = {
         const tableFields = fields.filter(item => item.fieldOptions.includes('列表') && !ignore.includes(item.__names.moduleName));
 
         const { options = [] } = file;
+        if (!options.includes('列表')) return false;
+        
         let _select = options.includes('选中');
         let _number = options.includes('序号');
         const _page = options.includes('分页');

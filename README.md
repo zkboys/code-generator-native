@@ -45,7 +45,7 @@ $ gen
 1. fieldOptions: 字段选项，显示到页面表格中，供用户选择；
 1. defaultFieldOptions: 默认选中的字段选项；
 1. targetPath: 默认生成目标文件的位置；相对命令启动目录开始编写，可以使用{'{module-name}'}等模块名进行占位；
-1. getContent: 获取文件内容函数；
+1. getContent: 获取文件内容函数；返回false，将忽略此文件，不生成；
 
 ### getContent函数参数
 

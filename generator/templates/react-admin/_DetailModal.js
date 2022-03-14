@@ -1,10 +1,11 @@
 module.exports = {
-    // name: '弹框详情页',
-    options: [],
-    fieldOptions: ['详情'],
     targetPath: '/src/pages/{module-name}/DetailModal.jsx',
     getContent: config => {
-        const { moduleNames: mn, fields, NULL_LINE } = config;
+        const { moduleNames: mn, file, fields, NULL_LINE } = config;
+        const { options = [] } = file;
+
+        if (!options.includes('详情')) return false;
+
         const ignore = ['id', 'updatedAt', 'createdAt', 'isDeleted'];
         const detailFields = fields.filter(item => item.fieldOptions.includes('详情') && !ignore.includes(item.__names.moduleName));
         return `

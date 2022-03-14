@@ -120,7 +120,10 @@ module.exports = apiRouter
         return db(dbUrl).getTypeOptions();
     })
     // 获取所有模版
-    .get('/templates', async () => await getLocalTemplates())
+    .get('/templates', async () => {
+        const res = await getLocalTemplates();
+        return res.filter(item => !item.shortName.startsWith('_'));
+    })
     // 获取模版详情
     .get('/templates/:id', async ctx => {
         const { id } = ctx.params;

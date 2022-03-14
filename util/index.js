@@ -141,13 +141,14 @@ async function getFilesContent(options) {
                     targetPath,
                     template: item,
                     templateId: templateId,
+                    _file: file,
                 });
             });
         }
     });
 
-    return Promise.all(allFiles.map(async file => {
-        const { template, templateId, targetPath } = file;
+    const result = await Promise.all(allFiles.map(async file => {
+        const { template, templateId, targetPath, _file } = file;
 
         const fis = fields.map(item => {
             const fieldOptions = item.fileOptions && item.fileOptions[templateId] || [];
@@ -164,13 +165,16 @@ async function getFilesContent(options) {
         const cfg = {
             ...others,
             NULL_LINE,
-            file,
+            file: _file || file,
             files,
             moduleNames,
             fields: fis,
         };
-        let content = template.getContent(cfg)
-            .split('\n')
+        let content = template.getContent(cfg);
+
+        if (content === false) return null;
+
+        content = content.split('\n')
             .filter(item => !item.includes(NULL_LINE))
             .join('\n');
 
@@ -208,6 +212,8 @@ async function getFilesContent(options) {
             content,
         };
     }));
+
+    return result.filter(Boolean);
 }
 
 /**

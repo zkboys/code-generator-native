@@ -7,6 +7,7 @@ module.exports = {
             name: '样式文件',
             targetPath: '/src/components/{module-name}/style.module.less',
             getContent: config => {
+                return false;
                 return `.root {
     width: 100%;
 }`;
