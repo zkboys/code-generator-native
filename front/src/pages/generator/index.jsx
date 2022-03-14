@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Form, Button, notification, Modal, Input, Select, Row, Col, Radio, Space, Checkbox, Tabs } from 'antd';
-import { CodeOutlined, CopyOutlined, DownloadOutlined, FileDoneOutlined, PlusOutlined, QuestionCircleOutlined, FormOutlined } from '@ant-design/icons';
-import { useDebounceFn } from 'ahooks';
-import { v4 as uuid } from 'uuid';
-import { storage, isMac } from 'src/commons';
-import { confirm, PageContent } from 'src/components';
-import { ajax } from 'src/hocs';
+import React, {useState, useEffect, useCallback} from 'react';
+import {Form, Button, notification, Modal, Input, Select, Row, Col, Radio, Space, Checkbox, Tabs} from 'antd';
+import {CodeOutlined, CopyOutlined, DownloadOutlined, FileDoneOutlined, PlusOutlined, QuestionCircleOutlined, FormOutlined} from '@ant-design/icons';
+import {useDebounceFn} from 'ahooks';
+import {v4 as uuid} from 'uuid';
+import {storage, isMac} from 'src/commons';
+import {confirm, PageContent} from 'src/components';
+import {ajax} from 'src/hocs';
 import FieldTable from './FieldTable';
 import Feedback from './Feedback';
 import FileList from './FileList';
@@ -232,7 +232,8 @@ export default ajax()(function Generator(props) {
 
         form.setFieldsValue({ files: [...files] });
         handleFilesChange();
-    }, [templateOptions, form, handleFilesChange]);
+        handleDataSourceChange(dataSource);
+    }, [templateOptions, form, handleFilesChange, handleDataSourceChange, dataSource]);
 
     // 表单改变事件
     const { run: handleFormChange } = useDebounceFn(() => {
@@ -564,19 +565,19 @@ export default ajax()(function Generator(props) {
                     tabBarExtraContent={{
                         left: (
                             <Space style={{ marginRight: 16 }}>
-                                <Button icon={<PlusOutlined />} onClick={() => handleAdd()}>
+                                <Button icon={<PlusOutlined/>} onClick={() => handleAdd()}>
                                     添加一行
                                 </Button>
-                                <Button icon={<FormOutlined />} onClick={() => setFastVisible(true)}>
+                                <Button icon={<FormOutlined/>} onClick={() => setFastVisible(true)}>
                                     快速编辑
                                 </Button>
-                                <Button icon={<CodeOutlined />} onClick={() => handleGenerate(true)}>
+                                <Button icon={<CodeOutlined/>} onClick={() => handleGenerate(true)}>
                                     代码预览
                                 </Button>
                                 <Button
                                     type="primary"
                                     danger
-                                    icon={<FileDoneOutlined />}
+                                    icon={<FileDoneOutlined/>}
                                     onClick={() => handleGenerate()}
                                 >
                                     生成文件
@@ -598,20 +599,20 @@ export default ajax()(function Generator(props) {
                         right: (
                             <Space>
                                 <Button
-                                    icon={<CopyOutlined />}
+                                    icon={<CopyOutlined/>}
                                     disabled={!tableOptions?.length}
                                     onClick={() => setBatchVisible(true)}
                                 >
                                     批量生成
                                 </Button>
                                 <Button
-                                    icon={<DownloadOutlined />}
+                                    icon={<DownloadOutlined/>}
                                     onClick={handleUpdateLocalTemplates}
                                 >
                                     更新本地模版
                                 </Button>
                                 <Button
-                                    icon={<QuestionCircleOutlined />}
+                                    icon={<QuestionCircleOutlined/>}
                                     onClick={() => setHelpVisible(true)}
                                 >
                                     帮助
@@ -622,8 +623,8 @@ export default ajax()(function Generator(props) {
                     activeKey={activeKey}
                     onChange={setActiveKey}
                 >
-                    <TabPane key="files" tab="文件编辑" />
-                    <TabPane key="items" tab="选项编辑" />
+                    <TabPane key="files" tab="文件编辑"/>
+                    <TabPane key="items" tab="选项编辑"/>
                 </Tabs>
                 <FieldTable
                     form={form}
@@ -666,7 +667,7 @@ export default ajax()(function Generator(props) {
                     form={form}
                     tableOptions={tableOptions}
                 />
-                <Feedback />
+                <Feedback/>
             </Form>
         </PageContent>
     );
