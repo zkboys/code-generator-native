@@ -1,6 +1,15 @@
 import React, {useState, useEffect, useCallback} from 'react';
 import {Form, Button, notification, Modal, Input, Select, Row, Col, Radio, Space, Checkbox, Tabs} from 'antd';
-import {CodeOutlined, CopyOutlined, DownloadOutlined, FileDoneOutlined, PlusOutlined, QuestionCircleOutlined, FormOutlined} from '@ant-design/icons';
+import {
+    CodeOutlined,
+    CopyOutlined,
+    DownloadOutlined,
+    FileDoneOutlined,
+    PlusOutlined,
+    QuestionCircleOutlined,
+    FormOutlined,
+    DeleteOutlined,
+} from '@ant-design/icons';
 import {useDebounceFn} from 'ahooks';
 import {v4 as uuid} from 'uuid';
 import {storage, isMac} from 'src/commons';
@@ -457,7 +466,6 @@ export default ajax()(function Generator(props) {
     return (
         <PageContent className={s.root} loading={loading} loadingTip={loadingTip}>
             <Form
-                className={s.query}
                 form={form}
                 layout="inline"
                 initialValues={{ files: [{}], searchType: 'tables' }}
@@ -594,7 +602,7 @@ export default ajax()(function Generator(props) {
                                     checked={filesVisible}
                                     onChange={e => setFilesVisible(e.target.checked)}
                                 >
-                                    展开文件列表
+                                    文件列表
                                 </Checkbox>
                                 <Checkbox
                                     checked={dbInfoVisible}
@@ -605,12 +613,22 @@ export default ajax()(function Generator(props) {
                                     }
                                     onChange={e => setDbInfoVisible(e.target.checked)}
                                 >
-                                    显示数据库信息
+                                    数据库信息
                                 </Checkbox>
                             </Space>
                         ),
                         right: (
                             <Space>
+                                <Button
+                                    icon={<DeleteOutlined/>}
+                                    disabled={!dataSource?.length}
+                                    onClick={async () => {
+                                        await confirm('您确定清空表格吗？');
+                                        handleDataSourceChange([]);
+                                    }}
+                                >
+                                    清空表格
+                                </Button>
                                 <Button
                                     icon={<CopyOutlined/>}
                                     disabled={!tableOptions?.length}

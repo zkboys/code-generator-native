@@ -270,7 +270,7 @@ export default React.memo(ajax()(function FieldTable(props) {
                 );
             },
         };
-    }, [activeKey, totalRow, handleKeyDown, optionColumns, form, onDataSourceChange, dataSource, templateOptions]);
+    }, [activeKey, totalRow, handleKeyDown, handleOptionsTagClick]);
 
     // Tab 页配置
     const tabColumns = useMemo(() => {
