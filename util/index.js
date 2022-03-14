@@ -532,9 +532,9 @@ async function getFormType(fields) {
         const record = results.find(it => it.name === item.name);
         if (record) return { ...item, formType: record.formType };
 
-        if (item.options && item.options.length) return 'select';
+        let formType = TYPE_MAP[item.dataType] || 'input';
 
-        const formType = TYPE_MAP[item.dataType] || 'input';
+        if (item.options && item.options.length) formType = 'select';
 
         return { ...item, formType };
     }));
