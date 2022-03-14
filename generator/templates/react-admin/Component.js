@@ -5,9 +5,8 @@ module.exports = {
     extraFiles: [
         {
             name: '样式文件',
-            targetPath: '/src/components/{module-name}/style.module.less',
+            targetPath: '{parentPath}/style.module.less',
             getContent: config => {
-                return false;
                 return `.root {
     width: 100%;
 }`;
@@ -15,7 +14,7 @@ module.exports = {
         },
         {
             name: '组件入口文件',
-            targetPath: '/src/components/index.js',
+            targetPath: '{__parentPath}/index.js',
             // 第一次插入，文件不存在时，获取完整的文件内容结构
             getFullContent: config => {
                 return `// 此注释用于标记代码生成器插入代码位置，请勿删除！`;

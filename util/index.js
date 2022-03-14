@@ -133,11 +133,14 @@ async function getFilesContent(options) {
 
         const parentPath = filePaths.join('/');
 
+        filePaths.pop();
+        const __parentPath = filePaths.join('/');
+
         if (template.extraFiles) {
             template.extraFiles.forEach(item => {
                 let { targetPath } = item;
 
-                targetPath = stringFormat(targetPath, { ...moduleNames, parentPath });
+                targetPath = stringFormat(targetPath, { ...moduleNames, parentPath, __parentPath });
                 const name = targetPath.split('/').pop();
                 allFiles.push({
                     ...item,
