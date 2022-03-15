@@ -233,3 +233,18 @@ export function getFiles(files, templateOptions, moduleNames) {
         return { ...item };
     }).flat();
 }
+
+
+export function compose(...fns) {
+    fns = fns.reverse();
+    return function(...args) {
+        let [firstFn, ...restFn] = fns;
+        if (!firstFn) return;
+        if (restFn.length === 0) {
+            return firstFn.apply(this, args);
+        } else {
+            let initValue = firstFn.apply(this, args);
+            return restFn.reduceRight((accumulator, currentValue) => currentValue(accumulator), initValue);
+        }
+    };
+}

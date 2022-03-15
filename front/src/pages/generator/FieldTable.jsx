@@ -18,7 +18,7 @@ import s from './style.module.less';
 
 const MyTable = React.memo(virtualTable((Table)));
 
-export default React.memo(ajax()(function FieldTable(props) {
+export default React.memo(ajax(function FieldTable(props) {
     const {
         templateOptions,
         form,

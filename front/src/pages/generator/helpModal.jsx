@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Button, Modal } from 'antd';
 import { ajax, modalFunction } from 'src/hocs';
-import { isMac } from 'src/commons';
+import { compose, isMac } from 'src/commons';
 import { Content } from 'src/components';
 import ReactMarkdown from 'react-markdown';
 
-export default modalFunction(ajax()(props => {
-    const { onCancel, ...others } = props;
+export default compose(
+    modalFunction, // 必须在第一个
+    ajax,
+)(function HelpModal(props) {
+    const { onCancel, commonProps, ...others } = props;
     const [content, setContent] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -20,12 +23,9 @@ export default modalFunction(ajax()(props => {
 
     return (
         <Modal
+            {...commonProps}
             title="帮助文档"
-            style={{ top: 50 }}
-            bodyStyle={{ padding: 0 }}
-            width={800}
             onOk={onCancel}
-            onCancel={onCancel}
             footer={<Button onClick={onCancel}>关闭</Button>}
             {...others}
         >
@@ -41,4 +41,4 @@ export default modalFunction(ajax()(props => {
             </Content>
         </Modal>
     );
-}));
+});

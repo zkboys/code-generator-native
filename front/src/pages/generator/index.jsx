@@ -26,7 +26,7 @@ import helpModal from './helpModal';
 
 const { TabPane } = Tabs;
 
-export default ajax()(function Generator(props) {
+export default ajax(function Generator(props) {
     const [tableOptions, setTableOptions] = useState([]);
     const [templateOptions, setTemplateOptions] = useState([]);
     const [moduleNames, setModuleNames] = useState({});

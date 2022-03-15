@@ -9,8 +9,16 @@ export default WrappedComponent => {
 
         function render(props) {
             setTimeout(() => {
+                // 公共属性
+                const commonProps = {
+                    width: 1000,
+                    onCancel: props.onCancel,
+                    style: { top: 50 },
+                    bodyStyle: { padding: 0 },
+                };
+
                 ReactDOM.render(
-                    <WrappedComponent{...props} />,
+                    <WrappedComponent {...props} commonProps={commonProps} />,
                     container,
                 );
             });

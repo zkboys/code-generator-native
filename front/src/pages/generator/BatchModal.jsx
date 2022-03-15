@@ -1,11 +1,21 @@
-import React, {useState, useCallback} from 'react';
-import {ModalContent, confirm} from 'src/components';
-import {Button, Alert, Checkbox, Row, Col, Modal} from 'antd';
-import {modal, ajax} from 'src/hocs';
-import {getFiles} from 'src/commons';
+import React, { useState, useCallback } from 'react';
+import { Content, confirm } from 'src/components';
+import { Button, Alert, Checkbox, Row, Col, Modal } from 'antd';
+import { modal, ajax } from 'src/hocs';
+import { compose, getFiles } from 'src/commons';
 
-function BatchModal(props) {
-    const { onCancel, form, tableOptions, templateOptions, moduleNames } = props;
+export default compose(
+    modal,
+    ajax,
+)(function BatchModal(props) {
+    const {
+        onCancel,
+        form,
+        tableOptions,
+        templateOptions,
+        moduleNames,
+        commonProps,
+    } = props;
     const [loading, setLoading] = useState(false);
     const [tables, setTables] = useState([]);
     const [checkAll, setCheckAll] = useState(false);
@@ -51,9 +61,9 @@ function BatchModal(props) {
     }, [tableOptions]);
 
     return (
-        <ModalContent
-            loading={loading}
-            fitHeight
+        <Modal
+            {...commonProps}
+            title="批量生成"
             footer={
                 <>
                     <Button onClick={onCancel}>关闭</Button>
@@ -69,41 +79,40 @@ function BatchModal(props) {
                 </>
             }
         >
-            <Alert
-                message={'提示'}
-                style={{ marginBottom: 16 }}
-                description="选择您要生成文件的数据库表，会根据页面文件配置生成所有文件。模块名默认为表名。"
-            />
-            <div style={{ marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid #e9e9e9' }}>
-                <Checkbox
-                    indeterminate={indeterminate}
-                    onChange={handleCheckAll}
-                    checked={checkAll}
-                >
-                    全选
-                </Checkbox>
-            </div>
-            <Checkbox.Group value={tables} onChange={handleChange}>
-                <Row>
-                    {tableOptions.map(item => {
-                        return (
-                            <Col span={8} style={{ marginBottom: 8 }} key={item.value}>
-                                <Checkbox value={item.value}>
-                                    {item.label}
-                                </Checkbox>
-                            </Col>
-                        );
-                    })}
-                </Row>
-            </Checkbox.Group>
-
-        </ModalContent>
+            <Content
+                loading={loading}
+                fitHeight
+                otherHeight={120}
+                style={{ padding: 16 }}
+            >
+                <Alert
+                    message={'提示'}
+                    style={{ marginBottom: 16 }}
+                    description="选择您要生成文件的数据库表，会根据页面文件配置生成所有文件。模块名默认为表名。"
+                />
+                <div style={{ marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid #e9e9e9' }}>
+                    <Checkbox
+                        indeterminate={indeterminate}
+                        onChange={handleCheckAll}
+                        checked={checkAll}
+                    >
+                        全选
+                    </Checkbox>
+                </div>
+                <Checkbox.Group value={tables} onChange={handleChange} style={{ width: '100%' }}>
+                    <Row>
+                        {tableOptions.map(item => {
+                            return (
+                                <Col span={8} style={{ marginBottom: 8 }} key={item.value}>
+                                    <Checkbox value={item.value}>
+                                        {item.label}
+                                    </Checkbox>
+                                </Col>
+                            );
+                        })}
+                    </Row>
+                </Checkbox.Group>
+            </Content>
+        </Modal>
     );
-}
-
-export default ajax()(modal({
-    top: 50,
-    title: '基于数据库表批量生成',
-    width: 1000,
-    maskClosable: true,
-})(BatchModal));
+});
