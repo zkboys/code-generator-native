@@ -217,7 +217,7 @@ export function getFiles(files, templateOptions, moduleNames) {
         const extraFiles = record?.extraFiles || [];
 
         if (extraFiles) {
-            const res = extraFiles.map(it => {
+            const extraFilesList = extraFiles.map(it => {
                 const targetPath = stringFormat(it.targetPath, { ...moduleNames, parentPath, __parentPath });
 
                 return {
@@ -227,9 +227,9 @@ export function getFiles(files, templateOptions, moduleNames) {
                     options, // 使用父级模版的optins
                 };
             });
-            return [item, ...res];
+            return [{ ...item }, ...extraFilesList];
         }
 
-        return item;
+        return { ...item };
     }).flat();
 }
