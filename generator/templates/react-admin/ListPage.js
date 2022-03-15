@@ -25,7 +25,7 @@ module.exports = {
 
         const { options = [] } = file;
         if (!options.includes('列表')) return false;
-        
+
         let _select = options.includes('选中');
         let _number = options.includes('序号');
         const _page = options.includes('分页');
@@ -67,7 +67,7 @@ export default config({
     ${has(_import, 'const [uploading, setUploading] = useState(false);')}
     const [form] = Form.useForm();
 
-    let columns = [
+    const columns = [
         ${tableFields.map(item => `{ title: '${item.chinese}', dataIndex: '${item.__names.moduleName}' },`).join('\n        ')}
         ${has(_edit || _detail || _delete, `{
             title: '操作',
