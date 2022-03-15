@@ -40,12 +40,13 @@ $ gen
 ## 模版说明
 
 1. name: 列表名称，默认 folder/filename；
-1. options: 文件选项，显示到页面文件后，供用户选择；
-1. defaultOptions: 默认选中的文件选项；
-1. fieldOptions: 字段选项，显示到页面表格中，供用户选择；
-1. defaultFieldOptions: 默认选中的字段选项；
-1. targetPath: 默认生成目标文件的位置；相对命令启动目录开始编写，可以使用{'{module-name}'}等模块名进行占位；
-1. getContent: 获取文件内容函数；返回false，将忽略此文件，不生成；
+2. options: 文件选项，显示到页面文件后，供用户选择；
+3. defaultOptions: 默认选中的文件选项；
+4. fieldOptions: 字段选项，显示到页面表格中，供用户选择；
+5. defaultFieldOptions: 默认选中的字段选项；
+6. targetPath: 默认生成目标文件的位置；相对命令启动目录开始编写，可以使用{'{module-name}'}等模块名进行占位；
+7. getContent: 获取文件内容函数；返回false，将忽略此文件，不生成；
+8. extraFiles: 其他模版，此配置可以使当前模板生成为复合模版，成多个文件；注：复合模版，文件查重，以主模板为准！
 
 ### getContent函数参数
 

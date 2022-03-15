@@ -591,12 +591,13 @@ async function getFormType(fields) {
     }) : [];
 
     return Promise.all(items.map(async item => {
+        // 比较确定，优先级较高的类型
+        if (item.options && item.options.length) return { ...item, formType: 'select' };
+
         const record = results.find(it => it.name === item.name);
         if (record) return { ...item, formType: record.formType };
 
         let formType = TYPE_MAP[item.dataType] || 'input';
-
-        if (item.options && item.options.length) formType = 'select';
 
         return { ...item, formType };
     }));
@@ -627,7 +628,6 @@ async function getDbType(fields) {
         return { ...item, type };
     }));
 }
-
 
 /**
  * 基于非_、-、中文、英文、数字，进行拆分
