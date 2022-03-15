@@ -1,6 +1,6 @@
 {
   "name": "@ra-lib/gen",
-  "version": "1.1.50",
+  "version": "1.1.51",
   "description": "",
   "main": "bin/index.js",
   "bin": {

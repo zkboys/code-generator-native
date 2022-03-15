@@ -375,7 +375,11 @@ async function getLastVersion() {
 async function updateVersion() {
     return await new Promise((resolve, reject) => {
         exec(`npm i ${packageJson.name} -g --registry=https://registry.npmmirror.com`, (error, stdout) => {
-            if (stdout) return resolve(stdout.trim());
+            if (stdout) {
+                console.log(stdout.trim());
+                console.log('更新成功，请重启服务使用最新版本！');
+                return resolve(stdout.trim());
+            }
             reject(Error('更新版本失败'));
         });
     });
