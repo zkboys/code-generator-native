@@ -61,7 +61,11 @@ module.exports = apiRouter
         sql = sql.replace(/[$#]+[\s]*({)?{[\s\w]*}(?!})/g, '?');
 
         const parser = new NodeSQLParser.Parser();
-        const ast = parser.astify(sql);
+
+        let ast = parser.astify(sql);
+
+        if (Array.isArray(ast)) ast = ast[0];
+
         const { columns, from } = ast;
 
         const tableNames = from.map(item => item.table);
