@@ -10,7 +10,7 @@ export default WrappedComponent => {
         function render(props) {
             setTimeout(() => {
                 ReactDOM.render(
-                    <WrappedComponent{...props}/>,
+                    <WrappedComponent{...props} />,
                     container,
                 );
             });
@@ -51,6 +51,12 @@ export default WrappedComponent => {
         }
 
         render(currentConfig);
+
+        // webpack热更新之后，销毁当前弹框
+        if (process.env.NODE_ENV === 'development') {
+            const socket = new WebSocket(`ws://${window.location.host}/ws`);
+            socket.onmessage = event => event.data === '{"type":"invalid"}' && destroy();
+        }
 
         return {
             destroy: close,

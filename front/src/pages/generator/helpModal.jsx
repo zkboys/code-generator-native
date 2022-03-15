@@ -1,8 +1,8 @@
-import {useEffect, useState} from 'react';
-import {Button, Modal} from 'antd';
-import {ajax, modalFunction} from 'src/hocs';
-import {isMac} from 'src/commons';
-import {Content} from 'src/components';
+import { useEffect, useState } from 'react';
+import { Button, Modal } from 'antd';
+import { ajax, modalFunction } from 'src/hocs';
+import { isMac } from 'src/commons';
+import { Content } from 'src/components';
 import ReactMarkdown from 'react-markdown';
 
 export default modalFunction(ajax()(props => {
