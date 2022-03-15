@@ -20,9 +20,9 @@ import Feedback from './Feedback';
 import FileList from './FileList';
 import s from './style.module.less';
 import PreviewModal from 'src/pages/generator/PreviewModal';
-import HelpModal from 'src/pages/generator/HelpModal';
 import BatchModal from 'src/pages/generator/BatchModal';
 import FastEditModal from './FastEditModal';
+import helpModal from './helpModal';
 
 const { TabPane } = Tabs;
 
@@ -36,7 +36,6 @@ export default ajax()(function Generator(props) {
     const [dataSource, setDataSource] = useState([]);
     const [filesVisible, setFilesVisible] = useState(true);
     const [activeKey, setActiveKey] = useState('files');
-    const [helpVisible, setHelpVisible] = useState(false);
     const [batchVisible, setBatchVisible] = useState(false);
     const [dbInfoVisible, setDbInfoVisible] = useState(false);
     const [previewParams, setPreviewParams] = useState(null);
@@ -669,7 +668,7 @@ export default ajax()(function Generator(props) {
                                 </Button>
                                 <Button
                                     icon={<QuestionCircleOutlined/>}
-                                    onClick={() => setHelpVisible(true)}
+                                    onClick={() => helpModal()}
                                 >
                                     帮助
                                 </Button>
@@ -713,10 +712,6 @@ export default ajax()(function Generator(props) {
                     params={previewParams}
                     onOk={() => setPreviewParams(null)}
                     onCancel={() => setPreviewParams(null)}
-                />
-                <HelpModal
-                    visible={helpVisible}
-                    onCancel={() => setHelpVisible(false)}
                 />
                 <BatchModal
                     visible={batchVisible}
