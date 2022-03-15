@@ -61,11 +61,23 @@ function getLocalTemplates() {
         const template = require(filePath);
         const extname = path.extname(filePath);
         const basename = path.basename(filePath);
+        if (basename.startsWith('_')) return null;
 
         const fileName = path.relative(templatesDir, filePath).replace(extname, '');
         const id = fileName.replace(/\W/g, '_');
         const shortName = template.name || basename.replace(extname, '');
         const name = template.name || fileName;
+        const extraFiles = (template.extraFiles || []).map((it, index) => {
+            const { targetPath } = it;
+            const name = it.name || targetPath.split('/').pop();
+
+            return {
+                ...it,
+                id: `${id}__${index}`,
+                name,
+                shortName: it.shortName || name,
+            };
+        });
         return {
             ...template,
             options: template.options || [],
@@ -74,8 +86,9 @@ function getLocalTemplates() {
             id,
             name,
             shortName,
+            extraFiles,
         };
-    });
+    }).filter(Boolean);
 }
 
 /**
@@ -116,47 +129,14 @@ async function getFilesContent(options) {
 
     const templates = getLocalTemplates();
     const moduleNames = getModuleNames(moduleName);
+    const allTemplates = templates.map(item => [item, ...item.extraFiles]).flat();
 
-    const allFiles = [];
-    files.forEach(file => {
-        const { templateId, name } = file;
-        const template = templates.find(item => item.id === templateId);
+    const result = await Promise.all(files.map(async file => {
+        const { templateId, targetPath } = file;
 
-        assert(template, `${name} 模版不存在!`);
+        let template = allTemplates.find(item => item.id === templateId);
 
-        allFiles.push({
-            ...file,
-            template,
-        });
-        const filePaths = file.targetPath.split('/');
-        filePaths.pop();
-
-        const parentPath = filePaths.join('/');
-
-        filePaths.pop();
-        const __parentPath = filePaths.join('/');
-
-        if (template.extraFiles) {
-            template.extraFiles.forEach(item => {
-                let { targetPath } = item;
-
-                targetPath = stringFormat(targetPath, { ...moduleNames, parentPath, __parentPath });
-                const name = targetPath.split('/').pop();
-                allFiles.push({
-                    ...item,
-                    id: targetPath,
-                    name,
-                    targetPath,
-                    template: item,
-                    templateId,
-                    _file: file,
-                });
-            });
-        }
-    });
-
-    const result = await Promise.all(allFiles.map(async file => {
-        const { template, templateId, targetPath, _file } = file;
+        assert(template, `${templateId} 模版不存在!`);
 
         const fis = fields.map(item => {
             const fieldOptions = item.fieldOptions && item.fieldOptions[templateId] || [];
@@ -173,7 +153,7 @@ async function getFilesContent(options) {
         const cfg = {
             ...others,
             NULL_LINE,
-            file: _file || file,
+            file: file,
             files,
             moduleNames,
             fields: fis,

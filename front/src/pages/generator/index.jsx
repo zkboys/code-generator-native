@@ -84,13 +84,39 @@ export default ajax()(function Generator(props) {
                     };
                 }, {}),
             }];
-            console.log(_dataSource);
 
             if (_dataSource.some(item => !item.name || !item.chinese)) return Modal.info({ title: '温馨提示', content: '表格的字段配置有必填项未填写！' });
 
+            const nextFiles = files.map(item => {
+                const { templateId, targetPath, options } = item;
+
+                const filePaths = targetPath.split('/');
+                filePaths.pop();
+                const parentPath = filePaths.join('/');
+                filePaths.pop();
+                const __parentPath = filePaths.join('/');
+                const record = templateOptions.find(item => item.value === templateId)?.record;
+                const extraFiles = record?.extraFiles || [];
+
+                if (extraFiles) {
+                    const res = extraFiles.map(it => {
+                        const targetPath = stringFormat(it.targetPath, { ...moduleNames, parentPath, __parentPath });
+
+                        return {
+                            templateId: it.id,
+                            targetPath,
+                            options, // 使用父级模版的optins
+                        };
+                    });
+                    return [item, ...res];
+                }
+
+                return item;
+            }).flat();
+
             const params = {
                 ...others,
-                files,
+                files: nextFiles,
                 fields: _dataSource,
             };
 
@@ -102,7 +128,7 @@ export default ajax()(function Generator(props) {
 
                 // 用户选择是否覆盖
                 for (let targetPath of res) {
-                    const file = files.find(it => it.targetPath === targetPath);
+                    const file = nextFiles.find(it => it.targetPath === targetPath);
 
                     try {
                         await confirm({
@@ -141,7 +167,7 @@ export default ajax()(function Generator(props) {
             }
             console.error(e);
         }
-    }, [dataSource, form, templateOptions, props.ajax]);
+    }, [dataSource, form, templateOptions, moduleNames, props.ajax]);
 
     // 数据库连接改变事件
     const { run: handleDbUrlChange } = useDebounceFn(async (e) => {

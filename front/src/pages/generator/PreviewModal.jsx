@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Tabs, Button } from 'antd';
-import { modal, ajax } from 'src/hocs';
-import { CodeEditor, ModalContent } from 'src/components';
+import React, {useState, useEffect} from 'react';
+import {Tabs, Button} from 'antd';
+import {modal, ajax} from 'src/hocs';
+import {CodeEditor, ModalContent} from 'src/components';
 
 const { TabPane } = Tabs;
 
@@ -31,12 +31,12 @@ export default ajax()(modal({
         >
             <Tabs type="card" tabBarStyle={{ marginBottom: 0, marginTop: 13, marginLeft: 4 }}>
                 {files.map(file => {
-                    const { id, name, content, targetPath } = file;
+                    const { id, content, targetPath } = file;
                     let language = targetPath.split('.').pop();
                     if (['jsx', 'js', 'vue', 'vux'].includes(language)) language = 'javascript';
                     if (['tsx', 'ts'].includes(language)) language = 'typescript';
                     return (
-                        <TabPane key={id} tab={name}>
+                        <TabPane key={id} tab={targetPath}>
                             <CodeEditor
                                 otherHeight={60}
                                 language={language}

@@ -1,4 +1,5 @@
 module.exports = {
+    name: 'DetailModal',
     targetPath: '{parentPath}/DetailModal.jsx',
     getContent: config => {
         const { moduleNames: mn, file, fields, NULL_LINE } = config;
