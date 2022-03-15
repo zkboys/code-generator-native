@@ -103,6 +103,7 @@ export default ajax()(function Generator(props) {
                         const targetPath = stringFormat(it.targetPath, { ...moduleNames, parentPath, __parentPath });
 
                         return {
+                            parentTemplateId: templateId,
                             templateId: it.id,
                             targetPath,
                             options, // 使用父级模版的optins

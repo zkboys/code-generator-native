@@ -132,14 +132,14 @@ async function getFilesContent(options) {
     const allTemplates = templates.map(item => [item, ...item.extraFiles]).flat();
 
     const result = await Promise.all(files.map(async file => {
-        const { templateId, targetPath } = file;
+        const { templateId, parentTemplateId,  targetPath } = file;
 
         let template = allTemplates.find(item => item.id === templateId);
 
         assert(template, `${templateId} 模版不存在!`);
 
         const fis = fields.map(item => {
-            const fieldOptions = item.fieldOptions && item.fieldOptions[templateId] || [];
+            const fieldOptions = item.fieldOptions && item.fieldOptions[parentTemplateId || templateId] || [];
             const __names = getModuleNames(item.name);
             return {
                 ...item,
