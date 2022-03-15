@@ -76,17 +76,19 @@ function getLocalTemplates() {
                 id: `${id}__${index}`,
                 name,
                 shortName: it.shortName || name,
+                options: template.options || [],
+                fieldOptions: template.fieldOptions || [],
             };
         });
         return {
             ...template,
-            options: template.options || [],
-            fieldOptions: template.fieldOptions || [],
-            filePath,
             id,
             name,
             shortName,
             extraFiles,
+            options: template.options || [],
+            fieldOptions: template.fieldOptions || [],
+            filePath,
         };
     }).filter(Boolean);
 }
@@ -132,7 +134,7 @@ async function getFilesContent(options) {
     const allTemplates = templates.map(item => [item, ...item.extraFiles]).flat();
 
     const result = await Promise.all(files.map(async file => {
-        const { templateId, parentTemplateId,  targetPath } = file;
+        const { templateId, parentTemplateId, targetPath } = file;
 
         let template = allTemplates.find(item => item.id === templateId);
 

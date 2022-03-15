@@ -12,7 +12,7 @@ import {
 } from '@ant-design/icons';
 import {useDebounceFn} from 'ahooks';
 import {v4 as uuid} from 'uuid';
-import {storage, isMac, stringFormat} from 'src/commons';
+import {storage, isMac, stringFormat, getFiles} from 'src/commons';
 import {confirm, PageContent} from 'src/components';
 import {ajax} from 'src/hocs';
 import FieldTable from './FieldTable';
@@ -87,33 +87,7 @@ export default ajax()(function Generator(props) {
 
             if (_dataSource.some(item => !item.name || !item.chinese)) return Modal.info({ title: '温馨提示', content: '表格的字段配置有必填项未填写！' });
 
-            const nextFiles = files.map(item => {
-                const { templateId, targetPath, options } = item;
-
-                const filePaths = targetPath.split('/');
-                filePaths.pop();
-                const parentPath = filePaths.join('/');
-                filePaths.pop();
-                const __parentPath = filePaths.join('/');
-                const record = templateOptions.find(item => item.value === templateId)?.record;
-                const extraFiles = record?.extraFiles || [];
-
-                if (extraFiles) {
-                    const res = extraFiles.map(it => {
-                        const targetPath = stringFormat(it.targetPath, { ...moduleNames, parentPath, __parentPath });
-
-                        return {
-                            parentTemplateId: templateId,
-                            templateId: it.id,
-                            targetPath,
-                            options, // 使用父级模版的optins
-                        };
-                    });
-                    return [item, ...res];
-                }
-
-                return item;
-            }).flat();
+            const nextFiles = getFiles(files, templateOptions, moduleNames);
 
             const params = {
                 ...others,
@@ -749,6 +723,8 @@ export default ajax()(function Generator(props) {
                     onCancel={() => setBatchVisible(false)}
                     form={form}
                     tableOptions={tableOptions}
+                    templateOptions={templateOptions}
+                    moduleNames={moduleNames}
                 />
                 <Feedback/>
             </Form>

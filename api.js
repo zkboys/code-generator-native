@@ -170,30 +170,28 @@ module.exports = apiRouter
     .post('/generate/files/batch', async ctx => {
         const { files, tables, dbUrl } = ctx.request.body;
         const result = [];
+        const templates = getLocalTemplates();
+        const allTemplates = templates.map(item => [item, ...item.extraFiles]).flat();
+
         for (let tableName of tables) {
             const moduleNames = getModuleNames(tableName);
             const moduleName = moduleNames['module-name'];
-
-            const nextFiles = files.map(item => {
-                const templates = getLocalTemplates();
-                const template = templates.find(it => it.id === item.templateId);
-                if (!template) return null;
-
-                const targetPath = template.targetPath;
+            const nextFiles = files.map(file => {
+                const targetPath = stringFormat(file.targetPath, moduleNames);
                 return {
-                    ...template,
-                    ...item,
-                    targetPath: stringFormat(targetPath, moduleNames),
+                    ...file,
+                    targetPath,
                 };
-            }).filter(Boolean);
+            });
 
             const tableFields = await db(dbUrl).getColumns(tableName);
             const fields = tableFields.map(item => {
                 const fieldOptions = nextFiles.reduce((prev, curr) => {
-                    const { templateId, fieldOptions } = curr;
+                    const { templateId, parentTemplateId } = curr;
+                    const fieldOptions = allTemplates.find(item => item.id === (parentTemplateId || templateId))?.fieldOptions || [];
                     return {
                         ...prev,
-                        [templateId]: [...fieldOptions],
+                        [parentTemplateId || templateId]: [...fieldOptions],
                     };
                 }, {});
                 return {

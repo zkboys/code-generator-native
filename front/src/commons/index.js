@@ -196,3 +196,40 @@ export function getNextTabIndex(e, options) {
 }
 
 export const isMac = /macintosh|mac os x/i.test(navigator.userAgent);
+
+/**
+ * 获取所有文件，包含子文件
+ * @param files
+ * @param templateOptions
+ * @param moduleNames
+ * @returns {*}
+ */
+export function getFiles(files, templateOptions, moduleNames) {
+    return files.map(item => {
+        const { templateId, targetPath, options } = item;
+
+        const filePaths = targetPath.split('/');
+        filePaths.pop();
+        const parentPath = filePaths.join('/');
+        filePaths.pop();
+        const __parentPath = filePaths.join('/');
+        const record = templateOptions.find(item => item.value === templateId)?.record;
+        const extraFiles = record?.extraFiles || [];
+
+        if (extraFiles) {
+            const res = extraFiles.map(it => {
+                const targetPath = stringFormat(it.targetPath, { ...moduleNames, parentPath, __parentPath });
+
+                return {
+                    parentTemplateId: templateId,
+                    templateId: it.id,
+                    targetPath,
+                    options, // 使用父级模版的optins
+                };
+            });
+            return [item, ...res];
+        }
+
+        return item;
+    }).flat();
+}
