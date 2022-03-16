@@ -22,6 +22,7 @@ export default WrappedComponent => {
             setTimeout(() => {
                 // 公共属性
                 const commonProps = {
+                    visible: props.visible,
                     maskClosable: false,
                     width: 1000,
                     style: { top: 50 },

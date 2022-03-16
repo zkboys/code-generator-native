@@ -1,15 +1,15 @@
 import React, {useState, useCallback} from 'react';
 import {Content, confirm} from 'src/components';
 import {Button, Alert, Checkbox, Row, Col, Modal} from 'antd';
-import {modal, ajax} from 'src/hocs';
+import {modalFunction, ajax} from 'src/hocs';
 import {compose, getFiles} from 'src/commons';
 
 export default compose(
-    modal,
+    modalFunction,
     ajax,
 )(function BatchModal(props) {
     const {
-        onCancel,
+        close,
         form,
         tableOptions,
         templateOptions,
@@ -44,8 +44,8 @@ export default compose(
                 </div>
             ),
         });
-        onCancel();
-    }, [dbUrl, files, moduleNames, onCancel, props.ajax, tables, templateOptions]);
+        close();
+    }, [dbUrl, files, moduleNames, close, props.ajax, tables, templateOptions]);
 
     const handleChange = useCallback((tables) => {
         setTables(tables);
@@ -66,7 +66,7 @@ export default compose(
             title="批量生成"
             footer={
                 <>
-                    <Button onClick={onCancel}>关闭</Button>
+                    <Button onClick={close}>关闭</Button>
                     <Button
                         style={{ marginLeft: 16 }}
                         type={'primary'}

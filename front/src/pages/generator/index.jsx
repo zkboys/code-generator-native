@@ -18,11 +18,11 @@ import {ajax} from 'src/hocs';
 import FieldTable from './FieldTable';
 import Feedback from './Feedback';
 import FileList from './FileList';
-import s from './style.module.less';
-import PreviewModal from 'src/pages/generator/PreviewModal';
-import BatchModal from 'src/pages/generator/BatchModal';
-import FastEditModal from './FastEditModal';
+import previewModal from 'src/pages/generator/previewModal';
+import batchModal from 'src/pages/generator/batchModal';
+import fastEditModal from './fastEditModal';
 import helpModal from './helpModal';
+import s from './style.module.less';
 
 const { TabPane } = Tabs;
 
@@ -37,12 +37,6 @@ export default ajax(function Generator(props) {
     const [activeKey, setActiveKey] = useState('files');
     const [filesVisible, setFilesVisible] = useState(true);
     const [dbInfoVisible, setDbInfoVisible] = useState(false);
-
-
-    const [batchVisible, setBatchVisible] = useState(false);
-    const [previewParams, setPreviewParams] = useState(null);
-    const [fastVisible, setFastVisible] = useState(false);
-
     const [dbTypeOptions, setDbTypeOptions] = useState([]);
     const [files, setFiles] = useState([]);
     const [form] = Form.useForm();
@@ -98,7 +92,7 @@ export default ajax(function Generator(props) {
             };
 
             if (preview) {
-                setPreviewParams(params);
+                previewModal({ params });
             } else {
                 // 检测文件是否存在
                 const res = await props.ajax.post('/generate/files/exist', params, { setLoading }) || [];
@@ -611,7 +605,16 @@ export default ajax(function Generator(props) {
                                 <Button icon={<PlusOutlined/>} onClick={() => handleAdd()}>
                                     添加一行
                                 </Button>
-                                <Button icon={<FormOutlined/>} onClick={() => setFastVisible(true)}>
+                                <Button
+                                    icon={<FormOutlined/>}
+                                    onClick={() => fastEditModal({
+                                        dataSource, getNewRecord,
+                                        onOk: async dataSource => {
+                                            handleDataSourceChange(dataSource);
+                                            await handleAutoFill(null, dataSource);
+                                        },
+                                    })}
+                                >
                                     快速编辑
                                 </Button>
                                 <Button icon={<CodeOutlined/>} onClick={() => handleGenerate(true)}>
@@ -659,7 +662,12 @@ export default ajax(function Generator(props) {
                                 <Button
                                     icon={<CopyOutlined/>}
                                     disabled={!tableOptions?.length}
-                                    onClick={() => setBatchVisible(true)}
+                                    onClick={() => batchModal({
+                                        form,
+                                        tableOptions,
+                                        templateOptions,
+                                        moduleNames,
+                                    })}
                                 >
                                     批量生成
                                 </Button>
@@ -698,31 +706,6 @@ export default ajax(function Generator(props) {
                     onAdd={handleAdd}
                     getNewRecord={getNewRecord}
                     onAutoFill={handleAutoFill}
-                />
-                <FastEditModal
-                    visible={fastVisible}
-                    dataSource={dataSource}
-                    onCancel={() => setFastVisible(false)}
-                    onOk={async dataSource => {
-                        handleDataSourceChange(dataSource);
-                        setFastVisible(false);
-                        await handleAutoFill(null, dataSource);
-                    }}
-                    getNewRecord={getNewRecord}
-                />
-                <PreviewModal
-                    visible={!!previewParams}
-                    params={previewParams}
-                    onOk={() => setPreviewParams(null)}
-                    onCancel={() => setPreviewParams(null)}
-                />
-                <BatchModal
-                    visible={batchVisible}
-                    onCancel={() => setBatchVisible(false)}
-                    form={form}
-                    tableOptions={tableOptions}
-                    templateOptions={templateOptions}
-                    moduleNames={moduleNames}
                 />
                 <Feedback/>
             </Form>

@@ -1,13 +1,13 @@
 import {useCallback, useState, useRef} from 'react';
 import {Content, confirm} from 'src/components';
 import {Button, Input, Modal} from 'antd';
-import {modal} from 'src/hocs';
+import {modalFunction} from 'src/hocs';
 import {useHeight} from 'src/hooks';
 import {isMac} from 'src/commons';
 import {FORM_ELEMENT_OPTIONS} from 'src/pages/generator/constant';
 
-export default modal((props) => {
-    const { onCancel, onOk, dataSource, getNewRecord, commonProps } = props;
+export default modalFunction((props) => {
+    const { onCancel, onOk, dataSource, getNewRecord, close, commonProps } = props;
     const [value, setValue] = useState('');
     const textAreaRef = useRef(null);
     const [height] = useHeight(textAreaRef, 100);
@@ -29,11 +29,12 @@ export default modal((props) => {
             return getNewRecord({ chinese, formType });
         });
         if (replace) {
-            onOk(newDataSource);
+            await onOk(newDataSource);
         } else {
-            onOk([...dataSource, ...newDataSource]);
+            await onOk([...dataSource, ...newDataSource]);
         }
-    }, [value, dataSource, onOk, getNewRecord]);
+        close();
+    }, [value, dataSource, onOk, close, getNewRecord]);
 
     const handlePressEnter = useCallback(async (e) => {
         const { ctrlKey, metaKey } = e;

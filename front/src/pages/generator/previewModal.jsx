@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Tabs, Button, Modal } from 'antd';
-import { modal, ajax } from 'src/hocs';
-import { CodeEditor, Content } from 'src/components';
-import { compose } from 'src/commons';
+import React, {useState, useEffect} from 'react';
+import {Tabs, Button, Modal} from 'antd';
+import {modalFunction, ajax} from 'src/hocs';
+import {CodeEditor, Content} from 'src/components';
+import {compose} from 'src/commons';
 
 const { TabPane } = Tabs;
 
 export default compose(
+    modalFunction,
     ajax,
-    modal,
 )(function PreviewModal(props) {
     const { params, onCancel, commonProps } = props;
     const [loading, setLoading] = useState(false);
