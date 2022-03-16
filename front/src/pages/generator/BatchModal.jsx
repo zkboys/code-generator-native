@@ -1,8 +1,8 @@
-import React, { useState, useCallback } from 'react';
-import { Content, confirm } from 'src/components';
-import { Button, Alert, Checkbox, Row, Col, Modal } from 'antd';
-import { modal, ajax } from 'src/hocs';
-import { compose, getFiles } from 'src/commons';
+import React, {useState, useCallback} from 'react';
+import {Content, confirm} from 'src/components';
+import {Button, Alert, Checkbox, Row, Col, Modal} from 'antd';
+import {modal, ajax} from 'src/hocs';
+import {compose, getFiles} from 'src/commons';
 
 export default compose(
     modal,

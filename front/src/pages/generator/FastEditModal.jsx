@@ -1,10 +1,10 @@
-import { useCallback, useState, useRef } from 'react';
-import { Content, confirm } from 'src/components';
-import { Button, Input, Modal } from 'antd';
-import { modal } from 'src/hocs';
-import { useHeight } from 'src/hooks';
-import { isMac } from 'src/commons';
-import { FORM_ELEMENT_OPTIONS } from 'src/pages/generator/constant';
+import {useCallback, useState, useRef} from 'react';
+import {Content, confirm} from 'src/components';
+import {Button, Input, Modal} from 'antd';
+import {modal} from 'src/hocs';
+import {useHeight} from 'src/hooks';
+import {isMac} from 'src/commons';
+import {FORM_ELEMENT_OPTIONS} from 'src/pages/generator/constant';
 
 export default modal((props) => {
     const { onCancel, onOk, dataSource, getNewRecord, commonProps } = props;
@@ -45,7 +45,7 @@ export default modal((props) => {
     return (
         <Modal
             {...commonProps}
-            title="快速编辑222"
+            title="快速编辑"
             width={600}
         >
             <Content

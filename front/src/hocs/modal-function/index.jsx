@@ -1,21 +1,32 @@
 import ReactDOM from 'react-dom';
+import destroyFns from 'antd/lib/modal/destroyFns';
 
 export default WrappedComponent => {
-
+    /**
+     * config 为用户调用弹框函数时，传递的参数
+     */
     return (config = {}) => {
         const container = document.createDocumentFragment();
+        let currentConfig = {
+            ...config,
+            onCancel,
+            close,
+            visible: true,
+        };
 
-        let currentConfig = { ...config, onCancel, close, visible: true };
-
+        /**
+         * 渲染弹框
+         * @param props
+         */
         function render(props) {
             setTimeout(() => {
                 // 公共属性
                 const commonProps = {
                     maskClosable: false,
                     width: 1000,
-                    onCancel: props.onCancel,
                     style: { top: 50 },
                     bodyStyle: { padding: 0 },
+                    onCancel: props.onCancel,
                 };
 
                 ReactDOM.render(
@@ -25,14 +36,31 @@ export default WrappedComponent => {
             });
         }
 
+        /**
+         * 销毁，不会等待动画，直接销毁
+         * @param args
+         */
         function destroy(...args) {
             ReactDOM.unmountComponentAtNode(container);
             const triggerCancel = args.some(param => param && param.triggerCancel);
             if (config.onCancel && triggerCancel) {
                 config.onCancel(...args);
             }
+
+            for (let i = 0; i < destroyFns.length; i++) {
+                const fn = destroyFns[i];
+
+                if (fn === close) {
+                    destroyFns.splice(i, 1);
+                    break;
+                }
+            }
         }
 
+        /**
+         * 触发用户传递的onCancel -> close -> destroy
+         * @param args
+         */
         function onCancel(...args) {
             // 用户没有传递onCancel函数，直接关闭
             if (!config.onCancel) return close(...args);
@@ -49,6 +77,10 @@ export default WrappedComponent => {
             }
         }
 
+        /**
+         *  关闭，等待动画结束之后，再销毁
+         * @param args
+         */
         function close(...args) {
             currentConfig = {
                 ...currentConfig,
@@ -63,6 +95,10 @@ export default WrappedComponent => {
             render(currentConfig);
         }
 
+        /**
+         * 根据新的参数，更新弹框渲染
+         * @param configUpdate
+         */
         function update(configUpdate) {
             if (typeof configUpdate === 'function') {
                 currentConfig = configUpdate(currentConfig);
@@ -76,6 +112,8 @@ export default WrappedComponent => {
         }
 
         render(currentConfig);
+
+        destroyFns.push(close);
 
         // webpack热更新之后，销毁当前弹框
         if (process.env.NODE_ENV === 'development') {

@@ -34,14 +34,17 @@ export default ajax(function Generator(props) {
     const [loadingTip, setLoadingTip] = useState(undefined);
     const [checkExist, setCheckExist] = useState({});
     const [dataSource, setDataSource] = useState([]);
-    const [filesVisible, setFilesVisible] = useState(true);
     const [activeKey, setActiveKey] = useState('files');
-    const [batchVisible, setBatchVisible] = useState(false);
+    const [filesVisible, setFilesVisible] = useState(true);
     const [dbInfoVisible, setDbInfoVisible] = useState(false);
+
+
+    const [batchVisible, setBatchVisible] = useState(false);
     const [previewParams, setPreviewParams] = useState(null);
+    const [fastVisible, setFastVisible] = useState(false);
+
     const [dbTypeOptions, setDbTypeOptions] = useState([]);
     const [files, setFiles] = useState([]);
-    const [fastVisible, setFastVisible] = useState(false);
     const [form] = Form.useForm();
 
     // 发请求获取模块名
@@ -668,14 +671,7 @@ export default ajax(function Generator(props) {
                                 </Button>
                                 <Button
                                     icon={<QuestionCircleOutlined/>}
-                                    onClick={() => helpModal({
-                                        onOk: () => {
-                                            console.log('ok');
-                                        },
-                                        onCancel: async () => {
-                                            console.log('onCancel');
-                                        },
-                                    })}
+                                    onClick={() => helpModal()}
                                 >
                                     帮助
                                 </Button>
