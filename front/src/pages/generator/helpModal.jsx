@@ -25,7 +25,6 @@ export default compose(
         <Modal
             {...commonProps}
             title="帮助文档"
-            onOk={onCancel}
             footer={<Button onClick={onCancel}>关闭</Button>}
             {...others}
         >

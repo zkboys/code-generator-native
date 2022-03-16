@@ -5,8 +5,7 @@ export default WrappedComponent => {
     return (config = {}) => {
         const container = document.createDocumentFragment();
 
-        let currentConfig = { ...config, onCancel: close, visible: true };
-
+        let currentConfig = { ...config, onCancel, close, visible: true };
 
         function render(props) {
             setTimeout(() => {
@@ -34,8 +33,23 @@ export default WrappedComponent => {
             }
         }
 
+        function onCancel(...args) {
+            // 用户没有传递onCancel函数，直接关闭
+            if (!config.onCancel) return close(...args);
+
+            // 调用用户传递的onCancel函数
+            const res = config.onCancel(...args);
+
+            // 如果是promise，成功之后才关闭，失败不关闭
+            if (res?.then) {
+                res.then(() => close(...args));
+            } else {
+                // 不是promise，直接关闭
+                close(...args);
+            }
+        }
+
         function close(...args) {
-            config.onCancel && config.onCancel(...args);
             currentConfig = {
                 ...currentConfig,
                 visible: false,
@@ -70,7 +84,8 @@ export default WrappedComponent => {
         }
 
         return {
-            destroy: close,
+            close,
+            destroy,
             update,
         };
     };

@@ -672,7 +672,7 @@ export default ajax(function Generator(props) {
                                         onOk: () => {
                                             console.log('ok');
                                         },
-                                        onCancel: () => {
+                                        onCancel: async () => {
                                             console.log('onCancel');
                                         },
                                     })}
