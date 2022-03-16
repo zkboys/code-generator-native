@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import {useState, useEffect} from 'react';
 
 export default (WrappedComponent) => {
     return props => {
@@ -19,12 +19,13 @@ export default (WrappedComponent) => {
 
         const commonProps = {
             visible,
+            maskClosable: false,
             width: 1000,
             onCancel: onCancel,
             style: { top: 50 },
             bodyStyle: { padding: 0 },
         };
 
-        return <WrappedComponent {...props} commonProps={commonProps} />;
+        return <WrappedComponent {...props} commonProps={commonProps}/>;
     };
 }

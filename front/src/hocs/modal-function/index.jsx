@@ -7,10 +7,12 @@ export default WrappedComponent => {
 
         let currentConfig = { ...config, onCancel: close, visible: true };
 
+
         function render(props) {
             setTimeout(() => {
                 // 公共属性
                 const commonProps = {
+                    maskClosable: false,
                     width: 1000,
                     onCancel: props.onCancel,
                     style: { top: 50 },
@@ -18,7 +20,7 @@ export default WrappedComponent => {
                 };
 
                 ReactDOM.render(
-                    <WrappedComponent {...props} commonProps={commonProps} />,
+                    <WrappedComponent {...props} commonProps={commonProps}/>,
                     container,
                 );
             });
@@ -33,6 +35,7 @@ export default WrappedComponent => {
         }
 
         function close(...args) {
+            config.onCancel && config.onCancel(...args);
             currentConfig = {
                 ...currentConfig,
                 visible: false,
