@@ -18,12 +18,11 @@ export default (WrappedComponent) => {
         if (destroyed) return null;
 
         const commonProps = {
-            visible,
-            maskClosable: false,
             width: 1000,
-            onCancel: onCancel,
             style: { top: 50 },
             bodyStyle: { padding: 0 },
+            visible,
+            onCancel,
         };
 
         return <WrappedComponent {...props} commonProps={commonProps}/>;

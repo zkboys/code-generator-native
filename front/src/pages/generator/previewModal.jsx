@@ -32,7 +32,7 @@ export default compose(
             <Content
                 fitHeight
                 otherHeight={105}
-                style={{ padding: 0, overflow: 'hidden' }}
+                style={{ overflow: 'hidden' }}
                 loading={loading}
             >
                 <Tabs type="card" tabBarStyle={{ marginBottom: 0, marginTop: 13, marginLeft: 4 }}>

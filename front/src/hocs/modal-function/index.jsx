@@ -22,12 +22,11 @@ export default WrappedComponent => {
             setTimeout(() => {
                 // 公共属性
                 const commonProps = {
-                    visible: props.visible,
-                    maskClosable: false,
                     width: 1000,
                     style: { top: 50 },
                     bodyStyle: { padding: 0 },
                     onCancel: props.onCancel,
+                    visible: props.visible,
                 };
 
                 ReactDOM.render(
