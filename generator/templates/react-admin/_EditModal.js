@@ -41,7 +41,7 @@ export default config({
             return `const check${field.__names.ModuleName} = useDebounceValidator(async (rule, value) => {
         if (!value) return;
 
-        const res = await props.ajax.get('/${mn.moduleNames}/${field.__names.moduleNames}/\${value}');
+        const res = await props.ajax.get(\`/${mn.moduleNames}/${field.__names.moduleNames}/\${value}\`);
         if (!res) return;
 
         const id = form.getFieldValue('id');
