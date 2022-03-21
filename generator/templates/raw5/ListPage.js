@@ -74,7 +74,7 @@ export default config({
                 ${has(_delete, 'const { id, name } = record')};
                 const items = [
                     ${has(_edit, `{
-                        label: '编辑',
+                        label: '修改',
                         onClick: () => editModal({ record }),
                     },`)}
                     ${has(_detail, `{
