@@ -124,13 +124,14 @@ function getAllFiles(dir, fileList = []) {
  * @returns {Promise<*>}
  */
 async function getFilesContent(options) {
-    const { files, moduleName, fields, ...others } = options;
+    const { files, moduleName, fields, moduleChineseName, ...others } = options;
     // 保存用户字段配置 name chinese
     // 不是用await，防止阻塞
     saveFields((fields || []).filter(item => !item.__isItems));
 
     const templates = getLocalTemplates();
     const moduleNames = getModuleNames(moduleName);
+    moduleNames.chineseName = moduleChineseName;
     const allTemplates = templates.map(item => [item, ...item.extraFiles]).flat();
 
     const result = await Promise.all(files.map(async file => {

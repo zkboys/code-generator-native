@@ -168,18 +168,20 @@ export default ajax(function Generator(props) {
     const handleModuleName = useCallback(async (tableName) => {
         let moduleNames;
         let moduleName;
+        let moduleChineseName;
 
         if (tableName) {
             moduleNames = await fetchModuleNames(tableName);
             moduleName = moduleNames['module-name'];
+            moduleChineseName = tableOptions.find(it => it.value === tableName)?.comment;
         }
 
         // moduleName并没有改变，不设置
         if (moduleName === form.getFieldValue('moduleName')) return;
 
         setModuleNames(moduleNames);
-        form.setFieldsValue({ moduleName });
-    }, [fetchModuleNames, form]);
+        form.setFieldsValue({ moduleName, moduleChineseName: moduleChineseName || moduleName });
+    }, [fetchModuleNames, form, tableOptions]);
 
     // 设置dataSource
     const handleDataSourceChange = useCallback(dataSource => {
@@ -568,7 +570,7 @@ export default ajax(function Generator(props) {
                         </Form.Item>
                     </Col>
                 </Row>
-                <div style={{ marginTop: 8 }}>
+                <div style={{ marginTop: 8, display: 'flex' }}>
                     <Form.Item
                         labelCol={{ flex: '0 0 112px' }}
                         label="模块名"
@@ -576,9 +578,19 @@ export default ajax(function Generator(props) {
                         rules={[{ required: true, message: '请输入模块名！' }]}
                     >
                         <Input
-                            style={{ width: 472 }}
+                            style={{ width: 211 }}
                             placeholder="比如：user-center"
                             onChange={handleModuleNameChange}
+                        />
+                    </Form.Item>
+                    <Form.Item
+                        labelCol={{ flex: '0 0 126px' }}
+                        label="中文名"
+                        name="moduleChineseName"
+                    >
+                        <Input
+                            style={{ width: 164 }}
+                            placeholder="比如：用户"
                         />
                     </Form.Item>
                 </div>
