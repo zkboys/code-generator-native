@@ -45,7 +45,7 @@ module.exports = {
         const has = (flag, str, nullLine = true) => flag ? str : (nullLine ? NULL_LINE : '');
 
         return `
-import {useCallback, useState, useEffect} from 'react';
+import React, {useCallback, useState, useEffect} from 'react';
 import {Button, Form, Space, ${has(_batchDelete, 'Modal, ', false)}${has(_import, 'Upload, notification', false)}} from 'antd';
 import {PageContent, QueryBar, FormItem, Table, ${has(_page, 'Pagination, ', false)}${has(_edit || _detail || _delete, 'Operator', false)}} from '@ra-lib/adm';
 import config from 'src/commons/config-hoc';

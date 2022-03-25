@@ -17,7 +17,7 @@ module.exports = {
 
 
         return `
-import {useCallback, useState${_edit ? ', useEffect' : ''}} from 'react';
+import React, {useCallback, useState${_edit ? ', useEffect' : ''}} from 'react';
 import {Form, Row, Col} from 'antd';
 import {ModalContent, FormItem${_validateRules ? ', validateRules' : ''}${uniqueFields.length ? ', useDebounceValidator' : ''}} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';

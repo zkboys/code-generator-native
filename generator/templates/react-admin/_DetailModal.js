@@ -11,7 +11,7 @@ module.exports = {
         const ignore = ['id', 'updatedAt', 'createdAt', 'isDeleted'];
         const detailFields = fields.filter(item => item.fieldOptions.includes('详情') && !ignore.includes(item.__names.moduleName));
         return `
-import {useState, useEffect} from 'react';
+import React, {useState, useEffect} from 'react';
 import {Button, Descriptions} from 'antd';
 import {ModalContent} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
