@@ -43,6 +43,17 @@ export default modalFunction((props) => {
         await handleSubmit(true);
     }, [handleSubmit]);
 
+    // 用户粘贴事件
+    const handlePaste = useCallback((e) => {
+        // 等待数据
+        setTimeout(() => {
+            const { value } = e.target;
+            if (!value?.trim()) return;
+            const nextValue = value.split(/[\s、，,]/).filter(Boolean).join('\n');
+            setValue(nextValue);
+        });
+    }, []);
+
     return (
         <Modal
             {...commonProps}
@@ -92,6 +103,7 @@ export default modalFunction((props) => {
                         value={value}
                         onChange={e => setValue(e.target.value)}
                         onPressEnter={handlePressEnter}
+                        onPaste={handlePaste}
                         placeholder={[
                             `1. 中文名 + 空格 + 表单类型缩写，一行一组; `,
                             `2. 表单类型默认 input; `,
