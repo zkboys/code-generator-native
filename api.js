@@ -226,8 +226,8 @@ module.exports = apiRouter
     .get('/help', async () => await fs.readFile(path.join(__dirname, 'README.md'), 'UTF-8'))
     // 自动填充
     .post('/autoFill', async ctx => {
-        const { fields } = ctx.request.body;
+        const { fields, justNames } = ctx.request.body;
 
-        return await autoFill(fields);
+        return await autoFill(fields, justNames);
     })
 ;

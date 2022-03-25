@@ -230,6 +230,26 @@ export default ajax(function Generator(props) {
         setModuleNames(moduleNames);
     }, { wait: 300 });
 
+    // 模块名自动补签
+    const handleAutoModuleName = useCallback(async (e) => {
+        const { ctrlKey, metaKey, keyCode } = e;
+        const enterKey = keyCode === 13;
+        if (!((ctrlKey || metaKey) && enterKey)) return;
+
+        const { moduleName: name, moduleChineseName: chinese } = form.getFieldsValue();
+        if (!name && !chinese) return;
+
+        const res = await props.ajax.post('/autoFill', { fields: [{ name, chinese }], justNames: true });
+        if (!res?.length) return;
+
+        const result = res[0];
+
+        form.setFieldsValue({
+            moduleName: result.name,
+            moduleChineseName: result.chinese,
+        });
+    }, [form, props.ajax]);
+
     // 文件改变 添加、删除、修改模版、地址、选项
     const handleFilesChange = useCallback(() => {
         setTimeout(() => {
@@ -581,6 +601,7 @@ export default ajax(function Generator(props) {
                             style={{ width: 211 }}
                             placeholder="比如：user-center"
                             onChange={handleModuleNameChange}
+                            onKeyDown={handleAutoModuleName}
                         />
                     </Form.Item>
                     <Form.Item
@@ -591,6 +612,7 @@ export default ajax(function Generator(props) {
                         <Input
                             style={{ width: 164 }}
                             placeholder="比如：用户"
+                            onKeyDown={handleAutoModuleName}
                         />
                     </Form.Item>
                 </div>

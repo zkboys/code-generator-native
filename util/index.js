@@ -708,9 +708,10 @@ async function getTablesColumns(dbUrl, tableNames) {
 /**
  * 自动填充内容
  * @param fields
+ * @param justNames 是否值补全名称 name 和 chinese
  * @returns {Promise<*>}
  */
-async function autoFill(fields) {
+async function autoFill(fields, justNames) {
     const _chinese = await getChinese(fields);
     const names = await getNames(fields);
 
@@ -723,6 +724,8 @@ async function autoFill(fields) {
             item.name = names.find(it => it.id === item.id)?.name;
         }
     });
+
+    if(justNames) return fields;
 
     const validations = await getValidation(fields);
     const formTypes = await getFormType(fields);
