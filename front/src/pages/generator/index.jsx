@@ -244,8 +244,10 @@ export default ajax(function Generator(props) {
 
         const result = res[0];
 
+        const moduleNames = await props.ajax.get(`/moduleNames/${result.name}`);
+
         form.setFieldsValue({
-            moduleName: result.name,
+            moduleName: moduleNames['module-name'],
             moduleChineseName: result.chinese,
         });
     }, [form, props.ajax]);
