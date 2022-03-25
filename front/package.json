@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "cross-env PORT=3033 node scripts/start.js",
-    "build": "cross-env GENERATE_SOURCEMAP=false BUILD_PATH=../public PUBLIC_URL=/public node scripts/build.js",
+    "build": "cross-env BUILD_PATH=../public PUBLIC_URL=/public node scripts/build.js",
     "test": "node scripts/test.js"
   },
   "dependencies": {

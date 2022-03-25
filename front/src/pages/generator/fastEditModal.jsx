@@ -16,7 +16,7 @@ export default modalFunction((props) => {
         if (!value?.trim()) return;
 
         const values = value.split('\n')
-            .map(item => item.trim().replace(/\s/g, ' '))
+            .map(item => item.trim().replace(/\s+/g, ' '))
             .filter(Boolean);
 
         if (!values?.length) return;
@@ -25,7 +25,7 @@ export default modalFunction((props) => {
         }
         const newDataSource = values.map(item => {
             const [chinese, ft = 'i'] = item.split(' ');
-            const formType = FORM_ELEMENT_OPTIONS.find(it => it.short === ft).value;
+            const formType = FORM_ELEMENT_OPTIONS.find(it => it.short === ft)?.value || 'input';
             return getNewRecord({ chinese, formType });
         });
         if (replace) {
@@ -48,23 +48,23 @@ export default modalFunction((props) => {
             {...commonProps}
             title="快速编辑"
             width={600}
+            footer={(
+                <>
+                    <Button onClick={onCancel}>关闭</Button>
+                    {dataSource?.length ? (
+                        <>
+                            <Button type="primary" onClick={() => handleSubmit(false)}>追加</Button>
+                            <Button type="primary" danger onClick={() => handleSubmit(true)}>覆盖</Button>
+                        </>
+                    ) : (
+                        <Button type="primary" onClick={() => handleSubmit(false)}>确定</Button>
+                    )}
+                </>
+            )}
         >
             <Content
                 style={{ padding: 16 }}
                 onCancel={onCancel}
-                footer={(
-                    <>
-                        {dataSource?.length ? (
-                            <>
-                                <Button type="primary" onClick={() => handleSubmit(false)}>追加</Button>
-                                <Button type="primary" danger onClick={() => handleSubmit(true)}>覆盖</Button>
-                            </>
-                        ) : (
-                            <Button type="primary" onClick={() => handleSubmit(false)}>确定</Button>
-                        )}
-                        <Button onClick={onCancel}>关闭</Button>
-                    </>
-                )}
             >
                 <div style={{ display: 'flex', flexWrap: 'wrap' }}>
                     {FORM_ELEMENT_OPTIONS.map(item => {

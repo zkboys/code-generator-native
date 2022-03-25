@@ -354,7 +354,12 @@ export default React.memo(ajax(function FieldTable(props) {
                 totalInputColumn++;
             }
             return column;
-        }).map(column => formColumn(column, totalInputColumn));
+        }).map((column, index, arr) => {
+            // 最后一列不设置宽度，否者表格会出现串列问题
+            if (index === arr.length - 1) column.width = undefined;
+
+            return formColumn(column, totalInputColumn);
+        });
     }, [tabColumns, activeKey, dbInfoVisible, dbTypeOptions, handleDelete, formColumn]);
 
     // dataSource改变，将数据同步到form中
