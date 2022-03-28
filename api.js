@@ -181,7 +181,8 @@ module.exports = apiRouter
             const moduleNames = getModuleNames(tableName);
             const moduleName = moduleNames['module-name'];
             const nextFiles = files.map(file => {
-                const targetPath = stringFormat(file.targetPath, moduleNames);
+                const template = allTemplates.find(item => item.id === file.templateId);
+                const targetPath = stringFormat(template.targetPath, moduleNames);
                 return {
                     ...file,
                     targetPath,
