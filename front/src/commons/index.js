@@ -204,17 +204,20 @@ export const isMac = /macintosh|mac os x/i.test(navigator.userAgent);
  * @param moduleNames
  * @returns {*}
  */
-export function getFiles(files, templateOptions, moduleNames) {
+export function getFiles(files, templateOptions, moduleNames = null) {
     return files.map(item => {
-        const { templateId, targetPath, options } = item;
+        let { templateId, targetPath, options } = item;
+        const template = templateOptions.find(item => item.value === templateId)?.record;
+
+        // 批量生成时候，moduleNames没传递，取原始targetPath
+        if (!moduleNames) targetPath = template.targetPath;
 
         const filePaths = targetPath.split('/');
         filePaths.pop();
         const parentPath = filePaths.join('/');
         filePaths.pop();
         const __parentPath = filePaths.join('/');
-        const record = templateOptions.find(item => item.value === templateId)?.record;
-        const extraFiles = record?.extraFiles || [];
+        const extraFiles = template?.extraFiles || [];
 
         if (extraFiles) {
             const extraFilesList = extraFiles.map(it => {
@@ -227,10 +230,10 @@ export function getFiles(files, templateOptions, moduleNames) {
                     options, // 使用父级模版的optins
                 };
             });
-            return [{ ...item }, ...extraFilesList];
+            return [{ ...item, targetPath }, ...extraFilesList];
         }
 
-        return { ...item };
+        return { ...item, targetPath };
     }).flat();
 }
 

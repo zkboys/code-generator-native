@@ -366,7 +366,7 @@ export default ajax(function Generator(props) {
             // type: 'VARCHAR',
             // formType: 'input',
             // dataType: 'String',
-            length: 50,
+            // length: 50,
             isNullable: true,
             __isNew: true,
             __isItems: isItems,

@@ -13,7 +13,6 @@ export default compose(
         form,
         tableOptions,
         templateOptions,
-        moduleNames,
         commonProps,
     } = props;
     const [loading, setLoading] = useState(false);
@@ -26,7 +25,7 @@ export default compose(
     const handleSubmit = useCallback(async () => {
         await confirm('您确定要生成选中的表吗？本地同名文件将被覆盖，请谨慎操作！');
 
-        const nextFiles = getFiles(files, templateOptions, moduleNames);
+        const nextFiles = getFiles(files, templateOptions);
 
         const params = {
             dbUrl,
@@ -45,7 +44,7 @@ export default compose(
             ),
         });
         close();
-    }, [dbUrl, files, moduleNames, close, props.ajax, tables, templateOptions]);
+    }, [dbUrl, files, close, props.ajax, tables, templateOptions]);
 
     const handleChange = useCallback((tables) => {
         setTables(tables);

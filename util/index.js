@@ -70,18 +70,11 @@ function getLocalTemplates() {
         const extraFiles = (template.extraFiles || []).map((it, index) => {
             const { targetPath } = it;
             const name = it.name || targetPath.split('/').pop();
-
-            const filePaths = template.targetPath.split('/');
-            filePaths.pop();
-            const parentPath = filePaths.join('/');
-            filePaths.pop();
-            const __parentPath = filePaths.join('/');
-            const _targetPath = stringFormat(targetPath, { parentPath, __parentPath });
             return {
                 ...it,
                 id: `${id}__${index}`,
                 name,
-                targetPath: _targetPath,
+                targetPath,
                 shortName: it.shortName || name,
                 options: template.options || [],
                 fieldOptions: template.fieldOptions || [],
@@ -718,7 +711,7 @@ async function getTablesColumns(dbUrl, tableNames) {
  * @param justNames 是否值补全名称 name 和 chinese
  * @returns {Promise<*>}
  */
-async function autoFill(fields, justNames) {
+async function autoFill(fields, justNames = false) {
     const _chinese = await getChinese(fields);
     const names = await getNames(fields);
 

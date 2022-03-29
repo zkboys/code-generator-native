@@ -8,20 +8,23 @@ function TargetPathInput(props) {
     const { value, form, name, moduleNames, checkExist, templateOptions, templateId, ...others } = props;
     const [exist, setExist] = useState(false);
 
+    // 这个name不转string，放入依赖中，每次render都变，这个是数组。。。
+    const nameStr = name.join(',');
+
     // value 改变 根据模块名，处理地址
     useEffect(() => {
         const path = value || templateOptions.find(item => item.value === templateId)?.record?.targetPath;
         if (!path) return;
         const val = path.includes('{') ? stringFormat(path, moduleNames) : path;
-        form.setFields([{ name, value: val }]);
-    }, [form, name, value, moduleNames, templateId, templateOptions]);
+        form.setFields([{ name: nameStr.split(','), value: val }]);
+    }, [form, nameStr, value, moduleNames, templateId, templateOptions]);
 
     // moduleNames 改变 根据模块名，处理地址
     useEffect(() => {
         const path = templateOptions.find(item => item.value === templateId)?.record?.targetPath;
         const val = stringFormat(path, moduleNames);
-        form.setFields([{ name, value: val }]);
-    }, [form, moduleNames, name, templateId, templateOptions]);
+        form.setFields([{ name: nameStr.split(','), value: val }]);
+    }, [form, moduleNames, nameStr, templateId, templateOptions]);
 
     // 检测文件是否存在
     useEffect(() => {
