@@ -244,7 +244,7 @@ export default ajax(function Generator(props) {
 
         const result = res[0];
 
-        const moduleNames = await props.ajax.get(`/moduleNames/${result.name}`);
+        const moduleNames = await fetchModuleNames(result.name);
 
         const moduleName = moduleNames['module-name'];
 
@@ -252,8 +252,8 @@ export default ajax(function Generator(props) {
             moduleName: moduleName,
             moduleChineseName: result.chinese,
         });
-        await handleModuleNameChange({ target: { value: moduleName } });
-    }, [handleModuleNameChange, form, props.ajax]);
+        setModuleNames(moduleNames);
+    }, [fetchModuleNames, form, props.ajax]);
 
     // 文件改变 添加、删除、修改模版、地址、选项
     const handleFilesChange = useCallback(() => {

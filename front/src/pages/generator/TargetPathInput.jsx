@@ -16,14 +16,18 @@ function TargetPathInput(props) {
         const path = value || templateOptions.find(item => item.value === templateId)?.record?.targetPath;
         if (!path) return;
         const val = path.includes('{') ? stringFormat(path, moduleNames) : path;
-        form.setFields([{ name: nameStr.split(','), value: val }]);
+        const name = nameStr.split(',');
+        name[1] = window.parseInt(name[1], 10);
+        form.setFields([{ name, value: val }]);
     }, [form, nameStr, value, moduleNames, templateId, templateOptions]);
 
     // moduleNames 改变 根据模块名，处理地址
     useEffect(() => {
         const path = templateOptions.find(item => item.value === templateId)?.record?.targetPath;
         const val = stringFormat(path, moduleNames);
-        form.setFields([{ name: nameStr.split(','), value: val }]);
+        const name = nameStr.split(',');
+        name[1] = window.parseInt(name[1], 10);
+        form.setFields([{ name, value: val }]);
     }, [form, moduleNames, nameStr, templateId, templateOptions]);
 
     // 检测文件是否存在
