@@ -246,11 +246,14 @@ export default ajax(function Generator(props) {
 
         const moduleNames = await props.ajax.get(`/moduleNames/${result.name}`);
 
+        const moduleName = moduleNames['module-name'];
+
         form.setFieldsValue({
-            moduleName: moduleNames['module-name'],
+            moduleName: moduleName,
             moduleChineseName: result.chinese,
         });
-    }, [form, props.ajax]);
+        await handleModuleNameChange({ target: { value: moduleName } });
+    }, [handleModuleNameChange, form, props.ajax]);
 
     // 文件改变 添加、删除、修改模版、地址、选项
     const handleFilesChange = useCallback(() => {
