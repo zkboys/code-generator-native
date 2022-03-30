@@ -231,13 +231,19 @@ export default ajax(function Generator(props) {
     }, { wait: 300 });
 
     // 模块名自动补签
-    const handleAutoModuleName = useCallback(async (e) => {
+    const handleAutoModuleName = useCallback(async (e, isModuleName = false) => {
         const { ctrlKey, metaKey, keyCode } = e;
         const enterKey = keyCode === 13;
         if (!((ctrlKey || metaKey) && enterKey)) return;
 
-        const { moduleName: name, moduleChineseName: chinese } = form.getFieldsValue();
+        let { moduleName: name, moduleChineseName: chinese } = form.getFieldsValue();
         if (!name && !chinese) return;
+
+        if (isModuleName) {
+            chinese = undefined;
+        } else {
+            name = undefined;
+        }
 
         const res = await props.ajax.post('/autoFill', { fields: [{ name, chinese }], justNames: true });
         if (!res?.length) return;
@@ -606,7 +612,7 @@ export default ajax(function Generator(props) {
                             style={{ width: 211 }}
                             placeholder="比如：user-center"
                             onChange={handleModuleNameChange}
-                            onKeyDown={handleAutoModuleName}
+                            onKeyDown={(e) => handleAutoModuleName(e, true)}
                         />
                     </Form.Item>
                     <Form.Item
