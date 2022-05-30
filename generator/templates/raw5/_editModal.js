@@ -25,7 +25,7 @@ import config from 'src/commons/config-hoc';
 export default config({
     modalFunction: true,
 })(function ${mn.ModuleName}EditModal(props) {
-    const {${_edit ? ' record, isEdit, ' : ''}close, commonProps } = props;
+    const {${_edit ? ' record, isEdit, ' : ''}close, onOk, commonProps } = props;
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
     
@@ -52,9 +52,10 @@ export default config({
         } else {
             await props.ajax.post('/${mn.module_names}', params, { setLoading, successTip: '创建成功！' });
         }` : `await props.ajax.post('/${mn.module_names}', params, { setLoading, successTip: '创建成功！' });`}
-
+        
+        onOk && onOk();
         close();
-    }, [${_edit ? 'isEdit, ' : ''}close, props.ajax]);
+    }, [${_edit ? 'isEdit, ' : ''}close, onOk, props.ajax]);
 
     ${_edit ? `// 初始化，查询详情数据
     useEffect(() => {

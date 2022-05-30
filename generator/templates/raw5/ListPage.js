@@ -75,7 +75,7 @@ export default config({
                 const items = [
                     ${has(_edit, `{
                         label: '修改',
-                        onClick: () => editModal({ record }),
+                        onClick: () => editModal({ record, onOk: handleSearch}),
                     },`)}
                     ${has(_detail, `{
                         label: '详情',
@@ -189,7 +189,7 @@ export default config({
                             <Button htmlType="reset">
                                 重置
                             </Button>
-                            ${has(_add, `<Button type="primary" onClick={() => editModal()}>
+                            ${has(_add, `<Button type="primary" onClick={() => editModal({onOk: handleSearch})}>
                                 添加
                             </Button>`)}
                             ${has(_batchDelete, `<Button type="primary" danger onClick={handleBatchDelete}>
