@@ -22,7 +22,7 @@ program
 let options = program.opts();
 
 const HOST = options.host || 'localhost';
-const DEFAULT_PORT = parseInt(options.port, 10) || 3001;
+const DEFAULT_PORT = parseInt(options.port, 10) || 30001;
 const ROOT_PATH = path.join(__dirname, '..');
 
 (async () => {

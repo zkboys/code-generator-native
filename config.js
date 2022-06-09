@@ -1,7 +1,7 @@
 const path = require('path');
 
 const args = getCommandArgs();
-const port = Number(args.port) || 3001;
+const port = Number(args.port) || 30001;
 const nativeRoot = args.nativeRoot || process.cwd();
 const generatorPath = 'generator';
 const localGeneratorPath = path.join(nativeRoot, generatorPath);
