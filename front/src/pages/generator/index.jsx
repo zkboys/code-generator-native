@@ -239,9 +239,11 @@ export default ajax(function Generator(props) {
         let { moduleName: name, moduleChineseName: chinese } = form.getFieldsValue();
         if (!name && !chinese) return;
 
-        if (isModuleName) {
+        if (isModuleName && name) {
             chinese = undefined;
-        } else {
+        }
+
+        if (!isModuleName && chinese) {
             name = undefined;
         }
 

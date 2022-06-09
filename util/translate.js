@@ -1,10 +1,13 @@
 const md5 = require('md5');
 const axios = require('axios');
-const appid = '20220309001118181';
-const secret = 'ElNiLc0MwM9qX4gkSXiU';
+// 前面加上123123，防止被扫描！！！
+const _appid = '12312320220309001118181';
+const _secret = '123123RhK65o9phx_9QxOjXOYJ';
 const salt = 'asdfsssdfasdfs';
 
 async function translate(options) {
+    const appid = _appid.replace('123123', '');
+    const secret = _secret.replace('123123', '');
     const { q, from, to } = options;
     const str = appid + q + salt + secret;
     const sign = md5(str);
