@@ -25,12 +25,10 @@ import config from 'src/commons/config-hoc';
 export default config({
     modalFunction: true,
 })(function ${mn.ModuleName}EditModal(props) {
-    const {${_edit ? ' record, isEdit, ' : ''}close, onOk, commonProps } = props;
+    const {${_edit ? ' record, isEdit, ' : ''} close, onOk, onCancel, commonProps } = props;
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
-    
     ${uniqueFields.map(field => {
-
             return `const check${field.__names.ModuleName} = useDebounceValidator(async (rule, value) => {
         if (!value) return;
 
@@ -42,7 +40,6 @@ export default config({
         if (!isEdit && res.${field.name} === value) throw Error('${field.chinese}不能重复！');
     });`;
         })}
-
     const handleSubmit = useCallback(async (values) => {
         const params = {
             ...values,
@@ -61,7 +58,7 @@ export default config({
     useEffect(() => {
         if (!isEdit) return;
         (async () => {
-            const res = await props.ajax.get('/${mn.module_names}', { id: record?.id }, [], { setLoading });
+            const res = await props.ajax.get('/${mn.module_names}', { id: record?.id }, { setLoading });
             form.setFieldsValue(res || {});
         })();
     }, [isEdit, form, props.ajax, record?.id]);` : NULL_LINE}
@@ -80,15 +77,14 @@ export default config({
                     loading={loading}
                     okText="保存"
                     okHtmlType="submit"
-                    cancelText="重置"
-                    onCancel={() => form.resetFields()}
+                    onCancel={onCancel}
                 >
                     ${_edit ? `{isEdit ? <FormItem hidden name="id"/> : null}` : NULL_LINE}
                     <Row>
                         ${formFields.map(item => {
-                const validation = item.validation.filter(item => !ignoreRules.includes(item));
-                const uniqueValidation = item.validation.some(it => it === 'unique');
-                return `<Col span={12}>
+            const validation = item.validation.filter(item => !ignoreRules.includes(item));
+            const uniqueValidation = item.validation.some(it => it === 'unique');
+            return `<Col span={12}>
                             <FormItem
                                 {...layout}
                                 type="${item.formType}"
@@ -103,12 +99,12 @@ export default config({
                                 ${validation.length || uniqueValidation ? `rules={[
                                     ${uniqueValidation ? `{ validator: check${item.__names.ModuleName} },` : NULL_LINE}
                                     ${validation.map(item => {
-                    return `validateRules.${item}(),`;
-                }).join('\n                                ')}
+                return `validateRules.${item}(),`;
+            }).join('\n                                ')}
                                 ]}` : NULL_LINE}
                             />        
                         </Col>`;
-            }).join('\n                    ')}
+        }).join('\n                        ')}
                     </Row>
                 </ModalContent>
             </Form>

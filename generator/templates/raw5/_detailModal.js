@@ -19,14 +19,14 @@ import config from 'src/commons/config-hoc';
 export default config({
     modalFunction: true,
 })(function ${mn.ModuleName}EditModal(props) {
-    const { record, onCancel, commonProps} = props;
+    const { record, onCancel, commonProps } = props;
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState({});
 
     // 初始化，查询详情数据
     useEffect(() => {
         (async () => {
-            const res = await props.ajax.get('/${mn.module_names}', { id: record?.id }, [], { setLoading });
+            const res = await props.ajax.get('/${mn.module_names}', { id: record?.id }, { setLoading });
             setData(res || {});
         })();
     }, [props.ajax, record?.id]);
@@ -41,9 +41,9 @@ export default config({
                 footer={<Button onClick={onCancel}>关闭</Button>}
             >
                 <Descriptions bordered size="small" labelStyle={{ width: 150 }}>
-                    ${detailFields.map(item => `<Descriptions.Item label="${item.chinese}">{data.${item.__names.moduleName} ?? '-'}</Descriptions.Item>`).join('\n                ')}
+                    ${detailFields.map(item => `<Descriptions.Item label="${item.chinese}">{data.${item.__names.moduleName} ?? '-'}</Descriptions.Item>`).join('\n                    ')}
                 </Descriptions>
-        </ModalContent>
+            </ModalContent>
         </Modal>
     );
 });

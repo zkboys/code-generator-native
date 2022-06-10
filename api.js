@@ -150,8 +150,15 @@ module.exports = apiRouter
     })
     // 批量查询文件是否存在
     .post('/generate/files/exist', async ctx => {
-        const { files } = ctx.request.body;
-        const filePaths = files.filter(item => !item.force).map(item => item.targetPath);
+        const { files, ...others } = ctx.request.body;
+        // 通过是否生成了实际文件，判断文件是否真的重复
+        const filesContents = await getFilesContent({ files, ...others });
+
+        const filePaths = files
+            .filter(item => !item.force)
+            .map(item => item.targetPath)
+            .filter(item => filesContents.some(it => it.targetPath === item));
+
         return await checkFilesExist(filePaths);
     })
     // 单个查询文件是否存在
