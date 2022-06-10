@@ -486,7 +486,7 @@ export default ajax(function Generator(props) {
         (async () => {
             const res = await props.ajax.get('/version', null, { errorTip: false });
             const { lastVersion, currentVersion } = res;
-            if (currentVersion !== lastVersion) {
+            if (lastVersion > currentVersion) {
                 notification.success({
                     message: '有新版本！',
                     description: (
