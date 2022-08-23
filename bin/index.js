@@ -36,10 +36,13 @@ const ROOT_PATH = path.join(__dirname, '..');
     spawn(command, ['-w', config.localGeneratorPath, '--exec', `node index.js --port=${port} --nativeRoot=${nativeRoot}`], { stdio: 'inherit', cwd: ROOT_PATH });
     // spawn('node', ['index.js', `--port=${port}`], { stdio: 'inherit', cwd: ROOT_PATH });
 
-    openBrowser(`http://${HOST}:${port}`);
-
     // 记录使用情况，等待数据库连接
     setTimeout(async () => {
         await saveUseLog();
+    }, 1000);
+
+    // 等待服务启动后，打开浏览器
+    setTimeout(() => {
+        openBrowser(`http://${HOST}:${port}`);
     }, 1000);
 })();
