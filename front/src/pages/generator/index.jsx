@@ -83,7 +83,7 @@ export default ajax(function Generator(props) {
 
             if (_dataSource.some(item => !item.name || !item.chinese)) return Modal.info({ title: '温馨提示', content: '表格的字段配置有必填项未填写！' });
 
-            const nextFiles = getFiles(files, templateOptions, moduleNames);
+            const nextFiles = getFiles(files, templateOptions, moduleNames, others.moduleChineseName || moduleNames.module_name);
 
             const params = {
                 ...others,
@@ -630,18 +630,26 @@ export default ajax(function Generator(props) {
                     </Form.Item>
                 </div>
                 <div style={{ width: '100%', marginTop: 4 }}>
-                    <FileList
-                        form={form}
-                        templateOptions={templateOptions}
-                        filesVisible={filesVisible}
-                        moduleNames={moduleNames}
-                        checkExist={checkExist}
-                        onTemplateChange={handleTemplateChange}
-                        onTargetPathChange={handleFilesChange}
-                        onOptionsChange={handleFilesChange}
-                        onAdd={handleFilesAdd}
-                        onRemove={handleFilesChange}
-                    />
+                    <Form.Item shouldUpdate noStyle>
+                        {({ getFieldValue }) => {
+                            const moduleChineseName = getFieldValue('moduleChineseName');
+                            return (
+                                <FileList
+                                    form={form}
+                                    templateOptions={templateOptions}
+                                    filesVisible={filesVisible}
+                                    moduleNames={moduleNames}
+                                    checkExist={checkExist}
+                                    onTemplateChange={handleTemplateChange}
+                                    onTargetPathChange={handleFilesChange}
+                                    onOptionsChange={handleFilesChange}
+                                    onAdd={handleFilesAdd}
+                                    onRemove={handleFilesChange}
+                                    moduleChineseName={moduleChineseName}
+                                />
+                            );
+                        }}
+                    </Form.Item>
                 </div>
                 <Tabs
                     style={{ width: '100%', userSelect: 'none' }}

@@ -12,6 +12,7 @@ function FileList(props) {
         templateOptions,
         filesVisible, // 是否展示完整的文件列表
         moduleNames,
+        moduleChineseName,
         checkExist,
         onAdd = () => undefined,
         onRemove = () => undefined,
@@ -139,6 +140,7 @@ function FileList(props) {
                                             name={['files', name, 'targetPath']}
                                             form={form}
                                             checkExist={checkExist}
+                                            moduleChineseName={moduleChineseName}
                                         />
                                     </Form.Item>
                                     <Form.Item noStyle shouldUpdate>
