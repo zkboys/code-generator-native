@@ -722,6 +722,7 @@ export default ajax(function Generator(props) {
                                         tableOptions,
                                         templateOptions,
                                         moduleNames,
+                                        moduleChineseName: form.getFieldValue('moduleChineseName'),
                                     })}
                                 >
                                     批量生成

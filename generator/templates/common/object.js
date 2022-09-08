@@ -5,7 +5,6 @@ module.exports = {
         const { fields} = config;
         return `{
         ${fields.map(item => {
-            console.log(item);
             return `"${item.__names.moduleName}": "${item.chinese}",`;
         }).join('\n        ')}
     }

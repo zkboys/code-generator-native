@@ -14,6 +14,7 @@ export default compose(
         tableOptions,
         templateOptions,
         commonProps,
+        moduleChineseName,
     } = props;
     const [loading, setLoading] = useState(false);
     const [tables, setTables] = useState([]);
@@ -25,7 +26,7 @@ export default compose(
     const handleSubmit = useCallback(async () => {
         await confirm('您确定要生成选中的表吗？本地同名文件将被覆盖，请谨慎操作！');
 
-        const nextFiles = getFiles(files, templateOptions);
+        const nextFiles = getFiles(files, templateOptions, moduleChineseName);
 
         const params = {
             dbUrl,
@@ -44,7 +45,7 @@ export default compose(
             ),
         });
         close();
-    }, [dbUrl, files, close, props.ajax, tables, templateOptions]);
+    }, [dbUrl, files, close, props.ajax, tables, templateOptions, moduleChineseName]);
 
     const handleChange = useCallback((tables) => {
         setTables(tables);
