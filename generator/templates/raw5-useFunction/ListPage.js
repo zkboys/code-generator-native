@@ -165,6 +165,7 @@ export default config({
         <PageContent loading={loading${has(_import, ' || uploading', false)}}>
             <QueryBar>
                 <Form
+                    {...layout} 
                     layout="inline"
                     form={form}
                     onFinish={async () => {
@@ -173,7 +174,6 @@ export default config({
                     }}
                 >
                     ${queryFields.map(item => `<FormItem 
-                        {...layout} 
                         type="${item.formType}" 
                         label="${item.chinese}" 
                         name="${item.__names.moduleName}"
