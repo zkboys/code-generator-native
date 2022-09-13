@@ -157,6 +157,7 @@ export default config({
     }, []);
 
     const layout = {
+        labelCol: { style: { width: 80 } },
         wrapperCol: { style: { width: 200 } },
     };
 
