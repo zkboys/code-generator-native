@@ -108,6 +108,8 @@ export default config({
         ${has(_page, 'const total = res?.totalElements || 0;')}
         setDataSource(dataSource);
         ${has(_page, 'setTotal(total);')}
+        ${has(_page, 'setPageNum(params.pageNum);')}
+        ${has(_page, 'setPageSize(params.pageSize);')}
     });
 
     ${has(_batchDelete, `// 批量删除
@@ -168,10 +170,7 @@ export default config({
                     {...layout} 
                     layout="inline"
                     form={form}
-                    onFinish={async () => {
-                        ${has(_page, 'setPageNum(1);')}
-                        await handleSearch(${has(_page, '{ pageNum: 1 }', false)});
-                    }}
+                    onFinish={async () => await handleSearch(${has(_page, '{ pageNum: 1 }', false)})}
                 >
                     ${queryFields.map(item => `<FormItem 
                         type="${item.formType}" 
@@ -231,15 +230,8 @@ export default config({
                 total={total}
                 pageNum={pageNum}
                 pageSize={pageSize}
-                onPageNumChange={async pageNum => {
-                    setPageNum(pageNum);
-                    await handleSearch({ pageNum });
-                }}
-                onPageSizeChange={async (pageSize) => {
-                    setPageNum(1);
-                    setPageSize(pageSize);
-                    await handleSearch({ pageNum: 1, pageSize });
-                }}
+                onPageNumChange={async pageNum => await handleSearch({ pageNum })}
+                onPageSizeChange={async (pageSize) => await handleSearch({ pageNum: 1, pageSize })}
             />`)}
         </PageContent>
     );
