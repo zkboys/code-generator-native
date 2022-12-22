@@ -15,7 +15,8 @@ export const isMac = /macintosh|mac os x/i.test(navigator.userAgent);
 // 本地太大
 // loader.config({ paths: { vs: `${process.env.PUBLIC_URL || ''}/monaco-editor@0.32.1/min/vs` } });
 // 使用cdn 太慢
-loader.config({ paths: { vs: `https://cdn.staticfile.org/monaco-editor/0.32.1/min/vs` } });
+// loader.config({ paths: { vs: `https://cdn.staticfile.org/monaco-editor/0.32.1/min/vs` } });
+loader.config({ paths: { vs: `${process.env.PUBLIC_URL || ''}/vs` } });
 
 function bindKeyWithAction(editor, monaco) {
     const keyMap = {

@@ -316,6 +316,7 @@ function getModuleNames(name) {
     const Module_Names = titleize(module_names).replace(/\s/g, '_');
 
     return {
+        origin: name,
         moduleName,
         ModuleName,
         moduleNames,
