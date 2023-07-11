@@ -523,7 +523,7 @@ export default ajax(function Generator(props) {
         <PageContent className={s.root} loading={loading} loadingTip={loadingTip}>
             <Form
                 form={form}
-                layout="inline"
+                layout="horizontal"
                 initialValues={{ files: [{}], searchType: 'tables' }}
                 onValuesChange={handleFormChange}
             >
