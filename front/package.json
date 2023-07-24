@@ -5,7 +5,8 @@
   "scripts": {
     "start": "cross-env PORT=3033 node scripts/start.js",
     "build": "cross-env BUILD_PATH=../public PUBLIC_URL=/public node scripts/build.js",
-    "test": "node scripts/test.js"
+    "test": "node scripts/test.js",
+    "fix:eslint": "node scripts/fix-babel-preset-react-app.js"
   },
   "dependencies": {
     "@ant-design/icons": "^4.7.0",
