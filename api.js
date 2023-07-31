@@ -17,30 +17,30 @@ const {
     autoFill,
     getTablesColumns,
 } = require('./util');
-const { DB_TYPES } = require('./db/MySql');
+const {DB_TYPES} = require('./db/MySql');
 const packageJson = require('./package.json');
 
-const apiRouter = new Router({ prefix: '/api' });
+const apiRouter = new Router({prefix: '/api'});
 module.exports = apiRouter
     // 结果处理
     .use(async (ctx, next) => {
         try {
             const data = await next();
-            if (ctx.body === undefined) ctx.body = { code: 0, message: 'ok', data };
+            if (ctx.body === undefined) ctx.body = {code: 0, message: 'ok', data};
         } catch (error) {
             console.error(error);
-            ctx.body = { code: 9999, message: error.message, error, data: null };
+            ctx.body = {code: 9999, message: error.message, error, data: null};
         }
     })
     // 获取数据库表
     .get('/db/tables', async ctx => {
-        const { dbUrl } = ctx.query;
+        const {dbUrl} = ctx.query;
         assert(dbUrl, '数据库地址不能为空！');
         return db(dbUrl).getTables();
     })
     // 获取数据库表字段
     .post('/db/tables/columns', async ctx => {
-        const { dbUrl, tableNames } = ctx.request.body;
+        const {dbUrl, tableNames} = ctx.request.body;
 
         assert(tableNames, '数据库表不能为空');
         assert(dbUrl, '数据库地址不能为空！');
@@ -56,7 +56,7 @@ module.exports = apiRouter
     })
     // 解析sql语句，获取数据库表字段
     .post('/db/sql', async ctx => {
-        let { dbUrl, sql } = ctx.request.body;
+        let {dbUrl, sql} = ctx.request.body;
 
         sql = sql.replace(/[$#]+[\s]*({)?{[\s\w]*}(?!})/g, '?');
 
@@ -66,7 +66,7 @@ module.exports = apiRouter
 
         if (Array.isArray(ast)) ast = ast[0];
 
-        const { columns, from } = ast;
+        const {columns, from} = ast;
 
         const tableNames = from.map(item => item.table);
         const allColumns = await getTablesColumns(dbUrl, tableNames);
@@ -80,8 +80,8 @@ module.exports = apiRouter
 
         let cols = [];
         columns.forEach(item => {
-            const { expr } = item;
-            let { table, column } = expr;
+            const {expr} = item;
+            let {table, column} = expr;
             column = column.toLowerCase();
 
             if (!table) {
@@ -117,7 +117,7 @@ module.exports = apiRouter
     })
     // 获取数据库类型 options
     .get('/db/types', async ctx => {
-        const { dbUrl } = ctx.query;
+        const {dbUrl} = ctx.query;
 
         if (!dbUrl) return DB_TYPES;
 
@@ -130,7 +130,7 @@ module.exports = apiRouter
     })
     // 获取模版详情
     .get('/templates/:id', async ctx => {
-        const { id } = ctx.params;
+        const {id} = ctx.params;
         assert(id, '模版id不能为空！');
 
         const templates = await getLocalTemplates();
@@ -143,16 +143,16 @@ module.exports = apiRouter
     .get('/templates/local/download', async () => await downloadTemplates())
     // 获取模块名
     .get('/moduleNames/:name', async ctx => {
-        const { name } = ctx.params;
+        const {name} = ctx.params;
         assert(name, 'name参数不能为空！');
 
         return getModuleNames(name);
     })
     // 批量查询文件是否存在
     .post('/generate/files/exist', async ctx => {
-        const { files, ...others } = ctx.request.body;
+        const {files, ...others} = ctx.request.body;
         // 通过是否生成了实际文件，判断文件是否真的重复
-        const filesContents = await getFilesContent({ files, ...others });
+        const filesContents = await getFilesContent({files, ...others});
 
         const filePaths = files
             .filter(item => !item.force)
@@ -163,13 +163,13 @@ module.exports = apiRouter
     })
     // 单个查询文件是否存在
     .post('/generate/file/exist', async ctx => {
-        const { targetPath } = ctx.request.body;
+        const {targetPath} = ctx.request.body;
         const res = await checkFilesExist([targetPath]);
         return !!(res && res.length);
     })
     // 生成文件
     .post('/generate/files', async ctx => {
-        const { files, ...others } = ctx.request.body;
+        const {files, ...others} = ctx.request.body;
         const nextFiles = files.filter(item => item.rewrite !== false);
 
         return await writeFile({
@@ -179,7 +179,7 @@ module.exports = apiRouter
     })
     // 批量生成
     .post('/generate/files/batch', async ctx => {
-        const { files, tables, dbUrl } = ctx.request.body;
+        const {files, tables, dbUrl} = ctx.request.body;
         const result = [];
         const templates = getLocalTemplates();
         const allTemplates = templates.map(item => [item, ...item.extraFiles]).flat();
@@ -198,7 +198,7 @@ module.exports = apiRouter
             const tableFields = await db(dbUrl).getColumns(tableName);
             const fields = tableFields.map(item => {
                 const fieldOptions = nextFiles.reduce((prev, curr) => {
-                    const { templateId, parentTemplateId } = curr;
+                    const {templateId, parentTemplateId} = curr;
                     const fieldOptions = allTemplates.find(item => item.id === (parentTemplateId || templateId))?.fieldOptions || [];
                     return {
                         ...prev,
@@ -211,7 +211,7 @@ module.exports = apiRouter
                 };
             });
             const _fields = await autoFill(fields);
-            const res = await writeFile({ files: nextFiles, moduleName, fields: _fields });
+            const res = await writeFile({files: nextFiles, moduleName, fields: _fields});
             result.push(res);
         }
         return result.flat();
@@ -229,11 +229,17 @@ module.exports = apiRouter
     })
     // 更新
     .put('/update', async () => await updateVersion())
+    // 保存模版
+    .put('/template', async (ctx) => {
+        const {content, filePath} = ctx.request.body;
+        await fs.writeFileSync(filePath, content, 'UTF-8');
+        return true;
+    })
     // 获取帮助文档
     .get('/help', async () => await fs.readFile(path.join(__dirname, 'README.md'), 'UTF-8'))
     // 自动填充
     .post('/autoFill', async ctx => {
-        const { fields, justNames } = ctx.request.body;
+        const {fields, justNames} = ctx.request.body;
 
         return await autoFill(fields, justNames);
     })

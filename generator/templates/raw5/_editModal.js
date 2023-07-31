@@ -1,4 +1,5 @@
 module.exports = {
+    filePath: __filename, // 用于读取当前文件内容
     name: 'EditModal',
     targetPath: '{parentPath}/editModal.jsx',
     getContent: config => {

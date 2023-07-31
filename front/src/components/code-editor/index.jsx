@@ -205,7 +205,7 @@ function CodeEditor(props) {
         tabSize: 2,
         readOnly,
         minimap: {
-            enabled: true,
+            enabled: false,
         },
     };
 

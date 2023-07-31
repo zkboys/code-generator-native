@@ -1,10 +1,10 @@
 const path = require('path');
 const fs = require('fs-extra');
 const assert = require('assert');
-const { exec } = require('child_process');
+const {exec} = require('child_process');
 const staticCache = require('koa-static-cache');
 const inflection = require('inflection');
-const { internalIpV4 } = require('./ip');
+const {internalIpV4} = require('./ip');
 
 const openBrowser = require('./openBrowser');
 const choosePort = require('./choosePort');
@@ -59,6 +59,8 @@ function getLocalTemplates() {
 
     return files.map(filePath => {
         const template = require(filePath);
+        const templateContent = fs.readFileSync(filePath, 'UTF-8');
+
         const extname = path.extname(filePath);
         const basename = path.basename(filePath);
         if (basename.startsWith('_')) return null;
@@ -68,8 +70,12 @@ function getLocalTemplates() {
         const shortName = template.name || basename.replace(extname, '');
         const name = template.name || fileName;
         const extraFiles = (template.extraFiles || []).map((it, index) => {
-            const { targetPath } = it;
+            const {targetPath, filePath} = it;
+            const templateContent = filePath ? fs.readFileSync(filePath, 'UTF-8') : undefined;
             const name = it.name || targetPath.split('/').pop();
+
+            // templateContent 怎么获取？？？
+
             return {
                 ...it,
                 id: `${id}__${index}`,
@@ -78,6 +84,8 @@ function getLocalTemplates() {
                 shortName: it.shortName || name,
                 options: template.options || [],
                 fieldOptions: template.fieldOptions || [],
+                filePath,
+                templateContent,
             };
         });
         return {
@@ -89,6 +97,7 @@ function getLocalTemplates() {
             options: template.options || [],
             fieldOptions: template.fieldOptions || [],
             filePath,
+            templateContent,
         };
     }).filter(Boolean);
 }
@@ -124,10 +133,10 @@ function getAllFiles(dir, fileList = []) {
  * @returns {Promise<*>}
  */
 async function getFilesContent(options) {
-    const { files, moduleName, fields, moduleChineseName, ...others } = options;
+    const {files, moduleName, fields, moduleChineseName, ...others} = options;
     // 保存用户字段配置 name chinese
     // 不是用await，防止阻塞
-    saveFields((fields || []).filter(item => !item.__isItems));
+    saveFields((fields || []).filter(item => !item.__isItems)).then();
 
     const templates = getLocalTemplates();
     const moduleNames = getModuleNames(moduleName);
@@ -135,7 +144,7 @@ async function getFilesContent(options) {
     const allTemplates = templates.map(item => [item, ...item.extraFiles]).flat();
 
     const result = await Promise.all(files.map(async file => {
-        const { templateId, parentTemplateId, targetPath } = file;
+        const {templateId, parentTemplateId, targetPath} = file;
 
         let template = allTemplates.find(item => item.id === templateId);
 
@@ -237,7 +246,7 @@ async function writeFile(options) {
     const filesContents = await getFilesContent(options);
     const result = [];
     for (let file of filesContents) {
-        const { targetPath, content } = file;
+        const {targetPath, content} = file;
 
         const filePath = path.join(config.nativeRoot, targetPath);
 
@@ -404,25 +413,25 @@ async function getNames(fields) {
 
     if (!items.length) return [];
 
-    const { authenticated } = require('../database');
+    const {authenticated} = require('../database');
 
     const results = authenticated ? await NameModel.findAll({
-        where: { chinese: items.map(item => item.chinese) },
+        where: {chinese: items.map(item => item.chinese)},
         order: [['weight', 'desc'], ['updatedAt', 'desc']],
     }) : [];
 
     const result = await Promise.all(items.map(async item => {
         const record = results.find(it => it.chinese === item.chinese);
-        if (record) return { ...item, name: record.name };
+        if (record) return {...item, name: record.name};
 
         // 未查询出结果，调用翻译接口
-        const params = { q: item.chinese, from: 'zh', to: 'en' };
+        const params = {q: item.chinese, from: 'zh', to: 'en'};
         const res = await translate(params);
 
         if (!res) return;
         // 结果转驼峰命名
         const name = getModuleNames(res.replace(/\s/g, '_')).moduleName;
-        return { ...item, name };
+        return {...item, name};
     }));
 
     return result.filter(Boolean);
@@ -438,26 +447,26 @@ async function getChinese(fields) {
 
     if (!items.length) return [];
 
-    const { authenticated } = require('../database');
+    const {authenticated} = require('../database');
 
     const results = authenticated ? await NameModel.findAll({
-        where: { name: items.map(item => item.name) },
+        where: {name: items.map(item => item.name)},
         order: [['weight', 'desc'], ['updatedAt', 'desc']],
     }) : [];
 
     const result = await Promise.all(items.map(async item => {
         const record = results.find(it => it.name === item.name);
-        if (record) return { ...item, chinese: record.chinese };
+        if (record) return {...item, chinese: record.chinese};
 
         // 转成自然语言，翻译好识别
         const q = getModuleNames(item.name)['module name'];
 
-        const params = { q, from: 'en', to: 'zh' };
+        const params = {q, from: 'en', to: 'zh'};
         const res = await translate(params);
 
         if (!res) return;
 
-        return { ...item, chinese: res };
+        return {...item, chinese: res};
     }));
 
     return result.filter(Boolean);
@@ -469,48 +478,48 @@ async function getChinese(fields) {
  * @returns {Promise<void>}
  */
 async function saveFields(fields) {
-    const { authenticated } = require('../database');
+    const {authenticated} = require('../database');
     if (!authenticated) return;
 
     for (let item of fields) {
-        const { name, chinese, formType, type, validation } = item;
+        const {name, chinese, formType, type, validation} = item;
         // 保存中英文
         if (name && chinese) {
-            const result = await NameModel.findOne({ where: { name, chinese } });
+            const result = await NameModel.findOne({where: {name, chinese}});
             if (result) {
-                await result.update({ weight: result.weight + 1 });
+                await result.update({weight: result.weight + 1});
             } else {
-                await NameModel.create({ name, chinese, weight: 0 });
+                await NameModel.create({name, chinese, weight: 0});
             }
         }
 
         // 保存表单类型
         if (name && formType) {
-            const result = await FormTypeModel.findOne({ where: { name, formType } });
+            const result = await FormTypeModel.findOne({where: {name, formType}});
             if (result) {
-                await result.update({ weight: result.weight + 1 });
+                await result.update({weight: result.weight + 1});
             } else {
-                await FormTypeModel.create({ name, formType, weight: 0 });
+                await FormTypeModel.create({name, formType, weight: 0});
             }
         }
         // 保存数据库类型
         if (name && type) {
-            const result = await DbTypeModel.findOne({ where: { name, type } });
+            const result = await DbTypeModel.findOne({where: {name, type}});
             if (result) {
-                await result.update({ weight: result.weight + 1 });
+                await result.update({weight: result.weight + 1});
             } else {
-                await DbTypeModel.create({ name, type, weight: 0 });
+                await DbTypeModel.create({name, type, weight: 0});
             }
         }
 
         // 保存校验规则
         if (name && validation && validation.length) {
             const validationStr = validation.sort().join(',');
-            const result = await ValidationModel.findOne({ where: { name, validation: validationStr } });
+            const result = await ValidationModel.findOne({where: {name, validation: validationStr}});
             if (result) {
-                await result.update({ weight: result.weight + 1 });
+                await result.update({weight: result.weight + 1});
             } else {
-                await ValidationModel.create({ name, validation: validationStr, weight: 0 });
+                await ValidationModel.create({name, validation: validationStr, weight: 0});
             }
         }
     }
@@ -525,18 +534,18 @@ async function getValidation(fields) {
     const items = fields.filter(item => !item.validation || !item.validation.length);
     if (!items.length) return [];
 
-    const { authenticated } = require('../database');
+    const {authenticated} = require('../database');
 
     const results = authenticated ? await ValidationModel.findAll({
-        where: { name: items.map(item => item.name) },
+        where: {name: items.map(item => item.name)},
         order: [['weight', 'desc'], ['updatedAt', 'desc']],
     }) : [];
 
     return Promise.all(items.map(async item => {
         const record = results.find(it => it.name === item.name);
-        if (record) return { ...item, validation: record.validation?.split(',') };
+        if (record) return {...item, validation: record.validation?.split(',')};
 
-        let { isNullable = true, comment = '', chinese = '', name = '' } = item;
+        let {isNullable = true, comment = '', chinese = '', name = ''} = item;
         comment = chinese || comment;
 
         const isXxx = (chinese, validator) => {
@@ -558,7 +567,7 @@ async function getValidation(fields) {
             isXxx('QQ号', 'qq'),
             isXxx('端口号', 'port'),
         ].filter(Boolean)));
-        return { ...item, validation };
+        return {...item, validation};
     }));
 }
 
@@ -571,23 +580,23 @@ async function getFormType(fields) {
     const items = fields.filter(item => !item.formType);
     if (!items.length) return [];
 
-    const { authenticated } = require('../database');
+    const {authenticated} = require('../database');
 
     const results = authenticated ? await FormTypeModel.findAll({
-        where: { name: items.map(item => item.name) },
+        where: {name: items.map(item => item.name)},
         order: [['weight', 'desc'], ['updatedAt', 'desc']],
     }) : [];
 
     return Promise.all(items.map(async item => {
         // 比较确定，优先级较高的类型
-        if (item.options && item.options.length) return { ...item, formType: 'select' };
+        if (item.options && item.options.length) return {...item, formType: 'select'};
 
         const record = results.find(it => it.name === item.name);
-        if (record) return { ...item, formType: record.formType };
+        if (record) return {...item, formType: record.formType};
 
         let formType = TYPE_MAP[item.dataType] || 'input';
 
-        return { ...item, formType };
+        return {...item, formType};
     }));
 }
 
@@ -600,20 +609,20 @@ async function getDbType(fields) {
     const items = fields.filter(item => !item.type);
     if (!items.length) return [];
 
-    const { authenticated } = require('../database');
+    const {authenticated} = require('../database');
 
     const results = authenticated ? await DbTypeModel.findAll({
-        where: { name: items.map(item => item.name) },
+        where: {name: items.map(item => item.name)},
         order: [['weight', 'desc'], ['updatedAt', 'desc']],
     }) : [];
 
     return Promise.all(items.map(async item => {
         const record = results.find(it => it.name === item.name);
-        if (record) return { ...item, type: record.type };
+        if (record) return {...item, type: record.type};
 
         const type = 'VARCHAR';
 
-        return { ...item, type };
+        return {...item, type};
     }));
 }
 
@@ -635,7 +644,7 @@ function splitComment(comment) {
  * @param info
  */
 function getChineseFromDb(info) {
-    let { comment } = info;
+    let {comment} = info;
     const items = splitComment(comment);
     return items[0];
 }
@@ -647,7 +656,7 @@ function getChineseFromDb(info) {
  * @param info
  */
 function getOptions(info) {
-    const { comment } = info;
+    const {comment} = info;
     if (!comment) return;
 
     const items = splitComment(comment);
@@ -685,11 +694,11 @@ async function getTablesColumns(dbUrl, tableNames) {
     const res = await Promise.all(tableNames.map(async tableName => {
         const columns = await _db.getColumns(tableName);
 
-        return columns.map(item => ({ ...item, tableName }));
+        return columns.map(item => ({...item, tableName}));
     }));
 
     return res.flat().map(item => {
-        const { name } = item;
+        const {name} = item;
 
         const info = {
             ...item,
@@ -717,7 +726,7 @@ async function autoFill(fields, justNames = false) {
     const names = await getNames(fields);
 
     fields.forEach(item => {
-        const { name, chinese } = item;
+        const {name, chinese} = item;
         if (!chinese) {
             item.chinese = _chinese.find(it => it.id === item.id)?.chinese;
         }
@@ -734,7 +743,7 @@ async function autoFill(fields, justNames = false) {
     const types = await getDbType(fields);
 
     fields.forEach(item => {
-        const { validation, formType, type } = item;
+        const {validation, formType, type} = item;
         if (!validation || !validation.length) {
             item.validation = validations.find(it => it.id === item.id)?.validation;
         }
@@ -756,10 +765,10 @@ async function autoFill(fields, justNames = false) {
  * @returns {Promise<void>}
  */
 async function saveUseLog() {
-    const { authenticated } = require('../database');
+    const {authenticated} = require('../database');
     const ip = await internalIpV4();
 
-    authenticated && await UseLogModel.create({ ip });
+    authenticated && await UseLogModel.create({ip});
 }
 
 module.exports = {
