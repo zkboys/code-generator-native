@@ -36,6 +36,14 @@ const TYPE_MAP = {
 
 const INSERT_ANNOTATION = '此注释用于标记代码生成器插入代码位置，请勿删除！';
 
+function getProjectNames (){
+    return {
+        projectName: 'cogo-b2c-admin',
+        projectNameSlash: 'cogo/b2c/admin',
+        projectNameDot: 'cogo.b2c.admin',
+    }
+}
+
 async function downloadTemplates() {
     const systemTemplatesDir = config.systemTemplatesPath;
     const systemTemplates = getAllFiles(systemTemplatesDir);
@@ -169,6 +177,7 @@ async function getFilesContent(options) {
             files,
             moduleNames,
             fields: fis,
+            ...getProjectNames(),
         };
         let content = template.getContent(cfg);
 
@@ -788,4 +797,5 @@ module.exports = {
     getTablesColumns,
     autoFill,
     saveUseLog,
+    getProjectNames,
 };

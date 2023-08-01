@@ -16,6 +16,7 @@ const {
     updateVersion,
     autoFill,
     getTablesColumns,
+    getProjectNames,
 } = require('./util');
 const {DB_TYPES} = require('./db/MySql');
 const packageJson = require('./package.json');
@@ -187,8 +188,12 @@ module.exports = apiRouter
         for (let tableName of tables) {
             const moduleNames = getModuleNames(tableName);
             const moduleName = moduleNames['module-name'];
+            const data = {
+                ...moduleNames,
+                ...getProjectNames(),
+            }
             const nextFiles = files.map(file => {
-                const targetPath = stringFormat(file.targetPath, moduleNames);
+                const targetPath = stringFormat(file.targetPath, data);
                 return {
                     ...file,
                     targetPath,
