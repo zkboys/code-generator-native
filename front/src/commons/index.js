@@ -202,9 +202,10 @@ export const isMac = /macintosh|mac os x/i.test(navigator.userAgent);
  * @param files
  * @param templateOptions
  * @param moduleNames
+ * @param moduleChineseName
  * @returns {*}
  */
-export function getFiles(files, templateOptions, moduleNames = null, moduleChineseName) {
+export function getFiles({files, templateOptions, moduleNames = null, moduleChineseName, projectNames}) {
     return files.map(item => {
         let { templateId, targetPath, options } = item;
         const template = templateOptions.find(item => item.value === templateId)?.record;
@@ -221,7 +222,7 @@ export function getFiles(files, templateOptions, moduleNames = null, moduleChine
 
         if (extraFiles) {
             const extraFilesList = extraFiles.map(it => {
-                const targetPath = stringFormat(it.targetPath, { ...moduleNames, parentPath, __parentPath, moduleChineseName });
+                const targetPath = stringFormat(it.targetPath, { ...moduleNames, ...projectNames, parentPath, __parentPath, moduleChineseName });
 
                 return {
                     parentTemplateId: templateId,

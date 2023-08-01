@@ -15,6 +15,7 @@ export default compose(
         templateOptions,
         commonProps,
         moduleChineseName,
+        projectNames,
     } = props;
     const [loading, setLoading] = useState(false);
     const [tables, setTables] = useState([]);
@@ -26,7 +27,7 @@ export default compose(
     const handleSubmit = useCallback(async () => {
         await confirm('您确定要生成选中的表吗？本地同名文件将被覆盖，请谨慎操作！');
 
-        const nextFiles = getFiles(files, templateOptions, moduleChineseName);
+        const nextFiles = getFiles({files, templateOptions, moduleChineseName, projectNames});
 
         const params = {
             dbUrl,

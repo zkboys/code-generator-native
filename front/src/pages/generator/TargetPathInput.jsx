@@ -5,7 +5,7 @@ import {Input} from 'antd';
 import {stringFormat} from 'src/commons';
 
 function TargetPathInput(props) {
-    const { value, form, name, moduleNames, moduleChineseName, checkExist, templateOptions, templateId, ...others } = props;
+    const { value, form, name, moduleNames, moduleChineseName, projectNames, checkExist, templateOptions, templateId, ...others } = props;
     const [exist, setExist] = useState(false);
 
     // 这个name不转string，放入依赖中，每次render都变，这个是数组。。。
@@ -15,7 +15,7 @@ function TargetPathInput(props) {
     useEffect(() => {
         const path = value || templateOptions.find(item => item.value === templateId)?.record?.targetPath;
         if (!path) return;
-        const val = path.includes('{') ? stringFormat(path, { ...moduleNames, moduleChineseName }) : path;
+        const val = path.includes('{') ? stringFormat(path, { ...moduleNames, moduleChineseName, ...projectNames }) : path;
         const name = nameStr.split(',');
         name[1] = window.parseInt(name[1], 10);
         form.setFields([{ name, value: val }]);
@@ -24,7 +24,7 @@ function TargetPathInput(props) {
     // moduleNames 改变 根据模块名，处理地址
     useEffect(() => {
         const path = templateOptions.find(item => item.value === templateId)?.record?.targetPath;
-        const val = stringFormat(path, { ...moduleNames, moduleChineseName });
+        const val = stringFormat(path, { ...moduleNames, moduleChineseName, ...projectNames });
         const name = nameStr.split(',');
         name[1] = window.parseInt(name[1], 10);
         form.setFields([{ name, value: val }]);

@@ -248,4 +248,7 @@ module.exports = apiRouter
 
         return await autoFill(fields, justNames);
     })
+    // 获取项目名称
+    .get('/projectNames', () => getProjectNames())
+
 ;

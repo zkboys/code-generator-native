@@ -69,7 +69,7 @@ export default compose(
                         if (['tsx', 'ts'].includes(language)) language = 'typescript';
                         const fileName = targetPath?.split('/').pop();
                         return (
-                            <TabPane key={id + refreshKey} tab={<Tooltip mouseEnterDelay={0.5} overlayStyle={{maxWidth: 'auto'}} placement='top' title={<span className={s.tabTitle}>{targetPath}</span>}>{fileName}</Tooltip>}>
+                            <TabPane key={id + refreshKey} tab={<Tooltip mouseEnterDelay={0.5} overlayStyle={{maxWidth: 'none'}} placement='top' title={<span className={s.tabTitle}>{targetPath}</span>}>{fileName}</Tooltip>}>
                                 <div className={s.content}>
                                     {showEdit ? (
                                         <div style={{flex: '0 0 50%'}}>

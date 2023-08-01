@@ -39,6 +39,7 @@ export default ajax(function Generator(props) {
     const [dbInfoVisible, setDbInfoVisible] = useState(false);
     const [dbTypeOptions, setDbTypeOptions] = useState([]);
     const [files, setFiles] = useState([]);
+    const [projectNames, setProjectNames] = useState({});
     const [form] = Form.useForm();
 
     // 发请求获取模块名
@@ -83,7 +84,13 @@ export default ajax(function Generator(props) {
 
             if (_dataSource.some(item => !item.name || !item.chinese)) return Modal.info({ title: '温馨提示', content: '表格的字段配置有必填项未填写！' });
 
-            const nextFiles = getFiles(files, templateOptions, moduleNames, others.moduleChineseName || moduleNames.module_name);
+            const nextFiles = getFiles({
+                files,
+                templateOptions,
+                moduleNames,
+                moduleChineseName: others.moduleChineseName || moduleNames.module_name,
+                projectNames,
+            });
 
             const params = {
                 ...others,
@@ -291,7 +298,7 @@ export default ajax(function Generator(props) {
             },
             {
                 name: ['files', name, 'targetPath'],
-                value: stringFormat(targetPath, moduleNames),
+                value: stringFormat(targetPath, {...moduleNames, ...projectNames}),
             },
             {
                 name: ['files', name, 'options'],
@@ -301,7 +308,7 @@ export default ajax(function Generator(props) {
 
         handleFilesChange();
         handleDataSourceChange(dataSource);
-    }, [moduleNames, templateOptions, form, handleFilesChange, handleDataSourceChange, dataSource]);
+    }, [projectNames, moduleNames, templateOptions, form, handleFilesChange, handleDataSourceChange, dataSource]);
 
     // 表单改变事件
     const { run: handleFormChange } = useDebounceFn(() => {
@@ -519,6 +526,14 @@ export default ajax(function Generator(props) {
 
     }, [activeKey]);
 
+    // 加载项目名称
+    useEffect(() => {
+        (async () => {
+            const projectNames = await props.ajax.get('/projectNames');
+            setProjectNames(projectNames)
+        })();
+    }, [props.ajax]);
+
     return (
         <PageContent className={s.root} loading={loading} loadingTip={loadingTip}>
             <Form
@@ -646,6 +661,7 @@ export default ajax(function Generator(props) {
                                     onAdd={handleFilesAdd}
                                     onRemove={handleFilesChange}
                                     moduleChineseName={moduleChineseName}
+                                    projectNames={projectNames}
                                 />
                             );
                         }}
@@ -722,6 +738,7 @@ export default ajax(function Generator(props) {
                                         tableOptions,
                                         templateOptions,
                                         moduleNames,
+                                        projectNames,
                                         moduleChineseName: form.getFieldValue('moduleChineseName'),
                                     })}
                                 >
