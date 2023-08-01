@@ -1,8 +1,8 @@
-const detailModalTemplate = require('./_detailModal.js');
-const editModalTemplate = require('./_editModal.js');
+const DetailModalTemplate = require('./_DetailModal.js');
+const EditModalTemplate = require('./_EditModal.js');
 module.exports = {
     // 模版名称
-    // name: '列表页',
+    name: '@ra-lib/admin列表页',
     // 文件级别选项
     options: ['列表', '选中', '序号', '分页', '添加', '修改', '详情', '删除', '批量删除', '导入', '导出'],
     defaultOptions: ['列表', '分页', '添加', '修改', '详情', '删除'],
@@ -12,8 +12,8 @@ module.exports = {
     // 生成文件的默认目标路径
     targetPath: '/src/pages/{module-name}/index.jsx',
     extraFiles: [
-        detailModalTemplate,
-        editModalTemplate,
+        DetailModalTemplate,
+        EditModalTemplate,
     ],
     // 获取文件内容
     getContent: config => {
@@ -45,26 +45,29 @@ module.exports = {
         const has = (flag, str, nullLine = true) => flag ? str : (nullLine ? NULL_LINE : '');
 
         return `
-import React, {useState, useEffect} from 'react';
+import React, {useCallback, useState, useEffect} from 'react';
 import {Button, Form, Space, ${has(_batchDelete, 'Modal, ', false)}${has(_import, 'Upload, notification', false)}} from 'antd';
-import {PageContent, QueryBar, FormItem, useFunction, Table, ${has(_page, 'Pagination, ', false)}${has(_edit || _detail || _delete, 'Operator', false)}} from '@ra-lib/adm';
+import {PageContent, QueryBar, FormItem, Table, ${has(_page, 'Pagination, ', false)}${has(_edit || _detail || _delete, 'Operator', false)}} from '@ra-lib/admin';
 import config from 'src/commons/config-hoc';
-${has(_add || _edit, 'import editModal from \'./editModal\';')}
-${has(_detail, 'import detailModal from \'./detailModal\';')}
+${has(_add || _edit, 'import EditModal from \'./EditModal\';')}
+${has(_detail, 'import DetailModal from \'./DetailModal\';')}
 
 export default config({
-    title: '${mn.chineseName}',
+    path: '/${mn.module_names}',
 })(function ${mn.ModuleName}List(props) {
     const [loading, setLoading] = useState(false);
     ${has(_page, 'const [pageNum, setPageNum] = useState(1);')}
     ${has(_page, 'const [pageSize, setPageSize] = useState(20);')}
     const [dataSource, setDataSource] = useState([]);
     ${has(_page, 'const [total, setTotal] = useState(0);')}
+    ${has(_add || _edit || _detail, 'const [record, setRecord] = useState(null);')}
+    ${has(_add || _edit, 'const [visible, setVisible] = useState(false);')}
+    ${has(_detail, 'const [detailVisible, setDetailVisible] = useState(false);')}
     ${has(_select, 'const [selectedRowKeys, setSelectedRowKeys] = useState([]);')}
     ${has(_import, 'const [uploading, setUploading] = useState(false);')}
     const [form] = Form.useForm();
 
-    let columns = [
+    const columns = [
         ${tableFields.map(item => `{ title: '${item.chinese}', dataIndex: '${item.__names.moduleName}' },`).join('\n        ')}
         ${has(_edit || _detail || _delete, `{
             title: '操作',
@@ -75,11 +78,17 @@ export default config({
                 const items = [
                     ${has(_edit, `{
                         label: '修改',
-                        onClick: () => editModal({ record, onOk: handleSearch}),
+                        onClick: () => {
+                            setRecord(record);
+                            setVisible(true);   
+                        },
                     },`)}
                     ${has(_detail, `{
                         label: '详情',
-                        onClick: () => detailModal({ record }),
+                        onClick: () => {
+                            setRecord(record);
+                            setDetailVisible(true);
+                        },
                     },`)}
                     ${has(_delete, `{
                         label: '删除',
@@ -96,7 +105,7 @@ export default config({
     ];
 
     // 查询
-    const handleSearch = useFunction(async (${has(_page, 'options = {}', false)}) => {
+    const handleSearch = useCallback(async (${has(_page, 'options = {}', false)}) => {
         const values = await form.validateFields();
         const params = {
             ...values,
@@ -108,19 +117,23 @@ export default config({
         ${has(_page, 'const total = res?.totalElements || 0;')}
         setDataSource(dataSource);
         ${has(_page, 'setTotal(total);')}
-        ${has(_page, 'setPageNum(params.pageNum);')}
-        ${has(_page, 'setPageSize(params.pageSize);')}
-    });
+    }, [form,${has(_page, ' pageNum, pageSize,', false)} props.ajax]);
+
+    ${has(_add, `// 添加
+    const handleAdd = useCallback(() => {
+        setRecord(null);
+        setVisible(true);
+    }, []);`)}
 
     ${has(_batchDelete, `// 批量删除
-    const handleBatchDelete = useFunction(async () => {
+    const handleBatchDelete = useCallback(async () => {
         if (!selectedRowKeys?.length) return Modal.info({ title: '温馨提示', content: '请选择要删除的数据！' });
         await props.ajax.del('/${mn.module_names}', { ids: selectedRowKeys }, { setLoading, successTip: '删除成功！' });
         await handleSearch();
-    });`)}
+    }, [handleSearch, props.ajax, selectedRowKeys]);`)}
 
     ${has(_import, `// 导入
-    const handleImport = useFunction(async (info) => {
+    const handleImport = useCallback(async (info) => {
         if (info.file.status === 'uploading') setUploading(true);
         if (info.file.status === 'done') {
             setUploading(false);
@@ -137,29 +150,29 @@ export default config({
                 duration: 2,
             });
         }
-    });`)}
+    }, [handleSearch]);`)}
 
     ${has(_export, `// 导出
-    const handleExport = useFunction(async () => {
+    const handleExport = useCallback(async () => {
         const values = await form.validateFields();
         await props.ajax.download('/${mn.module_names}/export', values);
-    });`)}
+    }, [form, props.ajax]);`)}
 
     ${has(_delete, `// 删除
-    const handleDelete = useFunction(async (id) => {
+    const handleDelete = useCallback(async (id) => {
         await props.ajax.del(\`/${mn.module_names}/\${id}\`, null, { setLoading, successTip: '删除成功！' });
         await handleSearch();
-    });`)}
+    }, [handleSearch, props.ajax]);`)}
 
     // 初始化查询
     useEffect(() => {
         (async () => {
             await handleSearch(${has(_page, '{ pageNum: 1 }', false)});
         })();
+        // eslint-disable-next-line
     }, []);
 
     const layout = {
-        labelCol: { style: { width: 80 } },
         wrapperCol: { style: { width: 200 } },
     };
 
@@ -167,12 +180,15 @@ export default config({
         <PageContent loading={loading${has(_import, ' || uploading', false)}}>
             <QueryBar>
                 <Form
-                    {...layout} 
                     layout="inline"
                     form={form}
-                    onFinish={async () => await handleSearch(${has(_page, '{ pageNum: 1 }', false)})}
+                    onFinish={async () => {
+                        ${has(_page, 'setPageNum(1);')}
+                        await handleSearch(${has(_page, '{ pageNum: 1 }', false)});
+                    }}
                 >
                     ${queryFields.map(item => `<FormItem 
+                        {...layout} 
                         type="${item.formType}" 
                         label="${item.chinese}" 
                         name="${item.__names.moduleName}"
@@ -188,7 +204,7 @@ export default config({
                             <Button htmlType="reset">
                                 重置
                             </Button>
-                            ${has(_add, `<Button type="primary" onClick={() => editModal({onOk: handleSearch})}>
+                            ${has(_add, `<Button type="primary" onClick={handleAdd}>
                                 添加
                             </Button>`)}
                             ${has(_batchDelete, `<Button type="primary" danger onClick={handleBatchDelete}>
@@ -230,8 +246,30 @@ export default config({
                 total={total}
                 pageNum={pageNum}
                 pageSize={pageSize}
-                onPageNumChange={async pageNum => await handleSearch({ pageNum })}
-                onPageSizeChange={async (pageSize) => await handleSearch({ pageNum: 1, pageSize })}
+                onPageNumChange={async pageNum => {
+                    setPageNum(pageNum);
+                    await handleSearch({ pageNum });
+                }}
+                onPageSizeChange={async (pageSize) => {
+                    setPageNum(1);
+                    setPageSize(pageSize);
+                    await handleSearch({ pageNum: 1, pageSize });
+                }}
+            />`)}
+            ${has(_add || _edit, `<EditModal
+                visible={visible}
+                isEdit={!!record}
+                record={record}
+                onOk={async () => {
+                    setVisible(false);
+                    await handleSearch();
+                }}
+                onCancel={() => setVisible(false)}
+            />`)}
+            ${has(_detail, `<DetailModal
+                visible={detailVisible}
+                record={record}
+                onCancel={() => setDetailVisible(false)}
             />`)}
         </PageContent>
     );

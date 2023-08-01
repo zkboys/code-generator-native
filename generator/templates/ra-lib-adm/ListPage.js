@@ -2,7 +2,7 @@ const detailModalTemplate = require('./_detailModal.js');
 const editModalTemplate = require('./_editModal.js');
 module.exports = {
     // 模版名称
-    // name: '列表页',
+    name: '@ra-lib/adm列表页',
     // 文件级别选项
     options: ['列表', '选中', '序号', '分页', '添加', '修改', '详情', '删除', '批量删除', '导入', '导出'],
     defaultOptions: ['列表', '分页', '添加', '修改', '详情', '删除'],
@@ -45,9 +45,9 @@ module.exports = {
         const has = (flag, str, nullLine = true) => flag ? str : (nullLine ? NULL_LINE : '');
 
         return `
-import React, {useCallback, useState, useEffect} from 'react';
+import React, {useState, useEffect} from 'react';
 import {Button, Form, Space, ${has(_batchDelete, 'Modal, ', false)}${has(_import, 'Upload, notification', false)}} from 'antd';
-import {PageContent, QueryBar, FormItem, Table, ${has(_page, 'Pagination, ', false)}${has(_edit || _detail || _delete, 'Operator', false)}} from '@ra-lib/adm';
+import {PageContent, QueryBar, FormItem, useFunction, Table, ${has(_page, 'Pagination, ', false)}${has(_edit || _detail || _delete, 'Operator', false)}} from '@ra-lib/adm';
 import config from 'src/commons/config-hoc';
 ${has(_add || _edit, 'import editModal from \'./editModal\';')}
 ${has(_detail, 'import detailModal from \'./detailModal\';')}
@@ -56,6 +56,7 @@ export default config({
     title: '${mn.chineseName}',
 })(function ${mn.ModuleName}List(props) {
     const [loading, setLoading] = useState(false);
+    ${has(_batchDelete, 'const [deleting, setDeleting] = useState(false);')}
     ${has(_page, 'const [pageNum, setPageNum] = useState(1);')}
     ${has(_page, 'const [pageSize, setPageSize] = useState(20);')}
     const [dataSource, setDataSource] = useState([]);
@@ -96,7 +97,8 @@ export default config({
     ];
 
     // 查询
-    const handleSearch = useCallback(async (${has(_page, 'options = {}', false)}) => {
+    const handleSearch = useFunction(async (${has(_page, 'options = {}', false)}) => {
+        if(loading) return;
         const values = await form.validateFields();
         const params = {
             ...values,
@@ -108,17 +110,26 @@ export default config({
         ${has(_page, 'const total = res?.totalElements || 0;')}
         setDataSource(dataSource);
         ${has(_page, 'setTotal(total);')}
-    }, [form,${has(_page, ' pageNum, pageSize,', false)} props.ajax]);
+        ${has(_page, 'setPageNum(params.pageNum);')}
+        ${has(_page, 'setPageSize(params.pageSize);')}
+    });
 
     ${has(_batchDelete, `// 批量删除
-    const handleBatchDelete = useCallback(async () => {
+    const handleBatchDelete = useFunction(async () => {
+        if(deleting) return;
         if (!selectedRowKeys?.length) return Modal.info({ title: '温馨提示', content: '请选择要删除的数据！' });
-        await props.ajax.del('/${mn.module_names}', { ids: selectedRowKeys }, { setLoading, successTip: '删除成功！' });
-        await handleSearch();
-    }, [handleSearch, props.ajax, selectedRowKeys]);`)}
+        Modal.confirm({
+            title: '温馨提示',
+            content: '您确定要删除选中的记录吗？',
+            onOk: async () => {
+                await props.ajax.del('/${mn.module_names}', { ids: selectedRowKeys }, { setLoading: setDeleting, successTip: '删除成功！' });
+                await handleSearch();
+            }
+        })
+    });`)}
 
     ${has(_import, `// 导入
-    const handleImport = useCallback(async (info) => {
+    const handleImport = useFunction(async (info) => {
         if (info.file.status === 'uploading') setUploading(true);
         if (info.file.status === 'done') {
             setUploading(false);
@@ -135,45 +146,38 @@ export default config({
                 duration: 2,
             });
         }
-    }, [handleSearch]);`)}
+    });`)}
 
     ${has(_export, `// 导出
-    const handleExport = useCallback(async () => {
+    const handleExport = useFunction(async () => {
         const values = await form.validateFields();
         await props.ajax.download('/${mn.module_names}/export', values);
-    }, [form, props.ajax]);`)}
+    });`)}
 
     ${has(_delete, `// 删除
-    const handleDelete = useCallback(async (id) => {
+    const handleDelete = useFunction(async (id) => {
         await props.ajax.del(\`/${mn.module_names}/\${id}\`, null, { setLoading, successTip: '删除成功！' });
         await handleSearch();
-    }, [handleSearch, props.ajax]);`)}
+    });`)}
 
     // 初始化查询
     useEffect(() => {
         (async () => {
             await handleSearch(${has(_page, '{ pageNum: 1 }', false)});
         })();
-        // eslint-disable-next-line
     }, []);
-
-    const layout = {
-        wrapperCol: { style: { width: 200 } },
-    };
 
     return (
         <PageContent loading={loading${has(_import, ' || uploading', false)}}>
             <QueryBar>
                 <Form
+                    labelCol={{ style: { width: 80 } }}
+                    wrapperCol={{ style: { width: 200 } }}
                     layout="inline"
                     form={form}
-                    onFinish={async () => {
-                        ${has(_page, 'setPageNum(1);')}
-                        await handleSearch(${has(_page, '{ pageNum: 1 }', false)});
-                    }}
+                    onFinish={async () => await handleSearch(${has(_page, '{ pageNum: 1 }', false)})}
                 >
                     ${queryFields.map(item => `<FormItem 
-                        {...layout} 
                         type="${item.formType}" 
                         label="${item.chinese}" 
                         name="${item.__names.moduleName}"
@@ -231,15 +235,8 @@ export default config({
                 total={total}
                 pageNum={pageNum}
                 pageSize={pageSize}
-                onPageNumChange={async pageNum => {
-                    setPageNum(pageNum);
-                    await handleSearch({ pageNum });
-                }}
-                onPageSizeChange={async (pageSize) => {
-                    setPageNum(1);
-                    setPageSize(pageSize);
-                    await handleSearch({ pageNum: 1, pageSize });
-                }}
+                onPageNumChange={async pageNum => await handleSearch({ pageNum })}
+                onPageSizeChange={async (pageSize) => await handleSearch({ pageNum: 1, pageSize })}
             />`)}
         </PageContent>
     );

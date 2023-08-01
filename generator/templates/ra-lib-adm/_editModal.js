@@ -42,6 +42,7 @@ export default config({
     });`;
         })}
     const handleSubmit = useFunction(async (values) => {
+        if(loading) return;
         const params = {
             ...values,
         };
@@ -64,16 +65,15 @@ export default config({
         })();
     }, [isEdit, form, props.ajax, record?.id]);` : NULL_LINE}
 
-    const layout = { labelCol: { flex: '100px' } };
     return (
         <Modal
             {...commonProps}
-            title={record ? '修改' : '添加'}
+            title={record ? '修改${mn.chineseName}' : '添加${mn.chineseName}'}
         >
             <Form
                 form={form}
                 onFinish={handleSubmit}
-                {...layout}
+                labelCol={{flex: '100px'}}
             >
                 <ModalContent
                     loading={loading}

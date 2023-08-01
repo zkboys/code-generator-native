@@ -12,10 +12,9 @@ module.exports = {
         const ignore = ['id', 'updatedAt', 'createdAt', 'isDeleted'];
         const detailFields = fields.filter(item => item.fieldOptions.includes('详情') && !ignore.includes(item.__names.moduleName));
         return `
-import React, {useState, useEffect} from 'react';
+import {useState, useEffect} from 'react';
 import {Button, Descriptions, Modal} from 'antd';
-import {ModalContent} from '@ra-lib/adm';
-import config from 'src/commons/config-hoc';
+import {config, Content} from '@ra-lib/adm';
 
 export default config({
     modalFunction: true,
@@ -35,16 +34,14 @@ export default config({
     return (
         <Modal
             {...commonProps}
-            title="详情"
+            title="${mn.chineseName}详情"
+            footer={<Button onClick={onCancel}>关闭</Button>}
         >
-            <ModalContent
-                loading={loading}
-                footer={<Button onClick={onCancel}>关闭</Button>}
-            >
+            <Content loading={loading}>
                 <Descriptions bordered size="small" labelStyle={{ width: 150 }}>
                     ${detailFields.map(item => `<Descriptions.Item label="${item.chinese}">{data.${item.__names.moduleName} ?? '-'}</Descriptions.Item>`).join('\n                    ')}
                 </Descriptions>
-            </ModalContent>
+            </Content>
         </Modal>
     );
 });

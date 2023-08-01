@@ -18,15 +18,15 @@ module.exports = {
 
 
         return `
-import React, {useCallback, useState${_edit ? ', useEffect' : ''}} from 'react';
-import {Form, Row, Col, Modal} from 'antd';
-import {ModalContent, FormItem${_validateRules ? ', validateRules' : ''}${uniqueFields.length ? ', useDebounceValidator' : ''}} from '@ra-lib/adm';
-import config from 'src/commons/config-hoc';
+import {useState${_edit ? ', useEffect' : ''}} from 'react';
+import {Form, Row, Col} from 'antd';
+import {config, Modal, ModalFooter, Content, useFunction, FormItem${_validateRules ? ', validateRules' : ''}${uniqueFields.length ? ', useDebounceValidator' : ''}} from '@rc-lib/pc';
 
 export default config({
     modalFunction: true,
 })(function ${mn.ModuleName}EditModal(props) {
-    const {${_edit ? ' record, isEdit, ' : ''} close, onOk, onCancel, commonProps } = props;
+    const {${_edit ? ' record, ' : ''} close, onOk, onCancel, commonProps } = props;
+    ${_edit ? 'const isEdit = !!record;' : ''}
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
     ${uniqueFields.map(field => {
@@ -41,7 +41,8 @@ export default config({
         if (!isEdit && res.${field.name} === value) throw Error('${field.chinese}不能重复！');
     });`;
         })}
-    const handleSubmit = useCallback(async (values) => {
+    const handleSubmit = useFunction(async (values) => {
+        if(loading) return;
         const params = {
             ...values,
         };
@@ -53,7 +54,7 @@ export default config({
         
         onOk && onOk();
         close();
-    }, [${_edit ? 'isEdit, ' : ''}close, onOk, props.ajax]);
+    });
 
     ${_edit ? `// 初始化，查询详情数据
     useEffect(() => {
@@ -64,23 +65,18 @@ export default config({
         })();
     }, [isEdit, form, props.ajax, record?.id]);` : NULL_LINE}
 
-    const layout = { labelCol: { flex: '100px' } };
     return (
         <Modal
             {...commonProps}
-            title={record ? '修改' : '添加'}
+            title={record ? '修改${mn.chineseName}' : '添加${mn.chineseName}'}
+            footer={null}
         >
             <Form
                 form={form}
                 onFinish={handleSubmit}
-                {...layout}
+                labelCol={{flex: '100px'}}
             >
-                <ModalContent
-                    loading={loading}
-                    okText="保存"
-                    okHtmlType="submit"
-                    onCancel={onCancel}
-                >
+                <Content loading={loading}>
                     ${_edit ? `{isEdit ? <FormItem hidden name="id"/> : null}` : NULL_LINE}
                     <Row>
                         ${formFields.map(item => {
@@ -107,7 +103,12 @@ export default config({
                         </Col>`;
         }).join('\n                        ')}
                     </Row>
-                </ModalContent>
+                    <ModalFooter
+                        okText="保存"
+                        okButtonProps={{ htmlType: 'submit' }}
+                        onCancel={onCancel}
+                    />
+                </Content>
             </Form>
         </Modal>
     );

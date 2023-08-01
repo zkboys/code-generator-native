@@ -492,7 +492,7 @@ export default ajax(function Generator(props) {
                     description: (
                         <div>
                             <span style={{ color: 'red' }}>{currentVersion}</span>
-                            <span style={{ margin: '0 8px' }}>-></span>
+                            <span style={{ margin: '0 8px' }}>-&gt</span>
                             <span style={{ color: 'green' }}>{lastVersion}</span>
                         </div>
                     ),
