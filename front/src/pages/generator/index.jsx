@@ -145,7 +145,7 @@ export default ajax(function Generator(props) {
             }
             console.error(e);
         }
-    }, [dataSource, form, templateOptions, moduleNames, props.ajax]);
+    }, [dataSource, form, templateOptions, moduleNames, projectNames, props.ajax]);
 
     // 数据库连接改变事件
     const { run: handleDbUrlChange } = useDebounceFn(async (e) => {

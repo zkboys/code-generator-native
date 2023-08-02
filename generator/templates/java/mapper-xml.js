@@ -6,6 +6,7 @@ module.exports = {
     // 获取文件内容
     getContent: (config) => {
         const {moduleNames: mn, fields, tableNames, projectNameDot} = config;
+        const noIdFields = fields.filter(item => item.dbName !== 'id');
 
         return `
 <?xml version="1.0" encoding="UTF-8"?>
@@ -27,19 +28,19 @@ module.exports = {
         ${tableNames}
     </sql>
     <sql id="columns">
-        ${fields.map((item, index, arr) => `${item.dbName},`).join('\n        ')}
+        ${fields.map((item) => `${item.dbName},`).join('\n        ')}
     </sql>
     <insert id="add" parameterType="com.${projectNameDot}.${mn.moduleName}.domain.${mn.ModuleName}" useGeneratedKeys="true" keyProperty="id">
         insert into
         <include refid="table"/>
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            ${fields.map(item => `<if test="${item.__names.moduleName} != null and ${item.__names.moduleName} != ''">
+            ${noIdFields.map(item => `<if test="${item.__names.moduleName} != null and ${item.__names.moduleName} != ''">
                 ${item.dbName},
             </if>`).join('\n            ')}
         </trim>
         values
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            ${fields.map(item => `<if test="${item.__names.moduleName} != null and ${item.__names.moduleName} != ''">
+            ${noIdFields.map(item => `<if test="${item.__names.moduleName} != null and ${item.__names.moduleName} != ''">
                 #{${item.__names.moduleName},jdbcType=${item.type}},
             </if>`).join('\n            ')}
         </trim>
@@ -48,7 +49,7 @@ module.exports = {
         update
         <include refid="table"/>
         <set>
-            ${fields.map(item => `<if test="${item.__names.moduleName} != null and ${item.__names.moduleName} != ''">
+            ${noIdFields.map(item => `<if test="${item.__names.moduleName} != null and ${item.__names.moduleName} != ''">
                 ${item.dbName} = #{${item.__names.moduleName},jdbcType=${item.type}},
             </if>`).join('\n            ')}
         </set>
@@ -82,7 +83,7 @@ module.exports = {
     </select>
     <sql id="dynamicWhere">
         <where>
-            ${fields.map(item => `<if test="${item.__names.moduleName} != null and ${item.__names.moduleName} != ''">
+            ${noIdFields.map(item => `<if test="${item.__names.moduleName} != null and ${item.__names.moduleName} != ''">
                 AND ${item.dbName} = #{${item.__names.moduleName}}
             </if>`).join('\n            ')}
         </where>
@@ -104,13 +105,13 @@ module.exports = {
         insert into
         <include refid="table"/>
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            ${fields.map((item) => `${item.dbName},`).join('\n        ')}
+            ${noIdFields.map((item) => `${item.dbName},`).join('\n        ')}
         </trim>
         values
         <foreach collection="list" item="item" index="index"
                     separator=",">
             <trim prefix="(" suffix=")" suffixOverrides=",">
-                ${fields.map((item) => `#{item.${item.__names.moduleName},jdbcType=${item.type}},`).join('\n                ')}
+                ${noIdFields.map((item) => `#{item.${item.__names.moduleName},jdbcType=${item.type}},`).join('\n                ')}
             </trim>
         </foreach>
     </insert>
@@ -130,7 +131,7 @@ module.exports = {
         </foreach>
         on duplicate key update
         <trim suffixOverrides=",">
-            ${fields.map((item) => `${item.dbName}=values(${item.dbName}),`).join('\n            ')}
+            ${noIdFields.map((item) => `${item.dbName}=values(${item.dbName}),`).join('\n            ')}
         </trim>
     </update>
 </mapper>

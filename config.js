@@ -8,6 +8,10 @@ const localGeneratorPath = path.join(nativeRoot, generatorPath);
 const localTemplatesPath = path.join(localGeneratorPath, 'templates');
 const systemTemplatesPath = path.join(__dirname, generatorPath, 'templates');
 
+const projectName = nativeRoot.split(path.sep).pop();
+const projectNameSlash = projectName?.replaceAll('-', '/');
+const projectNameDot = projectName?.replaceAll('-', '.');
+
 module.exports = {
     // 端口
     port,
@@ -19,6 +23,12 @@ module.exports = {
     localTemplatesPath,
     // 系统模板文件夹
     systemTemplatesPath,
+    // 项目名称
+    projectNames: {
+        projectName,
+        projectNameSlash,
+        projectNameDot,
+    }
 };
 
 /**
@@ -29,6 +39,6 @@ function getCommandArgs() {
     return process.argv.slice(2).reduce((prev, curr) => {
         const key = curr.split('=')[0].replace('--', '');
         const value = curr.split('=')[1];
-        return { ...prev, [key]: value };
+        return {...prev, [key]: value};
     }, {});
 }

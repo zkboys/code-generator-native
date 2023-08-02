@@ -19,7 +19,7 @@ function TargetPathInput(props) {
         const name = nameStr.split(',');
         name[1] = window.parseInt(name[1], 10);
         form.setFields([{ name, value: val }]);
-    }, [form, nameStr, value, moduleNames, templateId, templateOptions, moduleChineseName]);
+    }, [form, nameStr, value, moduleNames, templateId, templateOptions, moduleChineseName, projectNames]);
 
     // moduleNames 改变 根据模块名，处理地址
     useEffect(() => {
@@ -28,7 +28,7 @@ function TargetPathInput(props) {
         const name = nameStr.split(',');
         name[1] = window.parseInt(name[1], 10);
         form.setFields([{ name, value: val }]);
-    }, [form, moduleNames, nameStr, templateId, templateOptions, moduleChineseName]);
+    }, [form, moduleNames, nameStr, templateId, templateOptions, moduleChineseName, projectNames]);
 
     // 检测文件是否存在
     useEffect(() => {

@@ -46,7 +46,7 @@ export default compose(
             ),
         });
         close();
-    }, [dbUrl, files, close, props.ajax, tables, templateOptions, moduleChineseName]);
+    }, [files, templateOptions, moduleChineseName, projectNames, dbUrl, tables, props.ajax, close]);
 
     const handleChange = useCallback((tables) => {
         setTables(tables);

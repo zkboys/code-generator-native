@@ -7,8 +7,6 @@ module.exports = {
     getContent: (config) => {
         const { moduleNames: mn, projectNameDot } = config;
 
-        console.log(JSON.stringify(config, null, 2))
-
         return `
 package com.${projectNameDot}.service.${mn.moduleName};
 
