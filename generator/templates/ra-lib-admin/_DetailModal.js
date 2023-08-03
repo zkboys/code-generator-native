@@ -31,7 +31,7 @@ export default config({
     // 初始化，查询详情数据
     useEffect(() => {
         (async () => {
-            const res = await props.ajax.get('/${mn.module_names}', { id: record?.id }, [], { setLoading });
+            const res = await props.ajax.get(\`/${mn.module_names}/\${record?.id}\`, null, { setLoading });
             setData(res || {});
         })();
     }, [props.ajax, record?.id]);

@@ -7,7 +7,11 @@ module.exports = {
     targetPath: '/{projectName}-data/src/main/java/com/{projectNameSlash}/{moduleName}/domain/{ModuleName}.java',
     // 获取文件内容
     getContent: (config) => {
-        const { moduleNames: mn, fields, projectNameDot, javaPackages } = config;
+        const { file, moduleNames: mn, fields, projectNameDot, javaPackages } = config;
+        const { options = [] } = file;
+
+        // 返回false不生成文件
+        if (!options.includes('domain')) return false;
 
         const ignore = ['id', 'updatedAt', 'createdAt', 'isDeleted'];
         const domainFields = fields.filter(item => item.fieldOptions.includes('domain') && !ignore.includes(item.__names.moduleName));

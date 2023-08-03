@@ -5,7 +5,12 @@ module.exports = {
     targetPath: '/{projectName}-core/src/main/resources/com/{projectNameSlash}/mapper/{moduleName}/{ModuleName}Mapper.xml',
     // 获取文件内容
     getContent: (config) => {
-        const {moduleNames: mn, fields, tableNames, projectNameDot} = config;
+        const {file, moduleNames: mn, fields, tableNames, projectNameDot} = config;
+        const { options = [] } = file;
+
+        // 返回false不生成文件
+        if (!options.includes('mapper_xml')) return false;
+
         const noIdFields = fields.filter(item => item.dbName !== 'id');
 
         return `

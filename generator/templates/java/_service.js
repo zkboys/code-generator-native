@@ -5,7 +5,11 @@ module.exports = {
     targetPath: '/{projectName}-service/src/main/java/com/{projectNameSlash}/service/{moduleName}/{ModuleName}Service.java',
     // 获取文件内容
     getContent: (config) => {
-        const { moduleNames: mn, projectNameDot } = config;
+        const {file, moduleNames: mn, projectNameDot} = config;
+        const {options = []} = file;
+
+        // 返回false不生成文件
+        if (!options.includes('service')) return false;
 
         return `
 package com.${projectNameDot}.service.${mn.moduleName};

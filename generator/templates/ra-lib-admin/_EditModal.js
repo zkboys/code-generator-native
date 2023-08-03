@@ -33,7 +33,8 @@ export default config({
         top: 50,
     },
 })(function ${mn.ModuleName}EditModal(props) {
-    const {${_edit ? ' record, isEdit, ' : ''}onOk } = props;
+    const {${_edit ? ' record, ' : ''}onOk } = props;
+    ${_edit ? 'const isEdit = !!record;' : ''}
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
     
@@ -42,7 +43,7 @@ export default config({
             return `const check${field.__names.ModuleName} = useDebounceValidator(async (rule, value) => {
         if (!value) return;
 
-        const res = await props.ajax.get(\`/${mn.moduleNames}/${field.__names.moduleNames}/\${value}\`);
+        const res = await props.ajax.get(\`/${mn.module_names}/${field.__names.moduleNames}/\${value}\`);
         if (!res) return;
 
         const id = form.getFieldValue('id');
@@ -56,7 +57,7 @@ export default config({
             ...values,
         };
         ${_edit ? `if (isEdit) {
-            await props.ajax.put('/${mn.module_names}', params, { setLoading, successTip: '修改成功！' });
+            await props.ajax.put(\`/${mn.module_names}/\${record?.id}\`, params, { setLoading, successTip: '修改成功！' });
         } else {
             await props.ajax.post('/${mn.module_names}', params, { setLoading, successTip: '创建成功！' });
         }` : `await props.ajax.post('/${mn.module_names}', params, { setLoading, successTip: '创建成功！' });`}
@@ -68,7 +69,7 @@ export default config({
     useEffect(() => {
         if (!isEdit) return;
         (async () => {
-            const res = await props.ajax.get('/${mn.module_names}', { id: record?.id }, [], { setLoading });
+            const res = await props.ajax.get(\`/${mn.module_names}/\${record?.id}\`, null, { setLoading });
             form.setFieldsValue(res || {});
         })();
     }, [isEdit, form, props.ajax, record?.id]);` : NULL_LINE}
@@ -101,7 +102,7 @@ export default config({
                             ${item.validation.includes('noSpace') ? 'noSpace' : NULL_LINE}
                             ${item.length ? `maxLength={${item.length}}` : NULL_LINE}
                             ${item.options && item.options.length ? `options={[
-                                ${item.options.map(it => `{value: '${it.value}', label: '${it.label}'},`).join('\n                                ')}
+                                ${item.options.map(it => `{value: '${it.value}', label: '${it.label}'},`).join('\n                                    ')}
                             ]}` : NULL_LINE}
                             ${validation.length || uniqueValidation ? `rules={[
                                 ${uniqueValidation ? `{ validator: check${item.__names.ModuleName} },` : NULL_LINE}

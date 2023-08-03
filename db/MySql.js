@@ -1,6 +1,6 @@
 const DbInterface = require('./DbInterface');
-const { Sequelize } = require('sequelize');
-const { QueryTypes } = require('@sequelize/core');
+const {Sequelize} = require('sequelize');
+const {QueryTypes} = require('@sequelize/core');
 
 // 数据库类型与后端数据类型对应关系
 const TYPES = {
@@ -8,20 +8,20 @@ const TYPES = {
     CHAR: 'String',
     BLOB: 'String',
     TEXT: 'String',
-    INTEGER: 'long',
+    INTEGER: 'int',
     TINYINT: 'int',
     SMALLINT: 'int',
     MEDIUMINT: 'int',
     BIT: 'boolean',
-    BIGINT: 'BigInteger',
-    FLOAT: 'float',
-    DOUBLE: 'double',
+    BIGINT: 'int',
+    FLOAT: 'BigDecimal', // import java.math.BigDecimal;
+    DOUBLE: 'BigDecimal',
     DECIMAL: 'BigDecimal',
     BOOLEAN: 'boolean',
-    DATE: 'Date',
-    TIME: 'Time',
-    DATETIME: 'Timestamp',
-    TIMESTAMP: 'Timestamp',
+    DATE: 'Date', // import java.util.Date;
+    TIME: 'Date',
+    DATETIME: 'Date',
+    TIMESTAMP: 'LocalDateTime', // import java.time.LocalDateTime;
     YEAR: 'Date',
     TINYBLOB: 'String',
     TINYTEXT: 'String',
@@ -31,7 +31,7 @@ const TYPES = {
     LONGTEXT: 'String',
 };
 
-const DB_TYPES = Object.keys(TYPES).map(value => ({ value, label: value }));
+const DB_TYPES = Object.keys(TYPES).map(value => ({value, label: value}));
 
 class MySql extends DbInterface {
     database;
@@ -40,7 +40,7 @@ class MySql extends DbInterface {
     constructor(url) {
         super(url);
         this.database = new URL(url).pathname.replace('/', '');
-        this.sequelize = new Sequelize(url, { logging: false });
+        this.sequelize = new Sequelize(url, {logging: false});
     }
 
     async getTypeOptions() {
@@ -62,7 +62,7 @@ class MySql extends DbInterface {
                               where table_schema = '${this.database}'
                                 and (table_type = 'base table' or table_type = 'BASE TABLE')`;
 
-        return await this.sequelize.query(tableInfoSql, { type: QueryTypes.SELECT });
+        return await this.sequelize.query(tableInfoSql, {type: QueryTypes.SELECT});
     }
 
     async getColumns(tableName) {
@@ -70,7 +70,7 @@ class MySql extends DbInterface {
                               from information_schema.columns
                               where table_schema = "${this.database}"
                                 and table_name = "${tableName}"`;
-        const results = await this.sequelize.query(tableInfoSql, { type: QueryTypes.SELECT });
+        const results = await this.sequelize.query(tableInfoSql, {type: QueryTypes.SELECT});
 
         return results.map(item => {
             const name = item.COLUMN_NAME;

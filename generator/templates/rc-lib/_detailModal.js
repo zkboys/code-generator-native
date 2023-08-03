@@ -14,7 +14,7 @@ module.exports = {
         return `
 import {useState, useEffect} from 'react';
 import {Button, Descriptions, Modal} from 'antd';
-import {config, Content} from '@ra-lib/adm';
+import {config, Content} from '@rc-lib/pc';
 
 export default config({
     modalFunction: true,
@@ -26,7 +26,7 @@ export default config({
     // 初始化，查询详情数据
     useEffect(() => {
         (async () => {
-            const res = await props.ajax.get('/${mn.module_names}', { id: record?.id }, { setLoading });
+            const res = await props.ajax.get(\`/${mn.module_names}/\${record?.id}\`, null, { setLoading });
             setData(res || {});
         })();
     }, [props.ajax, record?.id]);

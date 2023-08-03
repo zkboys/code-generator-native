@@ -5,7 +5,11 @@ module.exports = {
     targetPath: '/{projectName}-data/src/main/java/com/{projectNameSlash}/{moduleName}/condition/{ModuleName}Condition.java',
     // 获取文件内容
     getContent: (config) => {
-        const {moduleNames: mn, projectNameDot} = config;
+        const {file, moduleNames: mn, projectNameDot} = config;
+        const { options = [] } = file;
+
+        // 返回false不生成文件
+        if (!options.includes('condition')) return false;
 
         return `
 package com.${projectNameDot}.${mn.moduleName}.condition;

@@ -55,7 +55,7 @@ export default config({
     title: '${mn.chineseName}',
 })(function ${mn.ModuleName}List(props) {
     const [loading, setLoading] = useState(false);
-    ${has(_batchDelete, 'const [deleting, setDeleting] = useState(false);')}
+    ${has(_batchDelete || _delete, 'const [deleting, setDeleting] = useState(false);')}
     ${has(_page, 'const [pageNum, setPageNum] = useState(1);')}
     ${has(_page, 'const [pageSize, setPageSize] = useState(20);')}
     const [dataSource, setDataSource] = useState([]);
@@ -105,8 +105,8 @@ export default config({
             ${has(_page, 'pageSize: options.pageSize || pageSize,')}
         };
         const res = await props.ajax.get('/${mn.module_names}', params, { setLoading });
-        const dataSource = res?.content || [];
-        ${has(_page, 'const total = res?.totalElements || 0;')}
+        const dataSource = res?.data?.content || [];
+        ${has(_page, 'const total = res?.data?.totalElements || 0;')}
         setDataSource(dataSource);
         ${has(_page, 'setTotal(total);')}
         ${has(_page, 'setPageNum(params.pageNum);')}
@@ -150,7 +150,7 @@ export default config({
 
     ${has(_delete, `// 删除
     const handleDelete = useFunction(async (id) => {
-        await props.ajax.del(\`/${mn.module_names}/\${id}\`, null, { setLoading, successTip: '删除成功！' });
+        await props.ajax.del(\`/${mn.module_names}/\${id}\`, null, { setDeleting, successTip: '删除成功！' });
         await handleSearch();
     });`)}
 
@@ -162,7 +162,7 @@ export default config({
     }, []);
 
     return (
-        <PageContent loading={loading${has(_import, ' || uploading', false)}}>
+        <PageContent loading={loading${has(_import, ' || uploading', false)}${has(_batchDelete || _delete, ' || deleting', false)}}>
             <QueryBar>
                 <Form
                     labelCol={{ style: { width: 80 } }}
@@ -175,6 +175,7 @@ export default config({
                         type="${item.formType}" 
                         label="${item.chinese}" 
                         name="${item.__names.moduleName}"
+                        allowClear
                         ${item.options && item.options.length ? `options={[
                             ${item.options.map(it => `{value: '${it.value}', label: '${it.label}'},`).join('\n                            ')}
                         ]}` : NULL_LINE}

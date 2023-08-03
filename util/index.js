@@ -34,6 +34,12 @@ const TYPE_MAP = {
     Timestamp: 'date-time',
 };
 
+const JAVA_PACKAGE_MAP = {
+    BigDecimal: 'import java.math.BigDecimal',
+    Date: 'import java.util.Date',
+    LocalDateTime: 'import java.time.LocalDateTime',
+};
+
 const INSERT_ANNOTATION = '此注释用于标记代码生成器插入代码位置，请勿删除！';
 
 function getProjectNames() {
@@ -174,6 +180,12 @@ async function getFilesContent(options) {
             moduleNames,
             fields: fis,
             ...getProjectNames(),
+            javaPackages: Array.from(new Set(fis.map(item => {
+                const {dataType} = item;
+                const p = JAVA_PACKAGE_MAP[dataType];
+                if (!p) return p;
+                return `${p};`
+            }).filter(Boolean))).join('\n'),
         };
         let content = template.getContent(cfg);
 

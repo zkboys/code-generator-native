@@ -5,7 +5,11 @@ module.exports = {
     targetPath: '/{projectName}-core/src/main/java/com/{projectNameSlash}/mapper/{moduleName}/{ModuleName}Mapper.java',
     // 获取文件内容
     getContent: (config) => {
-        const {moduleNames: mn, projectNameDot} = config;
+        const {file, moduleNames: mn, projectNameDot} = config;
+        const { options = [] } = file;
+
+        // 返回false不生成文件
+        if (!options.includes('mapper')) return false;
 
         return `
 package com.${projectNameDot}.mapper.${mn.moduleName};

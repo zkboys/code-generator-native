@@ -56,6 +56,7 @@ export default config({
     path: '/${mn.module_names}',
 })(function ${mn.ModuleName}List(props) {
     const [loading, setLoading] = useState(false);
+    ${has(_batchDelete || _delete, 'const [deleting, setDeleting] = useState(false);')}
     ${has(_page, 'const [pageNum, setPageNum] = useState(1);')}
     ${has(_page, 'const [pageSize, setPageSize] = useState(20);')}
     const [dataSource, setDataSource] = useState([]);
@@ -113,8 +114,8 @@ export default config({
             ${has(_page, 'pageSize: options.pageSize || pageSize,')}
         };
         const res = await props.ajax.get('/${mn.module_names}', params, { setLoading });
-        const dataSource = res?.content || [];
-        ${has(_page, 'const total = res?.totalElements || 0;')}
+        const dataSource = res?.data?.content || [];
+        ${has(_page, 'const total = res?.data?.totalElements || 0;')}
         setDataSource(dataSource);
         ${has(_page, 'setTotal(total);')}
     }, [form,${has(_page, ' pageNum, pageSize,', false)} props.ajax]);
@@ -128,7 +129,7 @@ export default config({
     ${has(_batchDelete, `// 批量删除
     const handleBatchDelete = useCallback(async () => {
         if (!selectedRowKeys?.length) return Modal.info({ title: '温馨提示', content: '请选择要删除的数据！' });
-        await props.ajax.del('/${mn.module_names}', { ids: selectedRowKeys }, { setLoading, successTip: '删除成功！' });
+        await props.ajax.del('/${mn.module_names}', { ids: selectedRowKeys }, { setLoading: setDeleting, successTip: '删除成功！' });
         await handleSearch();
     }, [handleSearch, props.ajax, selectedRowKeys]);`)}
 
@@ -160,7 +161,7 @@ export default config({
 
     ${has(_delete, `// 删除
     const handleDelete = useCallback(async (id) => {
-        await props.ajax.del(\`/${mn.module_names}/\${id}\`, null, { setLoading, successTip: '删除成功！' });
+        await props.ajax.del(\`/${mn.module_names}/\${id}\`, null, { setLoading: setDeleting, successTip: '删除成功！' });
         await handleSearch();
     }, [handleSearch, props.ajax]);`)}
 
@@ -177,7 +178,7 @@ export default config({
     };
 
     return (
-        <PageContent loading={loading${has(_import, ' || uploading', false)}}>
+        <PageContent loading={loading${has(_import, ' || uploading', false)}${has(_batchDelete || _delete, ' || deleting', false)}}>
             <QueryBar>
                 <Form
                     layout="inline"
@@ -192,6 +193,7 @@ export default config({
                         type="${item.formType}" 
                         label="${item.chinese}" 
                         name="${item.__names.moduleName}"
+                        allowClear
                         ${item.options && item.options.length ? `options={[
                             ${item.options.map(it => `{value: '${it.value}', label: '${it.label}'},`).join('\n                            ')}
                         ]}` : NULL_LINE}
