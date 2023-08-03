@@ -7,7 +7,7 @@ module.exports = {
     targetPath: '/{projectName}-data/src/main/java/com/{projectNameSlash}/{moduleName}/domain/{ModuleName}.java',
     // 获取文件内容
     getContent: (config) => {
-        const { moduleNames: mn, fields, projectNameDot } = config;
+        const { moduleNames: mn, fields, projectNameDot, javaPackages } = config;
 
         const ignore = ['id', 'updatedAt', 'createdAt', 'isDeleted'];
         const domainFields = fields.filter(item => item.fieldOptions.includes('domain') && !ignore.includes(item.__names.moduleName));
@@ -22,7 +22,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 
-import java.util.Date;
+${javaPackages}
 
 @Data
 @EqualsAndHashCode(callSuper = true)

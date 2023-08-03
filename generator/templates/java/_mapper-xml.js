@@ -28,7 +28,7 @@ module.exports = {
         ${tableNames}
     </sql>
     <sql id="columns">
-        ${fields.map((item) => `${item.dbName},`).join('\n        ')}
+        ${fields.map((item, index, arr) => `${item.dbName}${index === arr.length -1 ? '': ','}`).join('\n        ')}
     </sql>
     <insert id="add" parameterType="com.${projectNameDot}.${mn.moduleName}.domain.${mn.ModuleName}" useGeneratedKeys="true" keyProperty="id">
         insert into
@@ -105,7 +105,7 @@ module.exports = {
         insert into
         <include refid="table"/>
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            ${noIdFields.map((item) => `${item.dbName},`).join('\n        ')}
+            ${noIdFields.map((item) => `${item.dbName},`).join('\n            ')}
         </trim>
         values
         <foreach collection="list" item="item" index="index"
@@ -120,13 +120,13 @@ module.exports = {
         insert into
         <include refid="table"/>
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            ${fields.map((item) => `${item.dbName},`).join('\n        ')}
+            ${fields.map((item) => `${item.dbName},`).join('\n            ')}
         </trim>
         values
         <foreach collection="list" item="item" index="index"
                     separator=",">
             <trim prefix="(" suffix=")" suffixOverrides=",">
-            ${fields.map((item) => `#{item.${item.__names.moduleName},jdbcType=${item.type}},`).join('\n                ')}
+                ${fields.map((item) => `#{item.${item.__names.moduleName},jdbcType=${item.type}},`).join('\n                ')}
             </trim>
         </foreach>
         on duplicate key update
