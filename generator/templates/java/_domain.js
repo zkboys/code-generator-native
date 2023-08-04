@@ -1,8 +1,6 @@
 module.exports = {
     // 模版名称
     name: 'java/domain',
-    // 字段级别选项
-    fieldOptions: ['domain'],
     // 生成文件的默认目标路径
     targetPath: '/{projectName}-data/src/main/java/com/{projectNameSlash}/{moduleName}/domain/{ModuleName}.java',
     // 获取文件内容

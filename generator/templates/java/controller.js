@@ -10,6 +10,9 @@ module.exports = {
     // 文件级别选项
     options: ['condition', 'domain', 'mapper', 'mapper_xml', 'service'],
     defaultOptions: ['condition', 'domain', 'mapper', 'mapper_xml', 'service'],
+    // 字段级别选项
+    fieldOptions: ['domain'],
+    defaultFieldOptions: ['domain'],
     // 生成文件的默认目标路径
     targetPath: '/{projectName}-web/src/main/java/com/{projectNameSlash}/controller/{moduleName}/{ModuleName}Controller.java',
     extraFiles: [
