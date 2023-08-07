@@ -47,7 +47,7 @@ module.exports = {
         return `
 import React, {useState, useEffect} from 'react';
 import {Button, Form, Space, ${has(_import, 'Upload, notification', false)}} from 'antd';
-import {config, PageContent, QueryBar, FormItem, useFunction, Table, ${has(_batchDelete, 'confirm, ', false)}${has(_edit || _detail || _delete, 'Operator', false)}} from '@rc-lib/pc';
+import {config, PageContent, QueryBar, FormItem, useFunction, Table, ${has(_batchDelete, 'confirm, Modal, ', false)}${has(_edit || _detail || _delete, 'Operator', false)}} from '@rc-lib/pc';
 ${has(_add || _edit, 'import editModal from \'./editModal\';')}
 ${has(_detail, 'import detailModal from \'./detailModal\';')}
 
@@ -171,16 +171,16 @@ export default config({
                     form={form}
                     onFinish={async () => await handleSearch(${has(_page, '{ pageNum: 1 }', false)})}
                 >
-                    ${queryFields.map(item => `<FormItem 
-                        type="${item.formType}" 
-                        label="${item.chinese}" 
+                    ${queryFields.map(item => `<FormItem
+                        type="${item.formType}"
+                        label="${item.chinese}"
                         name="${item.__names.moduleName}"
                         allowClear
                         ${item.options && item.options.length ? `options={[
                             ${item.options.map(it => `{value: '${it.value}', label: '${it.label}'},`).join('\n                            ')}
                         ]}` : NULL_LINE}
                     />`).join('\n                    ')}
-                    <FormItem>
+                    <FormItem wrapperCol={{style: {width: 'auto'}}}>
                         <Space>
                             <Button type="primary" htmlType="submit">
                                 查询
