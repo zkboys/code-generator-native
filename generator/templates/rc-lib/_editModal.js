@@ -20,7 +20,8 @@ module.exports = {
         return `
 import {useState${_edit ? ', useEffect' : ''}} from 'react';
 import {Form, Row, Col} from 'antd';
-import {config, Modal, ModalFooter, Content, useFunction, FormItem${_validateRules ? ', validateRules' : ''}${uniqueFields.length ? ', useDebounceValidator' : ''}} from '@rc-lib/pc';
+import {config, Modal, ModalFooter, Content, useFunction, FormItem${uniqueFields.length ? ', useDebounceValidator' : ''}} from '@rc-lib/pc';
+${_validateRules ? "import * as validateRules from '@/validate-rules';" : ''}
 
 export default config({
     modalFunction: true,
@@ -51,7 +52,7 @@ export default config({
         } else {
             await props.ajax.post('/${mn.module_names}', params, { setLoading, successTip: '创建成功！' });
         }` : `await props.ajax.post('/${mn.module_names}', params, { setLoading, successTip: '创建成功！' });`}
-        
+
         onOk && onOk();
         close();
     });
@@ -99,7 +100,7 @@ export default config({
                 return `validateRules.${item}(),`;
             }).join('\n                                ')}
                                 ]}` : NULL_LINE}
-                            />        
+                            />
                         </Col>`;
         }).join('\n                        ')}
                     </Row>
