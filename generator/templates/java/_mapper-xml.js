@@ -5,29 +5,22 @@ module.exports = {
     targetPath: '/{projectName}-core/src/main/resources/com/{projectNameSlash}/mapper/{moduleName}/{ModuleName}Mapper.xml',
     // 获取文件内容
     getContent: (config) => {
-        const {file, moduleNames: mn, fields, tableNames, projectNameDot} = config;
+        const {NULL_LINE, file, moduleNames: mn, fields, tableNames, projectNameDot} = config;
         const { options = [] } = file;
 
         // 返回false不生成文件
         if (!options.includes('mapper_xml')) return false;
 
         const noIdFields = fields.filter(item => item.dbName !== 'id');
+        const hasId = fields.some(item => item.dbName === 'id');
 
         return `
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.${projectNameDot}.mapper.${mn.moduleName}.${mn.ModuleName}Mapper">
     <resultMap id="result" type="com.${projectNameDot}.${mn.moduleName}.domain.${mn.ModuleName}">
-        <id property="id" column="id" jdbcType="INTEGER"/>
-        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
-        <result column="employee_no" property="employeeNo" jdbcType="VARCHAR"/>
-        <result column="msg_title" property="msgTitle" jdbcType="VARCHAR"/>
-        <result column="msg" property="msg" jdbcType="VARCHAR"/>
-        <result column="send_status" property="sendStatus" jdbcType="CHAR"/>
-        <result column="wx_msg_id" property="wxMsgId" jdbcType="VARCHAR"/>
-        <result column="sys_id" property="sysId" jdbcType="VARCHAR"/>
-        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
-        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        ${hasId ? '<id property="id" column="id" jdbcType="INTEGER"/>' : NULL_LINE}
+        ${noIdFields.map(item=> `<result column="${item.dbName}" property="${item.__names.moduleName}" jdbcType="${item.type}"/>`).join('\n        ')}
     </resultMap>
     <sql id="table">
         ${tableNames}
