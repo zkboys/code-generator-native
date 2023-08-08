@@ -1,27 +1,14 @@
-const _condition = require('./_condition.js');
-const _domain = require('./_domain.js');
-const _mapper = require('./_mapper.js');
-const _mapper_xml = require('./_mapper-xml.js');
-const _service = require('./_service.js');
-
 module.exports = {
     // 模版名称
-    name: 'java增删改查',
+    // name: 'java',
     // 文件级别选项
-    options: ['condition', 'domain', 'mapper', 'mapper_xml', 'service'],
-    defaultOptions: ['condition', 'domain', 'mapper', 'mapper_xml', 'service'],
+    // options: ['condition', 'domain', 'mapper', 'mapper_xml', 'service'],
+    // defaultOptions: ['condition', 'domain', 'mapper', 'mapper_xml', 'service'],
     // 字段级别选项
-    fieldOptions: ['domain'],
-    defaultFieldOptions: ['domain'],
+    // fieldOptions: ['domain'],
+    // defaultFieldOptions: ['domain'],
     // 生成文件的默认目标路径
     targetPath: '/{projectName}-web/src/main/java/com/{projectNameSlash}/controller/{moduleName}/{ModuleName}Controller.java',
-    extraFiles: [
-        _condition,
-        _domain,
-        _mapper,
-        _mapper_xml,
-        _service,
-    ],
     // 获取文件内容
     getContent: config => {
         const { moduleNames: mn, projectNameDot } = config;

@@ -31,6 +31,10 @@ const TYPES = {
     LONGTEXT: 'String',
 };
 
+const JDBC_TYPE = {
+    'INT': 'INTEGER',
+}
+
 const DB_TYPES = Object.keys(TYPES).map(value => ({value, label: value}));
 
 class MySql extends DbInterface {
@@ -81,11 +85,13 @@ class MySql extends DbInterface {
             const defaultValue = item.COLUMN_DEFAULT;
             const isPrimaryKey = item.COLUMN_KEY === 'PRI';
 
+            console.log(name, type);
             return {
                 id: `${tableName}_${name}`,
                 name,
                 comment,
                 type,
+                jdbcType: JDBC_TYPE[type] || type,
                 dataType: TYPES[type] || 'String',
                 isNullable,
                 length,

@@ -19,8 +19,8 @@ module.exports = {
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.${projectNameDot}.mapper.${mn.moduleName}.${mn.ModuleName}Mapper">
     <resultMap id="result" type="com.${projectNameDot}.${mn.moduleName}.domain.${mn.ModuleName}">
-        ${primaryKeyField ? `<id property="${primaryKeyField.__names.moduleName}" column="${primaryKeyField.dbName}" jdbcType="${primaryKeyField.type}"/>` : NULL_LINE}
-        ${noIdFields.map(item=> `<result column="${item.dbName}" property="${item.__names.moduleName}" jdbcType="${item.type}"/>`).join('\n        ')}
+        ${primaryKeyField ? `<id property="${primaryKeyField.__names.moduleName}" column="${primaryKeyField.dbName}" jdbcType="${primaryKeyField.jdbcType}"/>` : NULL_LINE}
+        ${noIdFields.map(item=> `<result column="${item.dbName}" property="${item.__names.moduleName}" jdbcType="${item.jdbcType}"/>`).join('\n        ')}
     </resultMap>
     <sql id="table">
         ${tableNames}
@@ -39,7 +39,7 @@ module.exports = {
         values
         <trim prefix="(" suffix=")" suffixOverrides=",">
             ${noIdFields.map(item => `<if test="${item.__names.moduleName} != null and ${item.__names.moduleName} != ''">
-                #{${item.__names.moduleName},jdbcType=${item.type}},
+                #{${item.__names.moduleName},jdbcType=${item.jdbcType}},
             </if>`).join('\n            ')}
         </trim>
     </insert>
@@ -48,7 +48,7 @@ module.exports = {
         <include refid="table"/>
         <set>
             ${noIdFields.map(item => `<if test="${item.__names.moduleName} != null and ${item.__names.moduleName} != ''">
-                ${item.dbName} = #{${item.__names.moduleName},jdbcType=${item.type}},
+                ${item.dbName} = #{${item.__names.moduleName},jdbcType=${item.jdbcType}},
             </if>`).join('\n            ')}
         </set>
         where id = #{id}
@@ -108,7 +108,7 @@ module.exports = {
         values
         <foreach collection="list" item="item" index="index" separator=",">
             <trim prefix="(" suffix=")" suffixOverrides=",">
-                ${noIdFields.map((item) => `#{item.${item.__names.moduleName},jdbcType=${item.type}},`).join('\n                ')}
+                ${noIdFields.map((item) => `#{item.${item.__names.moduleName},jdbcType=${item.jdbcType}},`).join('\n                ')}
             </trim>
         </foreach>
     </insert>
@@ -122,7 +122,7 @@ module.exports = {
         values
         <foreach collection="list" item="item" index="index" separator=",">
             <trim prefix="(" suffix=")" suffixOverrides=",">
-                ${fields.map((item) => `#{item.${item.__names.moduleName},jdbcType=${item.type}},`).join('\n                ')}
+                ${fields.map((item) => `#{item.${item.__names.moduleName},jdbcType=${item.jdbcType}},`).join('\n                ')}
             </trim>
         </foreach>
         on duplicate key update
