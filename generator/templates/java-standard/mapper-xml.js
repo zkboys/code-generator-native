@@ -1,15 +1,11 @@
 module.exports = {
     // 模版名称
-    name: 'java/mapper/xml',
+    // name: 'java/mapper/xml',
     // 生成文件的默认目标路径
     targetPath: '/{projectName}-core/src/main/resources/com/{projectNameSlash}/mapper/{moduleName}/{ModuleName}Mapper.xml',
     // 获取文件内容
     getContent: (config) => {
-        const {NULL_LINE, file, moduleNames: mn, fields, tableNames, projectNameDot} = config;
-        const { options = [] } = file;
-
-        // 返回false不生成文件
-        if (!options.includes('mapper_xml')) return false;
+        const {NULL_LINE, moduleNames: mn, fields, tableNames, projectNameDot} = config;
 
         const noIdFields = fields.filter(item => item.dbName !== 'id');
         const primaryKeyField = fields.find(item => item.isPrimaryKey);

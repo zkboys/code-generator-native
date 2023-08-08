@@ -1,15 +1,11 @@
 module.exports = {
     // 模版名称
-    name: 'java/domain',
+    // name: 'java/domain',
     // 生成文件的默认目标路径
     targetPath: '/{projectName}-data/src/main/java/com/{projectNameSlash}/domain/{moduleName}/{ModuleName}.java',
     // 获取文件内容
     getContent: (config) => {
-        const { file, moduleNames: mn, fields, projectNameDot, javaPackages } = config;
-        const { options = [] } = file;
-
-        // 返回false不生成文件
-        if (!options.includes('domain')) return false;
+        const { moduleNames: mn, fields, projectNameDot, javaPackages } = config;
 
         const ignore = ['id', 'updatedAt', 'createdAt', 'isDeleted'];
         const domainFields = fields.filter(item => item.fieldOptions.includes('domain') && !ignore.includes(item.__names.moduleName));

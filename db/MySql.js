@@ -85,7 +85,6 @@ class MySql extends DbInterface {
             const defaultValue = item.COLUMN_DEFAULT;
             const isPrimaryKey = item.COLUMN_KEY === 'PRI';
 
-            console.log(name, type);
             return {
                 id: `${tableName}_${name}`,
                 name,

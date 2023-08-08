@@ -1,15 +1,11 @@
 module.exports = {
     // 模版名称
-    name: 'java/service',
+    // name: 'java/service',
     // 生成文件的默认目标路径
     targetPath: '/{projectName}-service/src/main/java/com/{projectNameSlash}/service/{moduleName}/{ModuleName}Service.java',
     // 获取文件内容
     getContent: (config) => {
-        const {file, moduleNames: mn, projectNameDot} = config;
-        const {options = []} = file;
-
-        // 返回false不生成文件
-        if (!options.includes('service')) return false;
+        const {moduleNames: mn, projectNameDot} = config;
 
         return `
 package com.${projectNameDot}.service.${mn.moduleName};
