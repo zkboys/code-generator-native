@@ -79,6 +79,7 @@ class MySql extends DbInterface {
             const isNullable = item.IS_NULLABLE === 'YES';
             const length = item.CHARACTER_MAXIMUM_LENGTH; // CHARACTER_OCTET_LENGTH
             const defaultValue = item.COLUMN_DEFAULT;
+            const isPrimaryKey = item.COLUMN_KEY === 'PRI';
 
             return {
                 id: `${tableName}_${name}`,
@@ -89,6 +90,7 @@ class MySql extends DbInterface {
                 isNullable,
                 length,
                 defaultValue,
+                isPrimaryKey,
             };
         });
     }

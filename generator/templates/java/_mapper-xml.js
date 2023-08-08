@@ -12,14 +12,14 @@ module.exports = {
         if (!options.includes('mapper_xml')) return false;
 
         const noIdFields = fields.filter(item => item.dbName !== 'id');
-        const hasId = fields.some(item => item.dbName === 'id');
+        const primaryKeyField = fields.find(item => item.isPrimaryKey);
 
         return `
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.${projectNameDot}.mapper.${mn.moduleName}.${mn.ModuleName}Mapper">
     <resultMap id="result" type="com.${projectNameDot}.${mn.moduleName}.domain.${mn.ModuleName}">
-        ${hasId ? '<id property="id" column="id" jdbcType="INTEGER"/>' : NULL_LINE}
+        ${primaryKeyField ? `<id property="${primaryKeyField.__names.moduleName}" column="${primaryKeyField.dbName}" jdbcType="${primaryKeyField.type}"/>` : NULL_LINE}
         ${noIdFields.map(item=> `<result column="${item.dbName}" property="${item.__names.moduleName}" jdbcType="${item.type}"/>`).join('\n        ')}
     </resultMap>
     <sql id="table">
@@ -106,8 +106,7 @@ module.exports = {
             ${noIdFields.map((item) => `${item.dbName},`).join('\n            ')}
         </trim>
         values
-        <foreach collection="list" item="item" index="index"
-                    separator=",">
+        <foreach collection="list" item="item" index="index" separator=",">
             <trim prefix="(" suffix=")" suffixOverrides=",">
                 ${noIdFields.map((item) => `#{item.${item.__names.moduleName},jdbcType=${item.type}},`).join('\n                ')}
             </trim>
@@ -121,8 +120,7 @@ module.exports = {
             ${fields.map((item) => `${item.dbName},`).join('\n            ')}
         </trim>
         values
-        <foreach collection="list" item="item" index="index"
-                    separator=",">
+        <foreach collection="list" item="item" index="index" separator=",">
             <trim prefix="(" suffix=")" suffixOverrides=",">
                 ${fields.map((item) => `#{item.${item.__names.moduleName},jdbcType=${item.type}},`).join('\n                ')}
             </trim>
