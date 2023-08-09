@@ -24,7 +24,7 @@ import fastEditModal from './fastEditModal';
 import helpModal from './helpModal';
 import s from './style.module.less';
 
-const { TabPane } = Tabs;
+const {TabPane} = Tabs;
 
 export default ajax(function Generator(props) {
     const [tableOptions, setTableOptions] = useState([]);
@@ -49,9 +49,9 @@ export default ajax(function Generator(props) {
 
     // 发请求，获取模版
     const fetchTemplates = useCallback(async (options = {}) => {
-        const templates = await props.ajax.get('/templates', null, { ...options });
+        const templates = await props.ajax.get('/templates', null, {...options});
 
-        const templateOptions = templates.map(item => ({ record: item, value: item.id, label: item.name }));
+        const templateOptions = templates.map(item => ({record: item, value: item.id, label: item.name}));
         setTemplateOptions(templateOptions);
         return templateOptions;
     }, [props.ajax]);
@@ -61,7 +61,7 @@ export default ajax(function Generator(props) {
         try {
             let _dataSource = [...dataSource];
             const values = await form.validateFields();
-            const { files, dataSource: ds, ...others } = values;
+            const {files, dataSource: ds, ...others} = values;
             // if (!_dataSource?.length) return Modal.info({ title: '温馨提示', content: '表格的字段配置不能为空！' });
             if (!_dataSource?.length) _dataSource = [{
                 id: uuid(),
@@ -82,7 +82,10 @@ export default ajax(function Generator(props) {
                 }, {}),
             }];
 
-            if (_dataSource.some(item => !item.name || !item.chinese)) return Modal.info({ title: '温馨提示', content: '表格的字段配置有必填项未填写！' });
+            if (_dataSource.some(item => !item.name || !item.chinese)) return Modal.info({
+                title: '温馨提示',
+                content: '表格的字段配置有必填项未填写！'
+            });
 
             const nextFiles = getFiles({
                 files,
@@ -99,10 +102,10 @@ export default ajax(function Generator(props) {
             };
 
             if (preview) {
-                previewModal({ params });
+                previewModal({params});
             } else {
                 // 检测文件是否存在
-                const res = await props.ajax.post('/generate/files/exist', params, { setLoading }) || [];
+                const res = await props.ajax.post('/generate/files/exist', params, {setLoading}) || [];
 
                 // 用户选择是否覆盖
                 for (let targetPath of res) {
@@ -124,14 +127,14 @@ export default ajax(function Generator(props) {
                     }
                 }
 
-                const paths = await props.ajax.post('/generate/files', params, { setLoading });
-                if (!paths?.length) return Modal.info({ title: '温馨提示', content: '未生成任何文件！' });
+                const paths = await props.ajax.post('/generate/files', params, {setLoading});
+                if (!paths?.length) return Modal.info({title: '温馨提示', content: '未生成任何文件！'});
 
                 Modal.success({
                     width: 600,
                     title: '生成文件如下',
                     content: (
-                        <div style={{ maxHeight: 200, overflow: 'auto' }}>
+                        <div style={{maxHeight: 200, overflow: 'auto'}}>
                             {paths.map(p => <div key={p}>{p}</div>)}
                         </div>
                     ),
@@ -141,27 +144,27 @@ export default ajax(function Generator(props) {
             }
         } catch (e) {
             if (e?.errorFields?.length) {
-                return Modal.info({ title: '温馨提示', content: '表单填写有误，请检查后再提交！' });
+                return Modal.info({title: '温馨提示', content: '表单填写有误，请检查后再提交！'});
             }
             console.error(e);
         }
     }, [dataSource, form, templateOptions, moduleNames, projectNames, props.ajax]);
 
     // 数据库连接改变事件
-    const { run: handleDbUrlChange } = useDebounceFn(async (e) => {
-        form.setFieldsValue({ tableNames: undefined, moduleName: undefined });
+    const {run: handleDbUrlChange} = useDebounceFn(async (e) => {
+        form.setFieldsValue({tableNames: undefined, moduleName: undefined});
         let tableOptions;
         let dbTypeOptions;
         try {
             const dbUrl = e.target.value;
-            const tables = await props.ajax.get('/db/tables', { dbUrl });
+            const tables = await props.ajax.get('/db/tables', {dbUrl});
             tableOptions = tables.map(item => ({
                 value: item.name,
                 label: `${item.name}${item.comment ? `（${item.comment}）` : ''}`,
                 comment: item.comment,
             }));
 
-            dbTypeOptions = await props.ajax.get('/db/types', { dbUrl });
+            dbTypeOptions = await props.ajax.get('/db/types', {dbUrl});
         } catch (e) {
             tableOptions = [];
             dbTypeOptions = [];
@@ -169,7 +172,7 @@ export default ajax(function Generator(props) {
 
         setTableOptions(tableOptions);
         setDbTypeOptions(dbTypeOptions);
-    }, { wait: 300 });
+    }, {wait: 300});
 
     // 设置模块名
     const handleModuleName = useCallback(async (tableName) => {
@@ -187,7 +190,7 @@ export default ajax(function Generator(props) {
         if (moduleName === form.getFieldValue('moduleName')) return;
 
         setModuleNames(moduleNames);
-        form.setFieldsValue({ moduleName, moduleChineseName: moduleChineseName || moduleName });
+        form.setFieldsValue({moduleName, moduleChineseName: moduleChineseName || moduleName});
     }, [fetchModuleNames, form, tableOptions]);
 
     // 设置dataSource
@@ -195,7 +198,7 @@ export default ajax(function Generator(props) {
         const files = form.getFieldValue('files');
         let changed;
         files.forEach(col => {
-            const { templateId } = col;
+            const {templateId} = col;
             const template = templateOptions.find(item => item.value === templateId)?.record;
             const options = template?.defaultFieldOptions || template?.fieldOptions || [];
 
@@ -216,6 +219,27 @@ export default ajax(function Generator(props) {
         setDataSource(dataSource);
     }, [templateOptions, form]);
 
+    // 自动填充表单，name chinese validation formType等
+    const handleAutoFill = useCallback(async (e, ds) => {
+        const _dataSource = ds || dataSource;
+        const newDataSource = await props.ajax.post('/autoFill', {fields: _dataSource});
+
+        // 获取鼠标焦点所在input，数据更新后会失去焦点，要再次选中
+        const currentTabIndex = e?.target?.getAttribute('tabindex');
+
+        // 更新数据
+        form.setFieldsValue({dataSource: newDataSource});
+        handleDataSourceChange(newDataSource);
+
+        // 等待页面刷新之后，重新使输入框获取焦点
+        if (currentTabIndex !== undefined) {
+            setTimeout(() => {
+                const input = document.querySelector(`input[tabindex='${currentTabIndex}']`);
+                if (input) input.focus();
+            });
+        }
+    }, [dataSource, form, props.ajax, handleDataSourceChange]);
+
     // 数据库表改变事件
     const handleTableNameChange = useCallback(async (tableNames) => {
         await handleModuleName(tableNames?.[0]);
@@ -225,25 +249,26 @@ export default ajax(function Generator(props) {
         // 查询表格数据
         if (!dbUrl || !tableNames?.length) return handleDataSourceChange([]);
 
-        const dataSource = await props.ajax.post('/db/tables/columns', { dbUrl, tableNames }, { setLoading });
-        handleDataSourceChange(dataSource);
-    }, [form, handleModuleName, props.ajax, handleDataSourceChange]);
+        const dataSource = await props.ajax.post('/db/tables/columns', {dbUrl, tableNames}, {setLoading});
+        // handleDataSourceChange(dataSource);
+        await handleAutoFill(null, dataSource);
+    }, [form, handleModuleName, props.ajax, handleDataSourceChange, handleAutoFill]);
 
     // 模块名改变事件
-    const { run: handleModuleNameChange } = useDebounceFn(async (e) => {
+    const {run: handleModuleNameChange} = useDebounceFn(async (e) => {
         const moduleName = e.target.value;
         if (!moduleName) return;
         const moduleNames = await fetchModuleNames(moduleName);
         setModuleNames(moduleNames);
-    }, { wait: 300 });
+    }, {wait: 300});
 
     // 模块名自动补签
     const handleAutoModuleName = useCallback(async (e, isModuleName = false) => {
-        const { ctrlKey, metaKey, keyCode } = e;
+        const {ctrlKey, metaKey, keyCode} = e;
         const enterKey = keyCode === 13;
         if (!((ctrlKey || metaKey) && enterKey)) return;
 
-        let { moduleName: name, moduleChineseName: chinese } = form.getFieldsValue();
+        let {moduleName: name, moduleChineseName: chinese} = form.getFieldsValue();
         if (!name && !chinese) return;
 
         if (isModuleName && name) {
@@ -254,7 +279,7 @@ export default ajax(function Generator(props) {
             name = undefined;
         }
 
-        const res = await props.ajax.post('/autoFill', { fields: [{ name, chinese }], justNames: true });
+        const res = await props.ajax.post('/autoFill', {fields: [{name, chinese}], justNames: true});
         if (!res?.length) return;
 
         const result = res[0];
@@ -289,7 +314,7 @@ export default ajax(function Generator(props) {
     // 模版改变事件
     const handleTemplateChange = useCallback((name, templateId) => {
         const record = templateOptions.find(item => item.value === templateId).record;
-        const { targetPath, defaultOptions, options } = record;
+        const {targetPath, defaultOptions, options} = record;
 
         form.setFields([
             {
@@ -311,17 +336,17 @@ export default ajax(function Generator(props) {
     }, [projectNames, moduleNames, templateOptions, form, handleFilesChange, handleDataSourceChange, dataSource]);
 
     // 表单改变事件
-    const { run: handleFormChange } = useDebounceFn(() => {
-        const { dbUrl, files } = form.getFieldsValue();
+    const {run: handleFormChange} = useDebounceFn(() => {
+        const {dbUrl, files} = form.getFieldsValue();
         storage.local.setItem('files', files);
         storage.local.setItem('dbUrl', dbUrl);
-    }, { wait: 500 });
+    }, {wait: 500});
 
     // 更新软件版本
     const handleUpdate = useCallback(async () => {
         try {
             setLoadingTip('更新中，请稍成功后请重启服务！');
-            await props.ajax.put('/update', null, { errorTip: false, setLoading });
+            await props.ajax.put('/update', null, {errorTip: false, setLoading});
             Modal.info({
                 title: '温馨提示',
                 content: '更新成功！请重启服务，使用最新版本！',
@@ -353,7 +378,7 @@ export default ajax(function Generator(props) {
             });
         }
         if (!sql) return;
-        const dataSource = await props.ajax.post('/db/sql', { dbUrl, sql }, { setLoading });
+        const dataSource = await props.ajax.post('/db/sql', {dbUrl, sql}, {setLoading});
         handleDataSourceChange(dataSource || []);
 
         await handleModuleName(dataSource?.[0].tableName);
@@ -361,7 +386,7 @@ export default ajax(function Generator(props) {
 
     // sql语句输入框，command 或 ctrl + enter 解析
     const handleSqlPressEnter = useCallback(async (e) => {
-        const { ctrlKey, metaKey } = e;
+        const {ctrlKey, metaKey} = e;
         if (!(ctrlKey || metaKey)) return;
 
         await handleParseSql();
@@ -404,35 +429,14 @@ export default ajax(function Generator(props) {
     // 更新本地模版
     const handleUpdateLocalTemplates = useCallback(async () => {
         await confirm('本地同名模版将被覆盖，是否继续？');
-        await props.ajax.get('/templates/local/download', null, { successTip: '更新成功！' });
+        await props.ajax.get('/templates/local/download', null, {successTip: '更新成功！'});
 
         // 等待本地服务器重启
         const si = setInterval(async () => {
-            await fetchTemplates({ errorTip: false });
+            await fetchTemplates({errorTip: false});
             clearInterval(si);
         }, 1000);
     }, [props.ajax, fetchTemplates]);
-
-    // 自动填充表单，name chinese validation formType等
-    const handleAutoFill = useCallback(async (e, ds) => {
-        const _dataSource = ds || dataSource;
-        const newDataSource = await props.ajax.post('/autoFill', { fields: _dataSource });
-
-        // 获取鼠标焦点所在input，数据更新后会失去焦点，要再次选中
-        const currentTabIndex = e?.target?.getAttribute('tabindex');
-
-        // 更新数据
-        form.setFieldsValue({ dataSource: newDataSource });
-        handleDataSourceChange(newDataSource);
-
-        // 等待页面刷新之后，重新使输入框获取焦点
-        if (currentTabIndex !== undefined) {
-            setTimeout(() => {
-                const input = document.querySelector(`input[tabindex='${currentTabIndex}']`);
-                if (input) input.focus();
-            });
-        }
-    }, [dataSource, form, props.ajax, handleDataSourceChange]);
 
     // 初始化时，加载模板
     useEffect(() => {
@@ -455,8 +459,8 @@ export default ajax(function Generator(props) {
             const dbUrl = storage.local.getItem('dbUrl');
             if (!dbUrl) return;
 
-            form.setFieldsValue({ dbUrl });
-            await handleDbUrlChange({ target: { value: dbUrl } });
+            form.setFieldsValue({dbUrl});
+            await handleDbUrlChange({target: {value: dbUrl}});
         })();
     }, [form, handleDbUrlChange]);
 
@@ -483,7 +487,7 @@ export default ajax(function Generator(props) {
         }).filter(Boolean);
         if (!nextFiles?.length) return;
 
-        form.setFieldsValue({ files: nextFiles });
+        form.setFieldsValue({files: nextFiles});
 
         handleFilesChange();
     }, [form, templateOptions, handleFilesChange]);
@@ -491,16 +495,16 @@ export default ajax(function Generator(props) {
     // 检查是否有新版本
     useEffect(() => {
         (async () => {
-            const res = await props.ajax.get('/version', null, { errorTip: false });
-            const { lastVersion, currentVersion } = res;
+            const res = await props.ajax.get('/version', null, {errorTip: false});
+            const {lastVersion, currentVersion} = res;
             if (lastVersion > currentVersion) {
                 notification.success({
                     message: '有新版本！',
                     description: (
                         <div>
-                            <span style={{ color: 'red' }}>{currentVersion}</span>
-                            <span style={{ margin: '0 8px' }}>-&gt</span>
-                            <span style={{ color: 'green' }}>{lastVersion}</span>
+                            <span style={{color: 'red'}}>{currentVersion}</span>
+                            <span style={{margin: '0 8px'}}>-&gt</span>
+                            <span style={{color: 'green'}}>{lastVersion}</span>
                         </div>
                     ),
                     btn: (
@@ -539,14 +543,14 @@ export default ajax(function Generator(props) {
             <Form
                 form={form}
                 layout="horizontal"
-                initialValues={{ files: [{}], searchType: 'tables' }}
+                initialValues={{files: [{}], searchType: 'tables'}}
                 onValuesChange={handleFormChange}
             >
-                <Row style={{ width: '100%', paddingRight: 50 }}>
+                <Row style={{width: '100%', paddingRight: 50}}>
                     <Col flex="0 0 600px">
                         <Form.Item
                             align="right"
-                            label={<div style={{ paddingLeft: 28 }}>数据库连接</div>}
+                            label={<div style={{paddingLeft: 28}}>数据库连接</div>}
                             name="dbUrl"
                         >
                             <Input
@@ -559,8 +563,8 @@ export default ajax(function Generator(props) {
                         <Form.Item name="searchType">
                             <Radio.Group
                                 options={[
-                                    { value: 'sql', label: 'sql' },
-                                    { value: 'tables', label: '表' },
+                                    {value: 'sql', label: 'sql'},
+                                    {value: 'tables', label: '表'},
                                 ]}
                                 optionType="button"
                                 buttonStyle="solid"
@@ -572,7 +576,7 @@ export default ajax(function Generator(props) {
                             noStyle
                             shouldUpdate={(p, c) => p.searchType !== c.searchType}
                         >
-                            {({ getFieldValue }) => {
+                            {({getFieldValue}) => {
                                 const searchType = getFieldValue('searchType');
                                 if (searchType === 'tables') {
                                     return (
@@ -594,7 +598,7 @@ export default ajax(function Generator(props) {
                                         <div className={s.sqlAreaWrapper}>
                                             <Form.Item name="sql">
                                                 <Input.TextArea
-                                                    style={{ height: 78 }}
+                                                    style={{height: 78}}
                                                     className={s.sqlArea}
                                                     placeholder={[
                                                         `支持多表关联，可以输入 ?、\${xx}、#{xx}等占位符；`,
@@ -618,35 +622,35 @@ export default ajax(function Generator(props) {
                         </Form.Item>
                     </Col>
                 </Row>
-                <div style={{ marginTop: 8, display: 'flex' }}>
+                <div style={{marginTop: 8, display: 'flex'}}>
                     <Form.Item
-                        labelCol={{ flex: '0 0 112px' }}
+                        labelCol={{flex: '0 0 112px'}}
                         label="模块名"
                         name="moduleName"
-                        rules={[{ required: true, message: '请输入模块名！' }]}
+                        rules={[{required: true, message: '请输入模块名！'}]}
                     >
                         <Input
-                            style={{ width: 211 }}
+                            style={{width: 211}}
                             placeholder="比如：user-center"
                             onChange={handleModuleNameChange}
                             onKeyDown={(e) => handleAutoModuleName(e, true)}
                         />
                     </Form.Item>
                     <Form.Item
-                        labelCol={{ flex: '0 0 126px' }}
+                        labelCol={{flex: '0 0 126px'}}
                         label="中文名"
                         name="moduleChineseName"
                     >
                         <Input
-                            style={{ width: 164 }}
+                            style={{width: 164}}
                             placeholder="比如：用户"
                             onKeyDown={handleAutoModuleName}
                         />
                     </Form.Item>
                 </div>
-                <div style={{ width: '100%', marginTop: 4 }}>
+                <div style={{width: '100%', marginTop: 4}}>
                     <Form.Item shouldUpdate noStyle>
-                        {({ getFieldValue }) => {
+                        {({getFieldValue}) => {
                             const moduleChineseName = getFieldValue('moduleChineseName');
                             return (
                                 <FileList
@@ -668,11 +672,11 @@ export default ajax(function Generator(props) {
                     </Form.Item>
                 </div>
                 <Tabs
-                    style={{ width: '100%', userSelect: 'none' }}
-                    tabBarStyle={{ marginBottom: 0 }}
+                    style={{width: '100%', userSelect: 'none'}}
+                    tabBarStyle={{marginBottom: 0}}
                     tabBarExtraContent={{
                         left: (
-                            <Space style={{ marginRight: 16 }}>
+                            <Space style={{marginRight: 16}}>
                                 <Button icon={<PlusOutlined/>} onClick={() => handleAdd()}>
                                     添加一行
                                 </Button>
