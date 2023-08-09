@@ -3,15 +3,14 @@ module.exports = {
     name: 'EditModal',
     targetPath: '{parentPath}/editModal.jsx',
     getContent: config => {
-        const { file, moduleNames: mn, fields, NULL_LINE } = config;
+        const { file, moduleNames: mn, fields, NULL_LINE, ignoreFields } = config;
         const { options = [] } = file;
 
         // 返回false不生成文件
         if (!options.includes('添加') && !options.includes('修改')) return false;
 
-        const ignore = ['id', 'updatedAt', 'createdAt', 'isDeleted'];
         const ignoreRules = ['required', 'noSpace', 'unique'];
-        const formFields = fields.filter(item => item.fieldOptions.includes('表单') && !ignore.includes(item.__names.moduleName));
+        const formFields = fields.filter(item => item.fieldOptions.includes('表单') && !ignoreFields.includes(item.__names.moduleName));
         const _edit = options.includes('修改');
         const _validateRules = fields.some(item => item.validation && item.validation.some(it => !ignoreRules.includes(it)));
         const uniqueFields = fields.filter(item => item.validation && item.validation.includes('unique'));

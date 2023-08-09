@@ -172,6 +172,7 @@ async function getFilesContent(options) {
         });
         const NULL_LINE = '_____NULL_LINE_____';
 
+        // 传递给模版的数据
         const cfg = {
             ...others,
             NULL_LINE,
@@ -186,6 +187,17 @@ async function getFilesContent(options) {
                 if (!p) return p;
                 return `${p};`
             }).filter(Boolean))).join('\n'),
+            ignoreFields: [
+                'id',
+                'updatedAt',
+                'createdAt',
+                'isDeleted',
+                'creater',
+                'creator',
+                'updater',
+                'createTime',
+                'updateTime',
+            ],
         };
         let content = template.getContent(cfg);
 

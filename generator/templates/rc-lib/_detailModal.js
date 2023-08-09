@@ -3,14 +3,13 @@ module.exports = {
     name: 'DetailModal',
     targetPath: '{parentPath}/detailModal.jsx',
     getContent: config => {
-        const { moduleNames: mn, file, fields, NULL_LINE } = config;
+        const { moduleNames: mn, file, fields, ignoreFields } = config;
         const { options = [] } = file;
 
         // 返回false不生成文件
         if (!options.includes('详情')) return false;
 
-        const ignore = ['id', 'updatedAt', 'createdAt', 'isDeleted'];
-        const detailFields = fields.filter(item => item.fieldOptions.includes('详情') && !ignore.includes(item.__names.moduleName));
+        const detailFields = fields.filter(item => item.fieldOptions.includes('详情') && !ignoreFields.includes(item.__names.moduleName));
         return `
 import {useState, useEffect} from 'react';
 import {Button, Descriptions, Modal} from 'antd';

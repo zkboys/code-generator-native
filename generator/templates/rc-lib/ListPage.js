@@ -17,11 +17,10 @@ module.exports = {
     ],
     // 获取文件内容
     getContent: config => {
-        const { NULL_LINE, file, moduleNames: mn, fields } = config;
+        const { NULL_LINE, file, moduleNames: mn, fields, ignoreFields } = config;
 
-        const ignore = ['id', 'updatedAt', 'createdAt', 'isDeleted'];
-        const queryFields = fields.filter(item => item.fieldOptions.includes('条件') && !ignore.includes(item.__names.moduleName));
-        const tableFields = fields.filter(item => item.fieldOptions.includes('列表') && !ignore.includes(item.__names.moduleName));
+        const queryFields = fields.filter(item => item.fieldOptions.includes('条件') && !ignoreFields.includes(item.__names.moduleName));
+        const tableFields = fields.filter(item => item.fieldOptions.includes('列表') && !ignoreFields.includes(item.__names.moduleName));
 
         const { options = [] } = file;
         if (!options.includes('列表')) return false;

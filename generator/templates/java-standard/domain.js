@@ -5,10 +5,9 @@ module.exports = {
     targetPath: '/{projectName}-data/src/main/java/com/{projectNameSlash}/domain/{moduleName}/{ModuleName}.java',
     // 获取文件内容
     getContent: (config) => {
-        const { moduleNames: mn, fields, projectNameDot, javaPackages } = config;
+        const { moduleNames: mn, fields, projectNameDot, javaPackages, ignoreFields } = config;
 
-        const ignore = ['id', 'updatedAt', 'createdAt', 'isDeleted'];
-        const domainFields = fields.filter(item => item.fieldOptions.includes('domain') && !ignore.includes(item.__names.moduleName));
+        const domainFields = fields.filter(item => item.fieldOptions.includes('domain') && !ignoreFields.includes(item.__names.moduleName));
 
         return `
 package com.${projectNameDot}.domain.${mn.moduleName};
