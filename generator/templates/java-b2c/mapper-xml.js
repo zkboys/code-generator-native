@@ -9,16 +9,8 @@ module.exports = {
 
         const noIdFields = fields.filter(item => item.dbName !== 'id');
         const primaryKeyField = fields.find(item => item.isPrimaryKey);
-        const hasCreateTime = noIdFields.some(item => ['createTime'].includes(item.__names.moduleName));
-        const hasUpdateTime = noIdFields.some(item => ['updateTime'].includes(item.__names.moduleName));
-        const hasCreateDate = noIdFields.some(item => ['createDate'].includes(item.__names.moduleName));
-        const hasUpdateDate = noIdFields.some(item => ['updateDate'].includes(item.__names.moduleName));
-
-
-        // 'createTime',
-        //     'updateTime',
-        //     'createDate',
-        //     'updateDate',
+        const isCreateItem = item => ['createTime', 'createDate'].includes(item.__names.moduleName);
+        const isUpdateItem = item => ['updateTime', 'updateDate'].includes(item.__names.moduleName);
 
         return `
 <?xml version="1.0" encoding="UTF-8"?>
@@ -26,26 +18,26 @@ module.exports = {
 <mapper namespace="com.${projectNameDot}.mapper.${mn.moduleName}.${mn.ModuleName}Mapper">
     <resultMap id="result" type="com.${projectNameDot}.${mn.moduleName}.domain.${mn.ModuleName}">
         ${primaryKeyField ? `<id property="${primaryKeyField.__names.moduleName}" column="${primaryKeyField.dbName}" jdbcType="${primaryKeyField.jdbcType}"/>` : NULL_LINE}
-        ${noIdFields.map(item=> `<result column="${item.dbName}" property="${item.__names.moduleName}" jdbcType="${item.jdbcType}"/>`).join('\n        ')}
+        ${noIdFields.map(item => `<result column="${item.dbName}" property="${item.__names.moduleName}" jdbcType="${item.jdbcType}"/>`).join('\n        ')}
     </resultMap>
     <sql id="table">
         ${tableNames}
     </sql>
     <sql id="columns">
-        ${fields.map((item, index, arr) => `${item.dbName}${index === arr.length -1 ? '': ','}`).join('\n        ')}
+        ${fields.map((item, index, arr) => `${item.dbName}${index === arr.length - 1 ? '' : ','}`).join('\n        ')}
     </sql>
     <insert id="add" parameterType="com.${projectNameDot}.${mn.moduleName}.domain.${mn.ModuleName}" useGeneratedKeys="true" keyProperty="id">
         insert into
         <include refid="table"/>
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            ${noIdFields.map(item => `<if test="${item.__names.moduleName} != null and ${item.__names.moduleName} != ''">
+            ${noIdFields.map(item => isCreateItem(item) ? `${item.dbName},` : `<if test="${item.__names.moduleName} != null and ${item.__names.moduleName} != ''">
                 ${item.dbName},
             </if>`).join('\n            ')}
         </trim>
         values
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            ${noIdFields.map(item => `<if test="${item.__names.moduleName} != null and ${item.__names.moduleName} != ''">
-                ${['createTime', 'createDate'].includes(item.__names.moduleName) ? 'NOW(),' : '#{${item.__names.moduleName},jdbcType=${item.jdbcType}},'}
+            ${noIdFields.map(item => isCreateItem(item) ? `NOW(),` : `<if test="${item.__names.moduleName} != null and ${item.__names.moduleName} != ''">
+                #{${item.__names.moduleName},jdbcType=${item.jdbcType}},
             </if>`).join('\n            ')}
         </trim>
     </insert>
@@ -53,8 +45,8 @@ module.exports = {
         update
         <include refid="table"/>
         <set>
-            ${noIdFields.map(item => `<if test="${item.__names.moduleName} != null and ${item.__names.moduleName} != ''">
-                ${['updateTime', 'updateDate'].includes(item.__names.moduleName) ? '${item.dbName} = NOW(),' : '${item.dbName} = #{${item.__names.moduleName},jdbcType=${item.jdbcType}},'}
+            ${noIdFields.filter(item => !isCreateItem(item)).map(item => isUpdateItem(item) ? `${item.dbName} = NOW(),` : `<if test="${item.__names.moduleName} != null and ${item.__names.moduleName} != ''">
+                ${item.dbName} = #{${item.__names.moduleName},jdbcType=${item.jdbcType}},
             </if>`).join('\n            ')}
         </set>
         where id = #{id}
@@ -114,7 +106,7 @@ module.exports = {
         values
         <foreach collection="list" item="item" index="index" separator=",">
             <trim prefix="(" suffix=")" suffixOverrides=",">
-                ${noIdFields.map((item) => `#{item.${item.__names.moduleName},jdbcType=${item.jdbcType}},`).join('\n                ')}
+                ${noIdFields.map((item) => isCreateItem(item) ? `NOW(),` : `#{item.${item.__names.moduleName},jdbcType=${item.jdbcType}},`).join('\n                ')}
             </trim>
         </foreach>
     </insert>
