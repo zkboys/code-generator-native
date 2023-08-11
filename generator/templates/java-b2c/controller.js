@@ -1,5 +1,3 @@
-const moment = require('moment');
-
 module.exports = {
     // 模版名称
     // name: 'java',
@@ -13,7 +11,7 @@ module.exports = {
     targetPath: '/{projectName}-web/src/main/java/com/{projectNameSlash}/controller/{moduleName}/{ModuleName}Controller.java',
     // 获取文件内容
     getContent: config => {
-        const { moduleNames: mn, projectNameDot, tables } = config;
+        const { moduleNames: mn, projectNameDot, tables, moment } = config;
         const table = tables[0] || {};
         const tableName = table.value;
         const tableLabel = table.comment || table.value;

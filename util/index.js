@@ -5,6 +5,7 @@ const {exec} = require('child_process');
 const staticCache = require('koa-static-cache');
 const inflection = require('inflection');
 const {internalIpV4} = require('./ip');
+const moment = require('moment');
 
 const openBrowser = require('./openBrowser');
 const choosePort = require('./choosePort');
@@ -200,8 +201,9 @@ async function getFilesContent(options) {
                 'createDate',
                 'updateDate',
             ],
+            moment,
         };
-        console.log(JSON.stringify(cfg, null, 2));
+
         let content = template.getContent(cfg);
 
         if (content === false) return null;

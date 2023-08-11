@@ -1,5 +1,3 @@
-const moment = require('moment');
-
 module.exports = {
     // 模版名称
     // name: 'java/domain',
@@ -10,7 +8,7 @@ module.exports = {
     defaultFieldOptions: ['domain'],
     // 获取文件内容
     getContent: (config) => {
-        const {NULL_LINE, moduleNames: mn, fields, projectNameDot, javaPackages, ignoreFields, tables} = config;
+        const {NULL_LINE, moduleNames: mn, fields, projectNameDot, javaPackages, ignoreFields, tables, moment} = config;
 
         const table = tables[0] || {};
         const tableName = table.value;
