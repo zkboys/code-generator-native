@@ -14,7 +14,15 @@ module.exports = {
         const tableName = table.value;
         const tableLabel = table.comment || table.value;
 
-        const domainFields = fields.filter(item => item.fieldOptions.includes('domain'));
+        const ignores = [
+            'id',
+            'creater',
+            'updater',
+            'createdDate',
+            'lastUpdated',
+            'version',
+        ];
+        const domainFields = fields.filter(item => item.fieldOptions.includes('domain') && !ignores.includes(item.__names.moduleName));
 
         const hasIsRequired = domainFields.some(item => !item.isNullable);
         const hasLength = domainFields.some(item => item.length);
