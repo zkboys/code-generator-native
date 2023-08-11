@@ -31,9 +31,19 @@ const TYPES = {
     LONGTEXT: 'String',
 };
 
+// 数据库类型与后端 JDBC 类型对应关系
 const JDBC_TYPE = {
-    'INT': 'INTEGER',
-}
+    'TEXT': 'CLOB',
+    'MEDIUMINT': 'INTEGER',
+    'DATETIME': 'TIMESTAMP',
+    'YEAR': 'INTEGER',
+    'TINYBLOB': 'BLOB',
+    'TINYTEXT': 'CLOB',
+    'MEDIUMBLOB': 'BLOB',
+    'MEDIUMTEXT': 'CLOB',
+    'LONGBLOB': 'BLOB',
+    'LONGTEXT': 'CLOB',
+};
 
 const DB_TYPES = Object.keys(TYPES).map(value => ({value, label: value}));
 

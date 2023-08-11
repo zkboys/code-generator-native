@@ -1,3 +1,5 @@
+const moment = require('moment');
+
 module.exports = {
     // 模版名称
     // name: 'java',
@@ -11,7 +13,10 @@ module.exports = {
     targetPath: '/{projectName}-web/src/main/java/com/{projectNameSlash}/controller/{moduleName}/{ModuleName}Controller.java',
     // 获取文件内容
     getContent: config => {
-        const { moduleNames: mn, projectNameDot } = config;
+        const { moduleNames: mn, projectNameDot, tables } = config;
+        const table = tables[0] || {};
+        const tableName = table.value;
+        const tableLabel = table.comment || table.value;
         return `
 package com.${projectNameDot}.controller.${mn.moduleName};
 
@@ -23,6 +28,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * ${tableLabel}(${tableName})
+ *
+ * @author @ra-lib/gen
+ * @date ${moment().format('YYYY-MM-DD HH:mm:ss')}
+ */
 @RestController
 @RequestMapping("${mn.module_names}")
 public class ${mn.ModuleName}Controller extends GenericRestController<${mn.ModuleName}, Long, ${mn.ModuleName}Condition> {

@@ -197,8 +197,11 @@ async function getFilesContent(options) {
                 'updater',
                 'createTime',
                 'updateTime',
+                'createDate',
+                'updateDate',
             ],
         };
+        console.log(JSON.stringify(cfg, null, 2));
         let content = template.getContent(cfg);
 
         if (content === false) return null;

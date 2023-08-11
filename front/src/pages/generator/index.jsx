@@ -61,7 +61,7 @@ export default ajax(function Generator(props) {
         try {
             let _dataSource = [...dataSource];
             const values = await form.validateFields();
-            const {files, dataSource: ds, ...others} = values;
+            const {files, dataSource: ds, tableNames, ...others} = values;
             // if (!_dataSource?.length) return Modal.info({ title: '温馨提示', content: '表格的字段配置不能为空！' });
             if (!_dataSource?.length) _dataSource = [{
                 id: uuid(),
@@ -95,14 +95,18 @@ export default ajax(function Generator(props) {
                 projectNames,
             });
 
+            const tables = tableOptions.filter(item => tableNames.includes(item.value));
+
             const params = {
                 ...others,
+                tableNames,
+                tables,
                 files: nextFiles,
                 fields: _dataSource,
             };
 
             if (preview) {
-                previewModal({params});
+                previewModal({params, tableOptions});
             } else {
                 // 检测文件是否存在
                 const res = await props.ajax.post('/generate/files/exist', params, {setLoading}) || [];
@@ -379,10 +383,12 @@ export default ajax(function Generator(props) {
         }
         if (!sql) return;
         const dataSource = await props.ajax.post('/db/sql', {dbUrl, sql}, {setLoading});
-        handleDataSourceChange(dataSource || []);
+        // handleDataSourceChange(dataSource || []);
+        await handleAutoFill(null, dataSource || []);
+
 
         await handleModuleName(dataSource?.[0].tableName);
-    }, [form, handleModuleName, props.ajax, handleDataSourceChange]);
+    }, [form, handleModuleName, props.ajax, handleAutoFill]);
 
     // sql语句输入框，command 或 ctrl + enter 解析
     const handleSqlPressEnter = useCallback(async (e) => {

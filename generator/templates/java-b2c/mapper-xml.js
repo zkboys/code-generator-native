@@ -9,6 +9,16 @@ module.exports = {
 
         const noIdFields = fields.filter(item => item.dbName !== 'id');
         const primaryKeyField = fields.find(item => item.isPrimaryKey);
+        const hasCreateTime = noIdFields.some(item => ['createTime'].includes(item.__names.moduleName));
+        const hasUpdateTime = noIdFields.some(item => ['updateTime'].includes(item.__names.moduleName));
+        const hasCreateDate = noIdFields.some(item => ['createDate'].includes(item.__names.moduleName));
+        const hasUpdateDate = noIdFields.some(item => ['updateDate'].includes(item.__names.moduleName));
+
+
+        // 'createTime',
+        //     'updateTime',
+        //     'createDate',
+        //     'updateDate',
 
         return `
 <?xml version="1.0" encoding="UTF-8"?>
@@ -35,7 +45,7 @@ module.exports = {
         values
         <trim prefix="(" suffix=")" suffixOverrides=",">
             ${noIdFields.map(item => `<if test="${item.__names.moduleName} != null and ${item.__names.moduleName} != ''">
-                #{${item.__names.moduleName},jdbcType=${item.jdbcType}},
+                ${['createTime', 'createDate'].includes(item.__names.moduleName) ? 'NOW(),' : '#{${item.__names.moduleName},jdbcType=${item.jdbcType}},'}
             </if>`).join('\n            ')}
         </trim>
     </insert>
@@ -44,7 +54,7 @@ module.exports = {
         <include refid="table"/>
         <set>
             ${noIdFields.map(item => `<if test="${item.__names.moduleName} != null and ${item.__names.moduleName} != ''">
-                ${item.dbName} = #{${item.__names.moduleName},jdbcType=${item.jdbcType}},
+                ${['updateTime', 'updateDate'].includes(item.__names.moduleName) ? '${item.dbName} = NOW(),' : '${item.dbName} = #{${item.__names.moduleName},jdbcType=${item.jdbcType}},'}
             </if>`).join('\n            ')}
         </set>
         where id = #{id}
