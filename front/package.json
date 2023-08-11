@@ -12,6 +12,7 @@
     "@ant-design/icons": "^4.7.0",
     "@babel/core": "^7.16.0",
     "@babel/plugin-proposal-decorators": "^7.17.2",
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@monaco-editor/react": "^4.3.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.3",
     "@ra-lib/ajax": "^0.1.35",
