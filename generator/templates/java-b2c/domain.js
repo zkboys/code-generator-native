@@ -8,13 +8,13 @@ module.exports = {
     defaultFieldOptions: ['domain'],
     // 获取文件内容
     getContent: (config) => {
-        const {NULL_LINE, moduleNames: mn, fields, projectNameDot, javaPackages, ignoreFields, tables, moment} = config;
+        const {NULL_LINE, moduleNames: mn, fields, projectNameDot, javaPackages, tables, moment} = config;
 
         const table = tables[0] || {};
         const tableName = table.value;
         const tableLabel = table.comment || table.value;
 
-        const domainFields = fields.filter(item => item.fieldOptions.includes('domain') && !ignoreFields.includes(item.__names.moduleName));
+        const domainFields = fields.filter(item => item.fieldOptions.includes('domain'));
 
         const hasIsRequired = domainFields.some(item => !item.isNullable);
         const hasLength = domainFields.some(item => item.length);
