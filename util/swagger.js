@@ -16,6 +16,7 @@ const axios = require('axios');
 
 async function getApiFields(key, url) {
     const docs = await getApiDocs(url);
+
     const apis = getApis(docs);
     const api = apis.find(item => item.key === key);
 
@@ -86,13 +87,20 @@ function getAllFields(api, definitions) {
                 loop(value);
             }
 
+            if (key === 'originalRef') {
+                if (!originalRefs.includes(value)) {
+                    originalRefs.push(value);
+
+                    loop(definitions?.[value])
+                }
+            }
+
             if (key === 'schema') {
                 const {originalRef} = value;
                 if (!originalRefs.includes(originalRef)) {
                     originalRefs.push(originalRef);
 
-                    const obj = definitions?.[originalRef] || {};
-                    loop(obj)
+                    loop(definitions?.[originalRef])
                 }
             }
 
@@ -101,11 +109,11 @@ function getAllFields(api, definitions) {
                     const {name, in: position, description, required, type, schema} = item;
                     if (schema) {
                         const {originalRef} = schema;
-                        if (originalRefs.includes(originalRef)) return;
-                        originalRefs.push(originalRef);
+                        if (!originalRefs.includes(originalRef)) {
+                            originalRefs.push(originalRef);
 
-                        const obj = definitions?.[originalRef] || {};
-                        loop(obj)
+                            loop(definitions?.[originalRef])
+                        }
                     } else {
                         if (!['array', 'object'].includes(type)
                             && !IGNORE_NAMES.includes(name)
@@ -141,15 +149,15 @@ function getAllFields(api, definitions) {
                             items,
                             originalRef,
                         } = v;
-                        const {_originalRef} = items || {};
+                        const {originalRef: _originalRef} = items || {};
                         const ori = _originalRef || originalRef
 
                         if (ori) {
-                            if (originalRefs.includes(ori)) return;
-                            originalRefs.push(ori);
+                            if (!originalRefs.includes(ori)) {
+                                originalRefs.push(ori);
 
-                            const obj = definitions?.[ori] || {};
-                            loop(obj)
+                                loop(definitions?.[ori])
+                            }
                         } else {
                             if (
                                 !['array', 'object'].includes(type)

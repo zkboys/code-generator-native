@@ -21,7 +21,7 @@ const {
     getOptions,
     API_JAVA_TYPE,
 } = require('./util');
-const {getApiOptions, getApiFields} = require('./util/swagger');
+const {getApiOptions, getApiFields, getApiDocs, getApis, getAllFields} = require('./util/swagger');
 
 const {DB_TYPES} = require('./db/MySql');
 const packageJson = require('./package.json');
@@ -138,12 +138,20 @@ module.exports = apiRouter
     // 获取swagger api 中的字段
     .post('/swagger/apis', async (ctx) => {
         const {swaggerUrl, apiKeys} = ctx.request.body;
-        const res = await Promise.all(apiKeys.map(key => getApiFields(key, swaggerUrl)));
+
+        const docs = await getApiDocs(swaggerUrl);
+        const apis = getApis(docs);
+        const {definitions} = docs;
+
+        const res = apiKeys.map(key => {
+            const api = apis.find(item => item.key === key);
+            return getAllFields(api, definitions)
+        })
 
         return res.flat(1).reduce((prev, curr) => {
             const {name, type, description: comment} = curr;
 
-            if(prev.some(item => item.name === name)) return prev;
+            if (prev.some(item => item.name === name)) return prev;
 
             const chinese = splitComment(comment)[0];
             const options = getOptions({comment})

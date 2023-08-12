@@ -276,6 +276,8 @@ export default ajax(function Generator(props) {
 
     // 选择apis事件
     const handleApisChange = useCallback(async (apiKeys) => {
+        if(!apiKeys?.length) return setDataSource([]);
+
         const swaggerUrl = form.getFieldValue('dbUrl');
 
         const dataSource = await props.ajax.post('/swagger/apis', {swaggerUrl, apiKeys}, {setLoading} );
