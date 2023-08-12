@@ -38,7 +38,8 @@ const TYPE_MAP = {
 const API_JAVA_TYPE = {
     string: 'String',
     integer: 'init',
-    number: 'init'
+    number: 'init',
+    boolean: 'boolean',
 }
 
 const JAVA_PACKAGE_MAP = {
