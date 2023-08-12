@@ -35,6 +35,12 @@ const TYPE_MAP = {
     Timestamp: 'date-time',
 };
 
+const API_JAVA_TYPE = {
+    string: 'String',
+    integer: 'init',
+    number: 'init'
+}
+
 const JAVA_PACKAGE_MAP = {
     BigDecimal: 'import java.math.BigDecimal',
     Date: 'import java.util.Date',
@@ -823,4 +829,7 @@ module.exports = {
     autoFill,
     saveUseLog,
     getProjectNames,
+    getOptions,
+    splitComment,
+    API_JAVA_TYPE,
 };

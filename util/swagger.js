@@ -1,18 +1,18 @@
 const axios = require('axios');
 
-const url = `http://admin:fhhj#$@80969HKJKJKDWER@@@@22.50.9.44:8080`;
+// const url = `http://admin:fhhj#$@80969HKJKJKDWER@@@@22.50.9.44:8080`;
 // const url = `http://172.16.46.133:8081`;
 
-(async () => {
-
-    const options = await getApiOptions(url);
-
-    const api = options[10]?.children?.[0];
-
-    const fields = await getApiFields(api.key, url);
-
-    console.log(fields);
-})()
+// (async () => {
+//
+//     const options = await getApiOptions(url);
+//
+//     const api = options[10]?.children?.[0];
+//
+//     const fields = await getApiFields(api.key, url);
+//
+//     console.log(fields);
+// })()
 
 async function getApiFields(key, url) {
     const docs = await getApiDocs(url);
@@ -33,8 +33,10 @@ async function getApiOptions(url) {
         const children = apis.filter(it => it.tags.includes(name));
         return {
             key: name,
+            value: name,
             title: name,
             description,
+            disabled: true,
             children,
         }
     });
@@ -44,10 +46,13 @@ function getApis(docs) {
     const {paths} = docs;
     return Object.entries(paths).map(([url, record]) => {
         return Object.entries(record).map(([method, options]) => {
-            const key = `${method}${url}`;
+            const {summary} = options;
+            const key = `${method}${url}(${summary})`;
             return {
                 ...options,
                 key,
+                value: key,
+                title: key,
                 method,
                 url,
             }
@@ -102,7 +107,10 @@ function getAllFields(api, definitions) {
                         const obj = definitions?.[originalRef] || {};
                         loop(obj)
                     } else {
-                        if (!['array', 'object'].includes(type) && !IGNORE_NAMES.includes(name)) fields.push({
+                        if (!['array', 'object'].includes(type)
+                            && !IGNORE_NAMES.includes(name)
+                            && !fields.some(item => item.name === name)
+                        ) fields.push({
                             name,
                             position,
                             description,
@@ -143,7 +151,11 @@ function getAllFields(api, definitions) {
                             const obj = definitions?.[ori] || {};
                             loop(obj)
                         } else {
-                            if (!['array', 'object'].includes(type) && !IGNORE_NAMES.includes(name)) fields.push({
+                            if (
+                                !['array', 'object'].includes(type)
+                                && !IGNORE_NAMES.includes(name)
+                                && !fields.some(item => item.name === name)
+                            ) fields.push({
                                 name,
                                 type,
                                 format,
@@ -239,4 +251,12 @@ function analyzeURL(url) {
     } else {
         return null; // 匹配失败
     }
+}
+
+module.exports = {
+    getApiOptions,
+    getApiFields,
+    getApis,
+    getApiDocs,
+    getAllFields,
 }

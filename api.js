@@ -17,7 +17,12 @@ const {
     autoFill,
     getTablesColumns,
     getProjectNames,
+    splitComment,
+    getOptions,
+    API_JAVA_TYPE,
 } = require('./util');
+const {getApiOptions, getApiFields} = require('./util/swagger');
+
 const {DB_TYPES} = require('./db/MySql');
 const packageJson = require('./package.json');
 
@@ -123,6 +128,37 @@ module.exports = apiRouter
         if (!dbUrl) return DB_TYPES;
 
         return db(dbUrl).getTypeOptions();
+    })
+    // 获取swagger apis
+    .get('/swagger/apis', async (ctx) => {
+        const {swaggerUrl} = ctx.query;
+
+        return await getApiOptions(swaggerUrl);
+    })
+    // 获取swagger api 中的字段
+    .post('/swagger/apis', async (ctx) => {
+        const {swaggerUrl, apiKeys} = ctx.request.body;
+        const res = await Promise.all(apiKeys.map(key => getApiFields(key, swaggerUrl)));
+
+        return res.flat(1).reduce((prev, curr) => {
+            const {name, type, description: comment} = curr;
+
+            if(prev.some(item => item.name === name)) return prev;
+
+            const chinese = splitComment(comment)[0];
+            const options = getOptions({comment})
+
+            return [
+                ...prev,
+                {
+                    id: name,
+                    chinese,
+                    options,
+                    dataType: API_JAVA_TYPE[type],
+                    ...curr,
+                },
+            ]
+        }, [])
     })
     // 获取所有模版
     .get('/templates', async () => {

@@ -1,5 +1,19 @@
 import React, {useState, useEffect, useCallback} from 'react';
-import {Form, Button, notification, Modal, Input, Select, Row, Col, Radio, Space, Checkbox, Tabs} from 'antd';
+import {
+    Form,
+    Button,
+    notification,
+    Modal,
+    Input,
+    Select,
+    Row,
+    Col,
+    Radio,
+    Space,
+    Checkbox,
+    Tabs,
+    TreeSelect
+} from 'antd';
 import {
     CodeOutlined,
     CopyOutlined,
@@ -40,6 +54,7 @@ export default ajax(function Generator(props) {
     const [dbTypeOptions, setDbTypeOptions] = useState([]);
     const [files, setFiles] = useState([]);
     const [projectNames, setProjectNames] = useState({});
+    const [apiOptions, setApiOptions] = useState([]);
     const [form] = Form.useForm();
 
     // 发请求获取模块名
@@ -152,11 +167,26 @@ export default ajax(function Generator(props) {
             }
             console.error(e);
         }
-    }, [dataSource, form, templateOptions, moduleNames, projectNames, props.ajax]);
+    }, [dataSource, form, templateOptions, moduleNames, projectNames, tableOptions, props.ajax]);
 
     // 数据库连接改变事件
     const {run: handleDbUrlChange} = useDebounceFn(async (e) => {
-        form.setFieldsValue({tableNames: undefined, moduleName: undefined});
+        form.setFieldsValue({tableNames: undefined, apis: undefined, moduleName: undefined});
+        const dbUrl = e.target.value;
+
+        // swagger 链接
+        if(dbUrl?.trim()?.startsWith('http')) {
+            try {
+                const apiOptions = await props.ajax.get('/swagger/apis', {swaggerUrl: dbUrl});
+                setApiOptions(apiOptions);
+            }catch (e) {
+                setApiOptions([]);
+            }
+            return ;
+        }
+
+        // 数据库链接
+
         let tableOptions;
         let dbTypeOptions;
         try {
@@ -243,6 +273,16 @@ export default ajax(function Generator(props) {
             });
         }
     }, [dataSource, form, props.ajax, handleDataSourceChange]);
+
+    // 选择apis事件
+    const handleApisChange = useCallback(async (apiKeys) => {
+        const swaggerUrl = form.getFieldValue('dbUrl');
+
+        const dataSource = await props.ajax.post('/swagger/apis', {swaggerUrl, apiKeys}, {setLoading} );
+
+        await handleAutoFill(null, dataSource);
+
+    }, [form, handleAutoFill, props.ajax]);
 
     // 数据库表改变事件
     const handleTableNameChange = useCallback(async (tableNames) => {
@@ -556,7 +596,7 @@ export default ajax(function Generator(props) {
                     <Col flex="0 0 600px">
                         <Form.Item
                             align="right"
-                            label={<div style={{paddingLeft: 28}}>数据库连接</div>}
+                            label={<div style={{paddingLeft: 0}}>swagger/数据库</div>}
                             name="dbUrl"
                         >
                             <Input
@@ -565,68 +605,103 @@ export default ajax(function Generator(props) {
                             />
                         </Form.Item>
                     </Col>
-                    <Col flex="0 0 112px">
-                        <Form.Item name="searchType">
-                            <Radio.Group
-                                options={[
-                                    {value: 'sql', label: 'sql'},
-                                    {value: 'tables', label: '表'},
-                                ]}
-                                optionType="button"
-                                buttonStyle="solid"
-                            />
-                        </Form.Item>
-                    </Col>
-                    <Col flex={1}>
-                        <Form.Item
-                            noStyle
-                            shouldUpdate={(p, c) => p.searchType !== c.searchType}
-                        >
-                            {({getFieldValue}) => {
-                                const searchType = getFieldValue('searchType');
-                                if (searchType === 'tables') {
-                                    return (
-                                        <Form.Item name="tableNames">
-                                            <Select
-                                                mode="multiple"
-                                                showSearch
-                                                optionFilterProp={'label'}
-                                                placeholder="请选择数据库表"
-                                                onChange={handleTableNameChange}
-                                                options={tableOptions}
-                                            />
-                                        </Form.Item>
-                                    );
-                                }
+                    <Form.Item shouldUpdate noStyle>
+                        {({getFieldValue}) => {
+                            const dbUrl = getFieldValue('dbUrl');
+                            const isSwagger = dbUrl?.trim()?.startsWith('http');
+                            if(isSwagger) return null;
 
-                                return (
-                                    <div className={s.sqlWrapper}>
-                                        <div className={s.sqlAreaWrapper}>
-                                            <Form.Item name="sql">
-                                                <Input.TextArea
-                                                    style={{height: 78}}
-                                                    className={s.sqlArea}
-                                                    placeholder={[
-                                                        `支持多表关联，可以输入 ?、\${xx}、#{xx}等占位符；`,
-                                                        '多表重复字段将会被去重；',
-                                                        `解析快捷键：${isMac ? '⌘' : 'ctrl'} + enter。`,
-                                                    ].join('\n')}
-                                                    onPressEnter={handleSqlPressEnter}
-                                                />
-                                            </Form.Item>
-                                        </div>
-                                        <Button
-                                            type="primary"
-                                            className={s.sqlButton}
-                                            onClick={handleParseSql}
-                                        >
-                                            解析
-                                        </Button>
-                                    </div>
-                                );
-                            }}
-                        </Form.Item>
-                    </Col>
+                            return (
+                                <Col flex="0 0 112px">
+                                    <Form.Item name="searchType">
+                                        <Radio.Group
+                                            options={[
+                                                {value: 'sql', label: 'sql'},
+                                                {value: 'tables', label: '表'},
+                                            ]}
+                                            optionType="button"
+                                            buttonStyle="solid"
+                                        />
+                                    </Form.Item>
+                                </Col>
+                            );
+                        }}
+                    </Form.Item>
+                    <Form.Item shouldUpdate noStyle>
+                        {({getFieldValue}) => {
+                            const dbUrl = getFieldValue('dbUrl');
+                            const isSwagger = dbUrl?.trim()?.startsWith('http');
+                            if(isSwagger) return (
+                                <Col flex={1}>
+                                    <Form.Item name="apis">
+                                        <TreeSelect
+                                            treeCheckable
+                                            maxTagCount={3}
+                                            mode="multiple"
+                                            showSearch
+                                            placeholder="请选择API"
+                                            onChange={handleApisChange}
+                                            treeData={apiOptions}
+                                            treeDefaultExpandAll
+                                        />
+                                    </Form.Item>
+                                </Col>
+                            );
+
+                            return (
+                                <Col flex={1}>
+                                    <Form.Item
+                                        noStyle
+                                        shouldUpdate={(p, c) => p.searchType !== c.searchType}
+                                    >
+                                        {({getFieldValue}) => {
+                                            const searchType = getFieldValue('searchType');
+                                            if (searchType === 'tables') {
+                                                return (
+                                                    <Form.Item name="tableNames">
+                                                        <Select
+                                                            mode="multiple"
+                                                            showSearch
+                                                            optionFilterProp={'label'}
+                                                            placeholder="请选择数据库表"
+                                                            onChange={handleTableNameChange}
+                                                            options={tableOptions}
+                                                        />
+                                                    </Form.Item>
+                                                );
+                                            }
+
+                                            return (
+                                                <div className={s.sqlWrapper}>
+                                                    <div className={s.sqlAreaWrapper}>
+                                                        <Form.Item name="sql">
+                                                            <Input.TextArea
+                                                                style={{height: 78}}
+                                                                className={s.sqlArea}
+                                                                placeholder={[
+                                                                    `支持多表关联，可以输入 ?、\${xx}、#{xx}等占位符；`,
+                                                                    '多表重复字段将会被去重；',
+                                                                    `解析快捷键：${isMac ? '⌘' : 'ctrl'} + enter。`,
+                                                                ].join('\n')}
+                                                                onPressEnter={handleSqlPressEnter}
+                                                            />
+                                                        </Form.Item>
+                                                    </div>
+                                                    <Button
+                                                        type="primary"
+                                                        className={s.sqlButton}
+                                                        onClick={handleParseSql}
+                                                    >
+                                                        解析
+                                                    </Button>
+                                                </div>
+                                            );
+                                        }}
+                                    </Form.Item>
+                                </Col>
+                            );
+                        }}
+                    </Form.Item>
                 </Row>
                 <div style={{marginTop: 8, display: 'flex'}}>
                     <Form.Item
