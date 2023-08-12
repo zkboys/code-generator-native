@@ -1,68 +1,170 @@
 const axios = require('axios');
 
-const url = `http://admin:fhhj#$@80969HKJKJKDWER@@@@172.16.46.133:8081`;
+const url = `http://admin:fhhj#$@80969HKJKJKDWER@@@@22.50.9.44:8080`;
 // const url = `http://172.16.46.133:8081`;
 
 (async () => {
+
+    const options = await getApiOptions(url);
+
+    const api = options[10]?.children?.[0];
+
+    const fields = await getApiFields(api.key, url);
+
+    console.log(fields);
+})()
+
+async function getApiFields(key, url) {
     const docs = await getApiDocs(url);
-    const {tags, paths, definitions} = docs;
-    const apis = Object.entries(paths).map(([url, record]) => {
-        return Object.entries(record).map(([method, options]) => {
-            return {
-                ...options,
-                method,
-                url,
-            }
-        })
-    }).flat(Infinity);
-    const options = tags.map(item => {
+    const apis = getApis(docs);
+    const api = apis.find(item => item.key === key);
+
+    const {definitions} = docs;
+    return getAllFields(api, definitions);
+}
+
+async function getApiOptions(url) {
+    const docs = await getApiDocs(url);
+    const apis = getApis(docs);
+    const {tags} = docs;
+
+    return tags.map(item => {
         const {description, name} = item;
         const children = apis.filter(it => it.tags.includes(name));
         return {
             key: name,
             title: name,
             description,
-            children: children.map(it => {
-                const {method, url, summary, parameters, responses} = it;
-                const originalRef = responses?.[200]?.schema?.originalRef;
-                const properties = definitions?.[originalRef]?.properties;
-
-                const key = `${method}${url}${summary}`;
-                return {
-                    key,
-                    ...it,
-                }
-            })
+            children,
         }
-    })
-    console.log(JSON.stringify(options[0], null, 2));
-})()
+    });
+}
+
+function getApis(docs) {
+    const {paths} = docs;
+    return Object.entries(paths).map(([url, record]) => {
+        return Object.entries(record).map(([method, options]) => {
+            const key = `${method}${url}`;
+            return {
+                ...options,
+                key,
+                method,
+                url,
+            }
+        })
+    }).flat(Infinity);
+}
 
 
-function getAllFields(api) {
-    if (!api) return [];
-    const {parameters, responses} = api;
-    const responseSchema = responses?.['200']?.schema;
+const IGNORE_NAMES = [
+    'pageNum',
+    'pageSize',
+    'pageNumber',
+    'paged',
+    'totalElements',
+    'totalPages',
+];
 
-    if (!parameters?.length && !responseSchema) return [];
-
+function getAllFields(api, definitions) {
+    const fields = [];
+    const originalRefs = [];
 
     const loop = data => {
         if (!data) return;
+
         if (typeof data !== 'object') return;
 
+        if (Array.isArray(data)) return data.forEach(loop);
 
+        Object.entries(data).forEach(([key, value]) => {
+            if (!['parameters', 'properties', 'schema'].includes(key)) {
+                loop(value);
+            }
+
+            if (key === 'schema') {
+                const {originalRef} = value;
+                if (!originalRefs.includes(originalRef)) {
+                    originalRefs.push(originalRef);
+
+                    const obj = definitions?.[originalRef] || {};
+                    loop(obj)
+                }
+            }
+
+            if (key === 'parameters') {
+                value.forEach(item => {
+                    const {name, in: position, description, required, type, schema} = item;
+                    if (schema) {
+                        const {originalRef} = schema;
+                        if (originalRefs.includes(originalRef)) return;
+                        originalRefs.push(originalRef);
+
+                        const obj = definitions?.[originalRef] || {};
+                        loop(obj)
+                    } else {
+                        if (!['array', 'object'].includes(type) && !IGNORE_NAMES.includes(name)) fields.push({
+                            name,
+                            position,
+                            description,
+                            required,
+                            type
+                        });
+                    }
+                })
+            }
+            if (key === 'properties') {
+                const ks = Object.keys(value);
+                if (ks.includes('content')) {
+                    loop(value.content)
+                } else if (ks.includes('data')) {
+                    loop(value.data);
+                } else {
+                    Object.entries(value).forEach(([name, v]) => {
+                        const {
+                            type,
+                            format,
+                            description,
+                            minimum,
+                            maximum,
+                            exclusiveMinimum,
+                            exclusiveMaximum,
+                            readOnly,
+                            enum: _enum,
+                            items,
+                            originalRef,
+                        } = v;
+                        const {_originalRef} = items || {};
+                        const ori = _originalRef || originalRef
+
+                        if (ori) {
+                            if (originalRefs.includes(ori)) return;
+                            originalRefs.push(ori);
+
+                            const obj = definitions?.[ori] || {};
+                            loop(obj)
+                        } else {
+                            if (!['array', 'object'].includes(type) && !IGNORE_NAMES.includes(name)) fields.push({
+                                name,
+                                type,
+                                format,
+                                description,
+                                minimum,
+                                maximum,
+                                exclusiveMinimum,
+                                exclusiveMaximum,
+                                readOnly,
+                                _enum,
+                            })
+                        }
+                    })
+                }
+            }
+        })
     }
 
-    // originalRef:
-    const schemas = [];
-    parameters.forEach(item => {
-        if (item.schema) {
-            schemas.push(item.schema);
-            ;
-        }
-    })
+    loop(api);
 
+    return fields;
 }
 
 
@@ -91,8 +193,9 @@ function axiosRequest(url) {
 async function getApiDocs(url) {
     const request = axiosRequest(url);
 
-    const res = await request('/swagger-resources');
-    const resource = res?.data?.[0];
+    const res = await getResources(url);
+    const resource = res?.[0];
+
     if (!resource) return null;
 
     const docsRes = await request(resource.url);
