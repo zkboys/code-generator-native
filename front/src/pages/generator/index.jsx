@@ -38,8 +38,6 @@ import fastEditModal from './fastEditModal';
 import helpModal from './helpModal';
 import s from './style.module.less';
 
-const {TabPane} = Tabs;
-
 export default ajax(function Generator(props) {
     const [tableOptions, setTableOptions] = useState([]);
     const [templateOptions, setTemplateOptions] = useState([]);
@@ -175,14 +173,14 @@ export default ajax(function Generator(props) {
         const dbUrl = e.target.value;
 
         // swagger 链接
-        if(dbUrl?.trim()?.startsWith('http')) {
+        if (dbUrl?.trim()?.startsWith('http')) {
             try {
                 const apiOptions = await props.ajax.get('/swagger/apis', {swaggerUrl: dbUrl});
                 setApiOptions(apiOptions);
-            }catch (e) {
+            } catch (e) {
                 setApiOptions([]);
             }
-            return ;
+            return;
         }
 
         // 数据库链接
@@ -276,11 +274,11 @@ export default ajax(function Generator(props) {
 
     // 选择apis事件
     const handleApisChange = useCallback(async (apiKeys) => {
-        if(!apiKeys?.length) return setDataSource([]);
+        if (!apiKeys?.length) return setDataSource([]);
 
         const swaggerUrl = form.getFieldValue('dbUrl');
 
-        const dataSource = await props.ajax.post('/swagger/apis', {swaggerUrl, apiKeys}, {setLoading} );
+        const dataSource = await props.ajax.post('/swagger/apis', {swaggerUrl, apiKeys}, {setLoading});
 
         await handleAutoFill(null, dataSource);
 
@@ -611,7 +609,7 @@ export default ajax(function Generator(props) {
                         {({getFieldValue}) => {
                             const dbUrl = getFieldValue('dbUrl');
                             const isSwagger = dbUrl?.trim()?.startsWith('http');
-                            if(isSwagger) return null;
+                            if (isSwagger) return null;
 
                             return (
                                 <Col flex="0 0 112px">
@@ -632,8 +630,11 @@ export default ajax(function Generator(props) {
                     <Form.Item shouldUpdate noStyle>
                         {({getFieldValue}) => {
                             const dbUrl = getFieldValue('dbUrl');
+                            if (!dbUrl) return null;
+
                             const isSwagger = dbUrl?.trim()?.startsWith('http');
-                            if(isSwagger) return (
+
+                            if (isSwagger) return (
                                 <Col flex={1}>
                                     <Form.Item name="apis">
                                         <TreeSelect
@@ -650,58 +651,47 @@ export default ajax(function Generator(props) {
                                 </Col>
                             );
 
+                            const searchType = getFieldValue('searchType');
+
                             return (
                                 <Col flex={1}>
-                                    <Form.Item
-                                        noStyle
-                                        shouldUpdate={(p, c) => p.searchType !== c.searchType}
-                                    >
-                                        {({getFieldValue}) => {
-                                            const searchType = getFieldValue('searchType');
-                                            if (searchType === 'tables') {
-                                                return (
-                                                    <Form.Item name="tableNames">
-                                                        <Select
-                                                            mode="multiple"
-                                                            showSearch
-                                                            optionFilterProp={'label'}
-                                                            placeholder="请选择数据库表"
-                                                            onChange={handleTableNameChange}
-                                                            options={tableOptions}
-                                                        />
-                                                    </Form.Item>
-                                                );
-                                            }
-
-                                            return (
-                                                <div className={s.sqlWrapper}>
-                                                    <div className={s.sqlAreaWrapper}>
-                                                        <Form.Item name="sql">
-                                                            <Input.TextArea
-                                                                style={{height: 78}}
-                                                                className={s.sqlArea}
-                                                                placeholder={[
-                                                                    `支持多表关联，可以输入 ?、\${xx}、#{xx}等占位符；`,
-                                                                    '多表重复字段将会被去重；',
-                                                                    `解析快捷键：${isMac ? '⌘' : 'ctrl'} + enter。`,
-                                                                ].join('\n')}
-                                                                onPressEnter={handleSqlPressEnter}
-                                                            />
-                                                        </Form.Item>
-                                                    </div>
-                                                    <Button
-                                                        type="primary"
-                                                        className={s.sqlButton}
-                                                        onClick={handleParseSql}
-                                                    >
-                                                        解析
-                                                    </Button>
-                                                </div>
-                                            );
-                                        }}
-                                    </Form.Item>
-                                </Col>
-                            );
+                                    {searchType === 'tables' ? (
+                                        <Form.Item name="tableNames">
+                                            <Select
+                                                mode="multiple"
+                                                showSearch
+                                                optionFilterProp={'label'}
+                                                placeholder="请选择数据库表"
+                                                onChange={handleTableNameChange}
+                                                options={tableOptions}
+                                            />
+                                        </Form.Item>
+                                    ) : (
+                                        <div className={s.sqlWrapper}>
+                                            <div className={s.sqlAreaWrapper}>
+                                                <Form.Item name="sql">
+                                                    <Input.TextArea
+                                                        style={{height: 78}}
+                                                        className={s.sqlArea}
+                                                        placeholder={[
+                                                            `支持多表关联，可以输入 ?、\${xx}、#{xx}等占位符；`,
+                                                            '多表重复字段将会被去重；',
+                                                            `解析快捷键：${isMac ? '⌘' : 'ctrl'} + enter。`,
+                                                        ].join('\n')}
+                                                        onPressEnter={handleSqlPressEnter}
+                                                    />
+                                                </Form.Item>
+                                            </div>
+                                            <Button
+                                                type="primary"
+                                                className={s.sqlButton}
+                                                onClick={handleParseSql}
+                                            >
+                                                解析
+                                            </Button>
+                                        </div>
+                                    )}
+                                </Col>)
                         }}
                     </Form.Item>
                 </Row>
@@ -848,11 +838,12 @@ export default ajax(function Generator(props) {
                     }}
                     activeKey={activeKey}
                     onChange={setActiveKey}
-                >
-                    <TabPane key="files" tab="文件"/>
-                    <TabPane key="items" tab="选项"/>
-                    <TabPane key="db" tab="数据库"/>
-                </Tabs>
+                    items={[
+                        {key: 'files', label: '文件'},
+                        {key: 'items', label: '选项'},
+                        {key: 'db', label: '数据库'},
+                    ]}
+                />
                 <FieldTable
                     form={form}
                     files={files}

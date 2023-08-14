@@ -7,8 +7,6 @@ import {EditOutlined} from '@ant-design/icons';
 import {useDebounceFn} from 'ahooks';
 import s from './previewModal.module.less';
 
-const {TabPane} = Tabs;
-
 export default compose(
     modalFunction,
     ajax
@@ -59,31 +57,51 @@ export default compose(
                     type="card"
                     tabBarStyle={{marginBottom: 0, marginTop: 13, marginLeft: 4}}
                     tabBarExtraContent={{
-                        left: <Button type="link" icon={<EditOutlined />} onClick={() => setShowEdit((showEdit) => !showEdit)} />,
+                        left: <Button type="link" icon={<EditOutlined/>}
+                                      onClick={() => setShowEdit((showEdit) => !showEdit)}/>,
                     }}
-                >
-                    {files.map((file) => {
+                    items={files.map((file) => {
                         const {id, content, targetPath, templateContent} = file;
                         let language = targetPath.split('.').pop();
                         if (['jsx', 'js', 'vue', 'vux'].includes(language)) language = 'javascript';
                         if (['tsx', 'ts'].includes(language)) language = 'typescript';
                         const fileName = targetPath?.split('/').pop();
-                        return (
-                            <TabPane key={id + refreshKey} tab={<Tooltip mouseEnterDelay={0.5} overlayStyle={{maxWidth: 'none'}} placement='top' title={<span className={s.tabTitle}>{targetPath}</span>}>{fileName}</Tooltip>}>
-                                <div className={s.content}>
-                                    {showEdit ? (
-                                        <div style={{flex: '0 0 50%'}}>
-                                            <CodeEditor otherHeight={60} language="javascript" value={templateContent} onChange={(value) => handleTemplateChange(value, file)} />
-                                        </div>
-                                    ) : null}
-                                    <div style={{flex: showEdit ? '0 0 50%' : '0 0 100%'}}>
-                                        <CodeEditor otherHeight={60} language={language} value={content} readOnly />
-                                    </div>
-                                </div>
-                            </TabPane>
+
+                        const key = id + refreshKey;
+                        const label = (
+                            <Tooltip
+                                mouseEnterDelay={0.5}
+                                overlayStyle={{maxWidth: 'none'}}
+                                placement="top"
+                                title={<span className={s.tabTitle}>{targetPath}</span>}
+                            >
+                                {fileName}
+                            </Tooltip>
                         );
+                        const children = (
+                            <div className={s.content}>
+                                {showEdit ? (
+                                    <div style={{flex: '0 0 50%'}}>
+                                        <CodeEditor
+                                            otherHeight={60}
+                                            language="javascript"
+                                            value={templateContent}
+                                            onChange={(value) => handleTemplateChange(value, file)}
+                                        />
+                                    </div>
+                                ) : null}
+                                <div style={{flex: showEdit ? '0 0 50%' : '0 0 100%'}}>
+                                    <CodeEditor otherHeight={60} language={language} value={content} readOnly/>
+                                </div>
+                            </div>
+                        );
+                        return {
+                            key,
+                            label,
+                            children,
+                        }
                     })}
-                </Tabs>
+                />
             </Content>
         </Modal>
     );
