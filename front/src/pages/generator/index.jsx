@@ -69,6 +69,11 @@ export default ajax(function Generator(props) {
         return templateOptions;
     }, [props.ajax]);
 
+    const getPackageName = useCallback(() => {
+        const moduleName = form.getFieldValue('moduleName');
+        return moduleName?.includes('.') ? moduleName?.split('.').shift() : moduleNames.moduleName;
+    }, [form, moduleNames.moduleName]);
+
     // 生成文件事件 生成代码、代码预览
     const handleGenerate = useCallback(async (preview = false) => {
         try {
@@ -106,11 +111,12 @@ export default ajax(function Generator(props) {
                 moduleNames,
                 moduleChineseName: others.moduleChineseName || moduleNames.module_name,
                 projectNames,
+                packageName: getPackageName(),
             });
 
             const tables = tableOptions.filter(item => tableNames.includes(item.value));
 
-            const packageName = moduleName?.includes('.') ? moduleName?.split('.').shift() : moduleNames.moduleName;
+            const packageName = getPackageName();
             const params = {
                 ...others,
                 packageName,
@@ -168,7 +174,7 @@ export default ajax(function Generator(props) {
             }
             console.error(e);
         }
-    }, [dataSource, form, templateOptions, moduleNames, projectNames, tableOptions, props.ajax]);
+    }, [dataSource, form, templateOptions, moduleNames, projectNames, tableOptions, props.ajax, getPackageName]);
 
     // 数据库连接改变事件
     const {run: handleDbUrlChange} = useDebounceFn(async (e) => {
@@ -368,8 +374,7 @@ export default ajax(function Generator(props) {
         const record = templateOptions.find(item => item.value === templateId).record;
         const {targetPath, defaultOptions, options} = record;
 
-        const moduleName = form.getFieldValue('moduleName');
-        const packageName = moduleName?.includes('.') ? moduleName?.split('.').shift() : moduleNames.moduleName;
+        const packageName = getPackageName();
 
         form.setFields([
             {
@@ -388,7 +393,7 @@ export default ajax(function Generator(props) {
 
         handleFilesChange();
         handleDataSourceChange(dataSource);
-    }, [projectNames, moduleNames, templateOptions, form, handleFilesChange, handleDataSourceChange, dataSource]);
+    }, [projectNames, moduleNames, templateOptions, form, handleFilesChange, handleDataSourceChange, dataSource, getPackageName]);
 
     // 表单改变事件
     const {run: handleFormChange} = useDebounceFn(() => {
@@ -736,7 +741,6 @@ export default ajax(function Generator(props) {
                     <Form.Item shouldUpdate noStyle>
                         {({getFieldValue}) => {
                             const moduleChineseName = getFieldValue('moduleChineseName');
-                            const moduleName = getFieldValue('moduleName');
                             return (
                                 <FileList
                                     form={form}
@@ -751,7 +755,7 @@ export default ajax(function Generator(props) {
                                     onRemove={handleFilesChange}
                                     moduleChineseName={moduleChineseName}
                                     projectNames={projectNames}
-                                    packageName={moduleName?.includes('.') ? moduleName?.split('.').shift() : moduleNames.moduleName}
+                                    packageName={getPackageName()}
                                 />
                             );
                         }}
@@ -829,6 +833,7 @@ export default ajax(function Generator(props) {
                                         templateOptions,
                                         moduleNames,
                                         projectNames,
+                                        packageName: getPackageName(),
                                         moduleChineseName: form.getFieldValue('moduleChineseName'),
                                     })}
                                 >
