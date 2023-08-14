@@ -74,7 +74,7 @@ export default ajax(function Generator(props) {
         try {
             let _dataSource = [...dataSource];
             const values = await form.validateFields();
-            const {files, dataSource: ds, tableNames, ...others} = values;
+            const {files, dataSource: ds, tableNames, moduleName, ...others} = values;
             // if (!_dataSource?.length) return Modal.info({ title: '温馨提示', content: '表格的字段配置不能为空！' });
             if (!_dataSource?.length) _dataSource = [{
                 id: uuid(),
@@ -110,8 +110,11 @@ export default ajax(function Generator(props) {
 
             const tables = tableOptions.filter(item => tableNames.includes(item.value));
 
+            const packageName = moduleName?.includes('.') ? moduleName?.split('.').shift() : moduleNames.moduleName;
             const params = {
                 ...others,
+                packageName,
+                moduleName,
                 tableNames,
                 tables,
                 files: nextFiles,
@@ -302,7 +305,10 @@ export default ajax(function Generator(props) {
     const {run: handleModuleNameChange} = useDebounceFn(async (e) => {
         const moduleName = e.target.value;
         if (!moduleName) return;
-        const moduleNames = await fetchModuleNames(moduleName);
+
+        const _moduleName = moduleName.split('.').pop();
+
+        const moduleNames = await fetchModuleNames(_moduleName);
         setModuleNames(moduleNames);
     }, {wait: 300});
 
@@ -312,7 +318,9 @@ export default ajax(function Generator(props) {
         const enterKey = keyCode === 13;
         if (!((ctrlKey || metaKey) && enterKey)) return;
 
-        let {moduleName: name, moduleChineseName: chinese} = form.getFieldsValue();
+        let {moduleName: _moduleName, moduleChineseName: chinese} = form.getFieldsValue();
+
+        let name = _moduleName?.split('.')?.pop();
         if (!name && !chinese) return;
 
         if (isModuleName && name) {
@@ -360,6 +368,9 @@ export default ajax(function Generator(props) {
         const record = templateOptions.find(item => item.value === templateId).record;
         const {targetPath, defaultOptions, options} = record;
 
+        const moduleName = form.getFieldValue('moduleName');
+        const packageName = moduleName?.includes('.') ? moduleName?.split('.').shift() : moduleNames.moduleName;
+
         form.setFields([
             {
                 name: ['files', name, 'templateId'],
@@ -367,7 +378,7 @@ export default ajax(function Generator(props) {
             },
             {
                 name: ['files', name, 'targetPath'],
-                value: stringFormat(targetPath, {...moduleNames, ...projectNames}),
+                value: stringFormat(targetPath, {...moduleNames, ...projectNames, packageName}),
             },
             {
                 name: ['files', name, 'options'],
@@ -725,6 +736,7 @@ export default ajax(function Generator(props) {
                     <Form.Item shouldUpdate noStyle>
                         {({getFieldValue}) => {
                             const moduleChineseName = getFieldValue('moduleChineseName');
+                            const moduleName = getFieldValue('moduleName');
                             return (
                                 <FileList
                                     form={form}
@@ -739,6 +751,7 @@ export default ajax(function Generator(props) {
                                     onRemove={handleFilesChange}
                                     moduleChineseName={moduleChineseName}
                                     projectNames={projectNames}
+                                    packageName={moduleName?.includes('.') ? moduleName?.split('.').shift() : moduleNames.moduleName}
                                 />
                             );
                         }}

@@ -14,6 +14,7 @@ function FileList(props) {
         moduleNames,
         moduleChineseName,
         projectNames,
+        packageName,
         checkExist,
         onAdd = () => undefined,
         onRemove = () => undefined,
@@ -143,6 +144,7 @@ function FileList(props) {
                                             checkExist={checkExist}
                                             moduleChineseName={moduleChineseName}
                                             projectNames={projectNames}
+                                            packageName={packageName}
                                         />
                                     </Form.Item>
                                     <Form.Item noStyle shouldUpdate>

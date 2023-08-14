@@ -317,7 +317,7 @@ export default React.memo(ajax(function FieldTable(props) {
         })();
         return [
             {
-                title: '操作', dataIndex: 'operator', width: 60,
+                title: '操作', dataIndex: 'operator', width: 45,
                 render: (value, record) => {
                     const { id } = record;
                     const items = [

@@ -60,7 +60,8 @@ $ gen
 7. projectName: 项目名称，取自`gen`脚本运行的目录名，比如 `my-project`；
 8. projectNameSlash: 下划线形式项目名，比如`my/project`；
 9. projectNameDot: 点形式项目名，比如`my.project`；
-10. tableNames: 数据库表名称；
+10. packageName: java报名，取值于页面的【模块名】字段: 默认为【模块名】， message.wechat-message，引文'.'分割【包名】.【模块名】
+    1tableNames: 数据库表名称；
 
 ### fields字段信息
 

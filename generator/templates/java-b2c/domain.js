@@ -2,13 +2,13 @@ module.exports = {
     // 模版名称
     // name: 'java/domain',
     // 生成文件的默认目标路径
-    targetPath: '/{projectName}-data/src/main/java/com/{projectNameSlash}/{moduleName}/domain/{ModuleName}.java',
+    targetPath: '/{projectName}-data/src/main/java/com/{projectNameSlash}/{packageName}/domain/{ModuleName}.java',
     // 字段级别选项
     fieldOptions: ['domain'],
     defaultFieldOptions: ['domain'],
     // 获取文件内容
     getContent: (config) => {
-        const {NULL_LINE, moduleNames: mn, fields, projectNameDot, javaPackages, tables, moment} = config;
+        const {NULL_LINE, moduleNames: mn, fields, projectNameDot, javaPackages, tables, moment, packageName} = config;
 
         const table = tables[0] || {};
         const tableName = table.value;
@@ -28,7 +28,7 @@ module.exports = {
         const hasLength = domainFields.some(item => item.length);
 
         return `
-package com.${projectNameDot}.${mn.moduleName}.domain;
+package com.${projectNameDot}.${packageName}.domain;
 
 import com.suixingpay.ace.mybatis.base.BaseDomain;
 import io.swagger.annotations.ApiModel;

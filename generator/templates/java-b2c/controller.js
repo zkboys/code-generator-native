@@ -8,19 +8,19 @@ module.exports = {
     // fieldOptions: ['domain'],
     // defaultFieldOptions: ['domain'],
     // 生成文件的默认目标路径
-    targetPath: '/{projectName}-web/src/main/java/com/{projectNameSlash}/controller/{moduleName}/{ModuleName}Controller.java',
+    targetPath: '/{projectName}-web/src/main/java/com/{projectNameSlash}/controller/{packageName}/{ModuleName}Controller.java',
     // 获取文件内容
     getContent: config => {
-        const { moduleNames: mn, projectNameDot, tables, moment } = config;
+        const { moduleNames: mn, projectNameDot, tables, moment, packageName } = config;
         const table = tables[0] || {};
         const tableName = table.value;
         const tableLabel = table.comment || table.value;
         return `
-package com.${projectNameDot}.controller.${mn.moduleName};
+package com.${projectNameDot}.controller.${packageName};
 
-import com.${projectNameDot}.${mn.moduleName}.condition.${mn.ModuleName}Condition;
-import com.${projectNameDot}.${mn.moduleName}.domain.${mn.ModuleName};
-import com.${projectNameDot}.service.${mn.moduleName}.${mn.ModuleName}Service;
+import com.${projectNameDot}.${packageName}.condition.${mn.ModuleName}Condition;
+import com.${projectNameDot}.${packageName}.domain.${mn.ModuleName};
+import com.${projectNameDot}.service.${packageName}.${mn.ModuleName}Service;
 import com.suixingpay.ace.mybatis.base.GenericRestController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
