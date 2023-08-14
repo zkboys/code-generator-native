@@ -8,21 +8,30 @@ module.exports = {
     // fieldOptions: ['domain'],
     // defaultFieldOptions: ['domain'],
     // 生成文件的默认目标路径
-    targetPath: '/{projectName}-web/src/main/java/com/{projectNameSlash}/controller/{moduleName}/{ModuleName}Controller.java',
+    targetPath: '/{projectName}-web/src/main/java/com/{projectNameSlash}/controller/{packageName}/{ModuleName}Controller.java',
     // 获取文件内容
     getContent: config => {
-        const { moduleNames: mn, projectNameDot } = config;
+        const { moduleNames: mn, projectNameDot, tables, moment, packageName } = config;
+        const table = tables[0] || {};
+        const tableName = table.value;
+        const tableLabel = table.comment || table.value;
         return `
-package com.${projectNameDot}.controller.${mn.moduleName};
+package com.${projectNameDot}.controller.${packageName};
 
-import com.${projectNameDot}.condition.${mn.moduleName}.${mn.ModuleName}Condition;
-import com.${projectNameDot}.domain.${mn.moduleName}.${mn.ModuleName};
-import com.${projectNameDot}.service.${mn.moduleName}.${mn.ModuleName}Service;
+import com.${projectNameDot}.condition.${packageName}.${mn.ModuleName}Condition;
+import com.${projectNameDot}.domain.${packageName}.${mn.ModuleName};
+import com.${projectNameDot}.service.${packageName}.${mn.ModuleName}Service;
 import com.suixingpay.ace.mybatis.base.GenericRestController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * ${tableLabel}(${tableName})
+ *
+ * @author @ra-lib/gen
+ * @date ${moment().format('YYYY-MM-DD HH:mm:ss')}
+ */
 @RestController
 @RequestMapping("${mn.module_names}")
 public class ${mn.ModuleName}Controller extends GenericRestController<${mn.ModuleName}, Long, ${mn.ModuleName}Condition> {
