@@ -121,7 +121,7 @@ export default ajax(function Generator(props) {
             const params = {
                 ...others,
                 packageName,
-                moduleName: moduleName?.includes('.').pop(),
+                moduleName: moduleName?.split('.').pop(),
                 tableNames,
                 tables,
                 files: nextFiles,
