@@ -117,10 +117,11 @@ export default ajax(function Generator(props) {
             const tables = tableOptions.filter(item => tableNames.includes(item.value));
 
             const packageName = getPackageName();
+
             const params = {
                 ...others,
                 packageName,
-                moduleName,
+                moduleName: moduleName?.includes('.').pop(),
                 tableNames,
                 tables,
                 files: nextFiles,
