@@ -8,7 +8,7 @@ module.exports = {
     defaultFieldOptions: ['domain'],
     // 获取文件内容
     getContent: (config) => {
-        const {NULL_LINE, moduleNames: mn, fields, projectNameDot, javaPackages, tables, moment, packageName} = config;
+        const {NULL_LINE, moduleNames: mn, fields, projectNameDot, javaPackages, tables, moment, packageName, author} = config;
 
         const table = tables[0] || {};
         const tableName = table.value;
@@ -45,7 +45,7 @@ ${javaPackages}
 /**
  * ${tableLabel}(${tableName})
  *
- * @author @ra-lib/gen
+ * @author ${author}
  * @date ${moment().format('YYYY-MM-DD HH:mm:ss')}
  */
 @Data

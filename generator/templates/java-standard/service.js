@@ -5,7 +5,7 @@ module.exports = {
     targetPath: '/{projectName}-service/src/main/java/com/{projectNameSlash}/service/{packageName}/{ModuleName}Service.java',
     // 获取文件内容
     getContent: (config) => {
-        const {moduleNames: mn, projectNameDot, tables, moment, packageName} = config;
+        const {moduleNames: mn, projectNameDot, tables, moment, packageName, author} = config;
         const table = tables[0] || {};
         const tableName = table.value;
         const tableLabel = table.comment || table.value;
@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * ${tableLabel}(${tableName})
  *
- * @author @ra-lib/gen
+ * @author ${author}
  * @date ${moment().format('YYYY-MM-DD HH:mm:ss')}
  */
 @Service

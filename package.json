@@ -38,6 +38,7 @@
     "nodemon": "^3.0.1",
     "open": "^8.4.0",
     "prompts": "^2.4.2",
-    "sequelize": "^6.17.0"
+    "sequelize": "^6.17.0",
+    "simple-git": "^3.19.1"
   }
 }

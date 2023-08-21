@@ -21,6 +21,10 @@ const {
 const translate = require('./translate');
 const db = require('../db');
 
+const simpleGit = require('simple-git');
+const git = simpleGit();
+
+
 const TYPE_MAP = {
     String: 'input',
     long: 'number',
@@ -180,6 +184,10 @@ async function getFilesContent(options) {
         });
         const NULL_LINE = '_____NULL_LINE_____';
 
+        const gitUser = await getGitUser();
+
+        const author = gitUser ? `${gitUser?.userName} <${gitUser?.userEmail}>` : '@ra-lib/gen';
+
         // 传递给模版的数据
         const cfg = {
             ...others,
@@ -209,6 +217,8 @@ async function getFilesContent(options) {
                 'updateDate',
             ],
             moment,
+            gitUser,
+            author,
         };
 
         let content = template.getContent(cfg);
@@ -812,6 +822,23 @@ async function saveUseLog() {
     authenticated && await UseLogModel.create({ip});
 }
 
+/**
+ * 获取git用户
+ * @returns {Promise<{userEmail: *, userName: *}>}
+ */
+async function getGitUser() {
+    try {
+        const {value: userName} = await git.getConfig('user.name');
+        const {value: userEmail} = await git.getConfig('user.email');
+        return {
+            userName,
+            userEmail,
+        }
+    } catch (e) {
+        return null;
+    }
+}
+
 module.exports = {
     downloadTemplates,
     getLocalTemplates,
@@ -832,5 +859,6 @@ module.exports = {
     getProjectNames,
     getOptions,
     splitComment,
+    getGitUser,
     API_JAVA_TYPE,
 };

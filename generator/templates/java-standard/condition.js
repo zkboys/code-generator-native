@@ -5,7 +5,7 @@ module.exports = {
     targetPath: '/{projectName}-data/src/main/java/com/{projectNameSlash}/condition/{packageName}/{ModuleName}Condition.java',
     // 获取文件内容 标准
     getContent: (config) => {
-        const {moduleNames: mn, projectNameDot, tables, moment, packageName} = config;
+        const {moduleNames: mn, projectNameDot, tables, moment, packageName, author} = config;
         const table = tables[0] || {};
         const tableName = table.value;
         const tableLabel = table.comment || table.value;
@@ -21,7 +21,7 @@ import lombok.ToString;
 /**
  * ${tableLabel}(${tableName})
  *
- * @author @ra-lib/gen
+ * @author ${author}
  * @date ${moment().format('YYYY-MM-DD HH:mm:ss')}
  */
 @Data
