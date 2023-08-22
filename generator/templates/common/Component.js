@@ -30,7 +30,7 @@ module.exports = {
     getContent: config => {
         const { fields, moduleNames: mn } = config;
         return `
-import React from 'react';
+import React from 'react'; 
 import PropTypes from 'prop-types';        
 import s from './style.module.less';
         

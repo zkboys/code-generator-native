@@ -2,7 +2,6 @@
 const path = require('path');
 const spawn = require('cross-spawn');
 const { initLocalTemplates, choosePort, openBrowser, saveUseLog } = require('../util');
-const config = require('../config');
 
 const program = require('commander');
 
@@ -33,7 +32,7 @@ const ROOT_PATH = path.join(__dirname, '..');
     const nativeRoot = process.cwd();
     const command = path.join(ROOT_PATH, 'node_modules', '.bin', 'nodemon');
     // 监听本地目录改变之后，重启服务
-    spawn(command, ['-w', config.localGeneratorPath, '--exec', `node index.js --port=${port} --nativeRoot=${nativeRoot}`], { stdio: 'inherit', cwd: ROOT_PATH });
+    spawn(command, ['--exec', `node index.js --port=${port} --nativeRoot=${nativeRoot}`], { stdio: 'inherit', cwd: ROOT_PATH });
     // spawn('node', ['index.js', `--port=${port}`], { stdio: 'inherit', cwd: ROOT_PATH });
 
     // 记录使用情况，等待数据库连接

@@ -80,6 +80,7 @@ function getLocalTemplates() {
     const files = getAllFiles(templatesDir);
 
     return files.map(filePath => {
+        delete require.cache[require.resolve(filePath)];
         const template = require(filePath);
         const templateContent = fs.readFileSync(filePath, 'UTF-8');
 

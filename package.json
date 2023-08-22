@@ -1,13 +1,13 @@
 {
   "name": "@ra-lib/gen",
-  "version": "1.1.108",
+  "version": "1.1.109",
   "description": "",
   "main": "bin/index.js",
   "bin": {
     "gen": "bin/index.js"
   },
   "scripts": {
-    "start": "nodemon --ignore front/ --ignore public/  --exec \"node index.js\""
+    "start": "nodemon --ignore front/ --ignore public/ --ignore generator/ --exec \"node index.js\""
   },
   "author": "",
   "license": "ISC",

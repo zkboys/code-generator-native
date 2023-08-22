@@ -12,8 +12,6 @@ export default compose(
     ajax
 )(function PreviewModal(props) {
     const {params, onCancel, commonProps} = props;
-    const [loading, setLoading] = useState(false);
-    const [saving, setSaving] = useState(false);
     const [files, setFiles] = useState([]);
     const [showEdit, setShowEdit] = useState(false);
     // 用户强制CodeEditor重新布局
@@ -22,7 +20,7 @@ export default compose(
     const handleSearch = useCallback(async () => {
         if (!params) return;
 
-        const res = await props.ajax.post('/generate/preview', params, {setLoading});
+        const res = await props.ajax.post('/generate/preview', params);
         setFiles(res);
     }, [params, props.ajax]);
 
@@ -34,7 +32,7 @@ export default compose(
                 content: value,
                 filePath,
             };
-            await props.ajax.put('/template', params, {setLoading: setSaving});
+            await props.ajax.put('/template', params);
             await handleSearch();
         },
         {wait: 300}
@@ -52,7 +50,7 @@ export default compose(
 
     return (
         <Modal {...commonProps} width="100%" footer={<Button onClick={onCancel}>关闭</Button>}>
-            <Content fitHeight otherHeight={105} style={{overflow: 'hidden'}} loading={loading || saving}>
+            <Content fitHeight otherHeight={105} style={{overflow: 'hidden'}}>
                 <Tabs
                     type="card"
                     tabBarStyle={{marginBottom: 0, marginTop: 13, marginLeft: 4}}
