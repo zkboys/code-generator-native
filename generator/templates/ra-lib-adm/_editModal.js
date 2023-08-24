@@ -43,6 +43,7 @@ export default config({
         })}
     const handleSubmit = useFunction(async (values) => {
         if(loading) return;
+        
         const params = {
             ...values,
         };

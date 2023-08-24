@@ -52,6 +52,8 @@ export default config({
         })}
 
     const handleSubmit = useCallback(async (values) => {
+        if (loading) return;
+        
         const params = {
             ...values,
         };
