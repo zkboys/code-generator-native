@@ -22,7 +22,7 @@ export default config({
         width: '70%',
         top: 50,
     },
-})(function ${mn.ModuleName}EditModal(props) {
+})(function ${mn.ModuleName}DetailModal(props) {
     const { record, onCancel } = props;
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState({});

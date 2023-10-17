@@ -39,6 +39,7 @@
     "open": "^8.4.0",
     "prompts": "^2.4.2",
     "sequelize": "^6.17.0",
-    "simple-git": "^3.19.1"
+    "simple-git": "^3.19.1",
+    "tencentcloud-sdk-nodejs-ocr": "^4.0.707"
   }
 }

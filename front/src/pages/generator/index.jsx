@@ -26,7 +26,7 @@ import {
 } from '@ant-design/icons';
 import {useDebounceFn} from 'ahooks';
 import {v4 as uuid} from 'uuid';
-import {storage, isMac, stringFormat, getFiles} from 'src/commons';
+import {storage, isMac, stringFormat, getFiles, getImageData} from 'src/commons';
 import {confirm, PageContent} from 'src/components';
 import {ajax} from 'src/hocs';
 import FieldTable from './FieldTable';
@@ -37,6 +37,7 @@ import batchModal from 'src/pages/generator/batchModal';
 import fastEditModal from './fastEditModal';
 import helpModal from './helpModal';
 import s from './style.module.less';
+import {FORM_ELEMENT_OPTIONS} from "src/pages/generator/constant";
 
 export default ajax(function Generator(props) {
     const [tableOptions, setTableOptions] = useState([]);
@@ -77,9 +78,13 @@ export default ajax(function Generator(props) {
     // 生成文件事件 生成代码、代码预览
     const handleGenerate = useCallback(async (preview = false) => {
         try {
+            if (!form.getFieldValue('moduleName')) form.setFieldsValue({moduleName: 'temp'}); // 临时
+
             let _dataSource = [...dataSource];
             const values = await form.validateFields();
-            const {files, dataSource: ds, tableNames, moduleName, ...others} = values;
+            let {files, dataSource: ds, tableNames, moduleName, ...others} = values;
+            if (!tableNames?.length) tableNames = ['temp'];
+
             // if (!_dataSource?.length) return Modal.info({ title: '温馨提示', content: '表格的字段配置不能为空！' });
             if (!_dataSource?.length) _dataSource = [{
                 id: uuid(),
@@ -114,7 +119,7 @@ export default ajax(function Generator(props) {
                 packageName: getPackageName(),
             });
 
-            const tables = tableOptions.filter(item => tableNames.includes(item.value));
+            const tables = tableOptions.filter(item => tableNames?.includes(item.value));
 
             const packageName = getPackageName();
 
@@ -601,6 +606,57 @@ export default ajax(function Generator(props) {
         })();
     }, [props.ajax]);
 
+    // 获取剪切板中的图片
+    useEffect(() => {
+        async function handle(e) {
+            const imageData = await getImageData(e);
+
+            if (!imageData) return;
+
+            // 图片识别，文字预览
+            const params = {imageBase64: imageData};
+            const data = await props.ajax.post('/ocr', params, {setLoading})
+            const values = data.map(item => item.trim()).filter(Boolean);
+
+            const newDataSource = values.map(item => {
+                const [chinese, ft = 'i'] = item.split(' ');
+                const formType = FORM_ELEMENT_OPTIONS.find(it => it.short === ft)?.value || 'input';
+                return getNewRecord({chinese, formType});
+            });
+
+            let replace = true;
+            if (dataSource?.length) {
+                try {
+                    await confirm({
+                        title: '温馨提示',
+                        content: '您确定要覆盖吗？',
+                        okText: '覆盖',
+                        cancelText: '追加'
+                    });
+                } catch (e) {
+                    replace = false;
+                }
+            }
+            if (replace) {
+                handleDataSourceChange(newDataSource);
+                await handleAutoFill(null, newDataSource);
+            } else {
+                const nextDataSource = [...dataSource];
+                newDataSource.forEach(item => {
+                    if (!nextDataSource.some(it => it.chinese === item.chinese)) {
+                        nextDataSource.push(item);
+                    }
+                });
+
+                handleDataSourceChange(nextDataSource);
+                await handleAutoFill(null, nextDataSource);
+            }
+        }
+
+        document.addEventListener('paste', handle);
+        return () => document.removeEventListener('paste', handle);
+    }, [dataSource, getNewRecord, handleAutoFill, handleDataSourceChange, props.ajax]);
+
     return (
         <PageContent className={s.root} loading={loading} loadingTip={loadingTip}>
             <Form
@@ -774,7 +830,8 @@ export default ajax(function Generator(props) {
                                 <Button
                                     icon={<FormOutlined/>}
                                     onClick={() => fastEditModal({
-                                        dataSource, getNewRecord,
+                                        dataSource,
+                                        getNewRecord,
                                         onOk: async dataSource => {
                                             handleDataSourceChange(dataSource);
                                             await handleAutoFill(null, dataSource);

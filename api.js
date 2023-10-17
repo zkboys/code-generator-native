@@ -21,6 +21,7 @@ const {
     getOptions,
     API_JAVA_TYPE,
 } = require('./util');
+const generalBasicOCR = require('./util/ocr');
 const {getApiOptions, getApiFields, getApiDocs, getApis, getAllFields} = require('./util/swagger');
 
 const {DB_TYPES} = require('./db/MySql');
@@ -294,5 +295,8 @@ module.exports = apiRouter
     })
     // 获取项目名称
     .get('/projectNames', () => getProjectNames())
-
+    .post('/ocr', async ctx => {
+        const {imageBase64} = ctx.request.body;
+        return await generalBasicOCR(imageBase64);
+    })
 ;

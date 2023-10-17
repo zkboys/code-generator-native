@@ -110,8 +110,8 @@ export function triggerWindowResize() {
 }
 
 export function getNextTabIndex(e, options) {
-    const { tabIndex, columnIndex, totalColumn, totalRow, rowIndex } = options;
-    const { keyCode, ctrlKey, shiftKey, altKey, metaKey } = e;
+    const {tabIndex, columnIndex, totalColumn, totalRow, rowIndex} = options;
+    const {keyCode, ctrlKey, shiftKey, altKey, metaKey} = e;
     const enterKey = keyCode === 13;
 
     const isDelete = (ctrlKey || metaKey) && shiftKey && enterKey;
@@ -209,7 +209,7 @@ export const isMac = /macintosh|mac os x/i.test(navigator.userAgent);
  */
 export function getFiles({files, templateOptions, moduleNames = null, moduleChineseName, projectNames, packageName}) {
     return files.map(item => {
-        let { templateId, targetPath, options } = item;
+        let {templateId, targetPath, options} = item;
         const template = templateOptions.find(item => item.value === templateId)?.record;
 
         // 批量生成时候，moduleNames没传递，取原始targetPath
@@ -224,7 +224,13 @@ export function getFiles({files, templateOptions, moduleNames = null, moduleChin
 
         if (extraFiles) {
             const extraFilesList = extraFiles.map(it => {
-                const targetPath = stringFormat(it.targetPath, { ...moduleNames, ...projectNames, packageName, parentPath, __parentPath, moduleChineseName });
+                const targetPath = stringFormat(it.targetPath, {
+                    ...moduleNames, ...projectNames,
+                    packageName,
+                    parentPath,
+                    __parentPath,
+                    moduleChineseName
+                });
 
                 return {
                     parentTemplateId: templateId,
@@ -233,17 +239,17 @@ export function getFiles({files, templateOptions, moduleNames = null, moduleChin
                     options, // 使用父级模版的optins
                 };
             });
-            return [{ ...item, targetPath }, ...extraFilesList];
+            return [{...item, targetPath}, ...extraFilesList];
         }
 
-        return { ...item, targetPath };
+        return {...item, targetPath};
     }).flat();
 }
 
 
 export function compose(...fns) {
     fns = fns.reverse();
-    return function(...args) {
+    return function (...args) {
         let [firstFn, ...restFn] = fns;
         if (!firstFn) return;
         if (restFn.length === 0) {
@@ -253,4 +259,40 @@ export function compose(...fns) {
             return restFn.reduceRight((accumulator, currentValue) => currentValue(accumulator), initValue);
         }
     };
+}
+
+
+/**
+ * 从粘贴事件对象中获取图片base64数据
+ * @param event
+ * @returns {Promise<*>}
+ */
+export async function getImageData(event) {
+    const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+    for (let item of items) {
+        const {type} = item;
+        if (type.includes('image')) {
+            const blob = item.getAsFile();
+            return await getBlobToBase64(blob);
+        }
+    }
+    return null;
+}
+
+/**
+ * blob 转 base64数据
+ * @param blob
+ * @returns {Promise<unknown>}
+ */
+export async function getBlobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+            const base64Data = event.target.result;
+            resolve(base64Data)
+        }
+        reader.readAsDataURL(blob);
+        reader.onerror = reject;
+    })
 }

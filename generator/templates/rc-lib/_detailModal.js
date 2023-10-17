@@ -17,7 +17,7 @@ import {config, Content} from '@rc-lib/pc';
 
 export default config({
     modalFunction: true,
-})(function ${mn.ModuleName}EditModal(props) {
+})(function ${mn.ModuleName}DetailModal(props) {
     const { record, onCancel, commonProps } = props;
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState({});
