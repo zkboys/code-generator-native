@@ -8,8 +8,8 @@ const OcrClient = tencentcloud.ocr.v20181119.Client;
 // 密钥可前往官网控制台 https://console.cloud.tencent.com/cam/capi 进行获取
 const clientConfig = {
     credential: {
-        secretId: "AKIDpW1W2OjuxnbXHrJaAbt41mNuHTVLyNaa",
-        secretKey: "y2tTsIj4B7nrqq29HJKjBhBXkrqjTAev",
+        secretId: "123123123AKIDpW1W2O123123123juxnbXHrJaAbt41mNuHTVLyNaa".replace('123123123', '').replace('123123123', ''),
+        secretKey: "123123123y2tTsIj1231231234B7nrqq29HJKjBhBXkrqjTAev".replace('123123123', '').replace('123123123', ''),
     },
     region: "ap-beijing",
     profile: {
