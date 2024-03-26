@@ -3,7 +3,7 @@ module.exports = {
     name: 'DetailModal',
     targetPath: '{parentPath}/detailModal.jsx',
     getContent: config => {
-        const { moduleNames: mn, file, fields, ignoreFields } = config;
+        const { moduleNames: mn, file, fields, ignoreFields = [] } = config;
         const { options = [] } = file;
 
         // 返回false不生成文件

@@ -17,7 +17,7 @@ module.exports = {
     ],
     // 获取文件内容
     getContent: config => {
-        const { NULL_LINE, file, moduleNames: mn, fields, ignoreFields } = config;
+        const { NULL_LINE, file, moduleNames: mn, fields, ignoreFields = [] } = config;
 
         const queryFields = fields.filter(item => item.fieldOptions.includes('条件') && !ignoreFields.includes(item.__names.moduleName));
         const tableFields = fields.filter(item => item.fieldOptions.includes('列表') && !ignoreFields.includes(item.__names.moduleName));

@@ -3,7 +3,7 @@ module.exports = {
     name: 'EditModal',
     targetPath: '{parentPath}/editModal.jsx',
     getContent: config => {
-        const { file, moduleNames: mn, fields, NULL_LINE, ignoreFields } = config;
+        const { file, moduleNames: mn, fields, NULL_LINE, ignoreFields = [] } = config;
         const { options = [] } = file;
 
         // 返回false不生成文件
